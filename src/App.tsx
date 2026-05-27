@@ -1,8 +1,13 @@
-import { Redirect, Route } from 'react-router-dom';
+import { useState } from 'react';
+import { Redirect, Route, useHistory, useLocation } from 'react-router-dom';
 import {
   IonApp,
   IonIcon,
   IonLabel,
+  IonList,
+  IonItem,
+  IonNote,
+  IonPopover,
   IonRouterOutlet,
   IonTabBar,
   IonTabButton,
@@ -10,10 +15,15 @@ import {
   setupIonicReact
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import { ellipse, square, triangle } from 'ionicons/icons';
-import Tab1 from './pages/Tab1';
-import Tab2 from './pages/Tab2';
-import Tab3 from './pages/Tab3';
+import {
+  calendarOutline,
+  chatbubbleEllipsesOutline,
+  gridOutline,
+  personCircleOutline,
+  sparklesOutline
+} from 'ionicons/icons';
+import DashboardPage from './pages/DashboardPage';
+import PlaceholderPage from './pages/PlaceholderPage';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -47,39 +57,148 @@ import './theme/variables.css';
 
 setupIonicReact();
 
+const tabByPath: Record<string, string> = {
+  '/dashboard': 'dashboard',
+  '/chat': 'chat',
+  '/schedule': 'schedule',
+  '/ai-coach': 'ai-coach'
+};
+
+const AppTabs: React.FC = () => {
+  const location = useLocation();
+  const history = useHistory();
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [menuAnchorEvent, setMenuAnchorEvent] = useState<Event | undefined>(undefined);
+
+  const currentTab = tabByPath[location.pathname] ?? 'dashboard';
+
+  const onProfileTap = (event: CustomEvent) => {
+    event.preventDefault();
+    setMenuAnchorEvent(event);
+    setIsProfileMenuOpen(true);
+  };
+
+  const onMenuItemTap = (destination: string) => {
+    setIsProfileMenuOpen(false);
+    history.push(destination);
+  };
+
+  return (
+    <IonTabs>
+      <IonRouterOutlet>
+        <Route exact path="/dashboard">
+          <DashboardPage />
+        </Route>
+        <Route exact path="/chat">
+          <PlaceholderPage
+            title="Chat"
+            subtitle="Conversations and coaching threads will live here."
+          />
+        </Route>
+        <Route exact path="/schedule">
+          <PlaceholderPage
+            title="Schedule"
+            subtitle="Calendar, sessions, and reminders will be organized here."
+          />
+        </Route>
+        <Route exact path="/ai-coach">
+          <PlaceholderPage
+            title="AI Coach"
+            subtitle="Training plans, prompts, and progress insights go here."
+          />
+        </Route>
+        <Route exact path="/announcements">
+          <PlaceholderPage
+            title="Announcements"
+            subtitle="Latest platform and team updates."
+          />
+        </Route>
+        <Route exact path="/notifications">
+          <PlaceholderPage
+            title="Notifications"
+            subtitle="Unread alerts and activity updates."
+          />
+        </Route>
+        <Route exact path="/settings">
+          <PlaceholderPage
+            title="Settings"
+            subtitle="Account and app preferences."
+          />
+        </Route>
+        <Route exact path="/profile">
+          <PlaceholderPage
+            title="Profile"
+            subtitle="Personal details, goals, and account status."
+          />
+        </Route>
+        <Route exact path="/real-time-resume">
+          <PlaceholderPage
+            title="Real-time Resume"
+            subtitle="Live achievements, milestones, and impact snapshots."
+          />
+        </Route>
+        <Route exact path="/">
+          <Redirect to="/dashboard" />
+        </Route>
+      </IonRouterOutlet>
+
+      <IonTabBar slot="bottom">
+        <IonTabButton selected={currentTab === 'dashboard'} tab="dashboard" href="/dashboard">
+          <IonIcon aria-hidden="true" icon={gridOutline} />
+          <IonLabel>Dashboard</IonLabel>
+        </IonTabButton>
+        <IonTabButton selected={currentTab === 'chat'} tab="chat" href="/chat">
+          <IonIcon aria-hidden="true" icon={chatbubbleEllipsesOutline} />
+          <IonLabel>Chat</IonLabel>
+        </IonTabButton>
+        <IonTabButton selected={currentTab === 'schedule'} tab="schedule" href="/schedule">
+          <IonIcon aria-hidden="true" icon={calendarOutline} />
+          <IonLabel>Schedule</IonLabel>
+        </IonTabButton>
+        <IonTabButton selected={currentTab === 'ai-coach'} tab="ai-coach" href="/ai-coach">
+          <IonIcon aria-hidden="true" icon={sparklesOutline} />
+          <IonLabel>AI Coach</IonLabel>
+        </IonTabButton>
+        <IonTabButton tab="profile-menu" href="/dashboard" onClick={onProfileTap}>
+          <IonIcon aria-hidden="true" icon={personCircleOutline} />
+          <IonLabel>Menu</IonLabel>
+        </IonTabButton>
+      </IonTabBar>
+
+      <IonPopover
+        isOpen={isProfileMenuOpen}
+        event={menuAnchorEvent}
+        onDidDismiss={() => setIsProfileMenuOpen(false)}
+      >
+        <IonList>
+          <IonItem button detail onClick={() => onMenuItemTap('/announcements')}>
+            Announcements
+          </IonItem>
+          <IonItem button detail onClick={() => onMenuItemTap('/notifications')}>
+            Notifications
+          </IonItem>
+          <IonItem button detail onClick={() => onMenuItemTap('/settings')}>
+            Settings
+          </IonItem>
+          <IonItem button detail onClick={() => onMenuItemTap('/profile')}>
+            Profile
+          </IonItem>
+          <IonItem button detail onClick={() => onMenuItemTap('/real-time-resume')}>
+            Real-time Resume
+          </IonItem>
+          <IonItem lines="none">
+            <IonNote color="medium">Avatar menu</IonNote>
+          </IonItem>
+        </IonList>
+      </IonPopover>
+    </IonTabs>
+  );
+};
+
 const App: React.FC = () => (
   <IonApp>
     <IonReactRouter>
-      <IonTabs>
-        <IonRouterOutlet>
-          <Route exact path="/tab1">
-            <Tab1 />
-          </Route>
-          <Route exact path="/tab2">
-            <Tab2 />
-          </Route>
-          <Route path="/tab3">
-            <Tab3 />
-          </Route>
-          <Route exact path="/">
-            <Redirect to="/tab1" />
-          </Route>
-        </IonRouterOutlet>
-        <IonTabBar slot="bottom">
-          <IonTabButton tab="tab1" href="/tab1">
-            <IonIcon aria-hidden="true" icon={triangle} />
-            <IonLabel>Tab 1</IonLabel>
-          </IonTabButton>
-          <IonTabButton tab="tab2" href="/tab2">
-            <IonIcon aria-hidden="true" icon={ellipse} />
-            <IonLabel>Tab 2</IonLabel>
-          </IonTabButton>
-          <IonTabButton tab="tab3" href="/tab3">
-            <IonIcon aria-hidden="true" icon={square} />
-            <IonLabel>Tab 3</IonLabel>
-          </IonTabButton>
-        </IonTabBar>
-      </IonTabs>
+      <AppTabs />
     </IonReactRouter>
   </IonApp>
 );

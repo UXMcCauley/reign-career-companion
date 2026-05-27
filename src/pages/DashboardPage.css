@@ -1,0 +1,103 @@
+.dashboard-toolbar {
+  --background: #050507;
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.dashboard-logo {
+  display: block;
+  width: min(280px, 80vw);
+  height: auto;
+  margin: 0 auto;
+}
+
+.dashboard-content {
+  padding: 12px 8px 24px;
+  background: #050507;
+}
+
+.clock-card,
+.metric-card,
+.announcement-card {
+  --background: #18181c;
+  color: #f4f5f8;
+  border: 1px solid #2a2b32;
+  border-radius: 10px;
+}
+
+.clock-card ion-card-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.clock-label {
+  text-align: center;
+  margin-top: -2px;
+}
+
+.clock-status {
+  width: fit-content;
+  margin: 8px auto 18px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #2a2b32;
+  font-weight: 600;
+}
+
+.clock-note {
+  margin: 12px 0 4px;
+  text-align: center;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.metric-card {
+  margin: 0;
+}
+
+.metric-card ion-card-header {
+  padding-bottom: 8px;
+}
+
+.metric-card ion-card-subtitle {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.metric-card ion-card-title {
+  color: #c7c9d1;
+  font-size: 1rem;
+  line-height: 1.15;
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.metric-total {
+  color: #9ea3af;
+  font-weight: 600;
+  margin-left: 2px;
+}
+
+.announcement-card {
+  margin-top: 10px;
+}
+
+.announcement-card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.announcement-card ion-card-subtitle ion-icon {
+  vertical-align: text-bottom;
+}
