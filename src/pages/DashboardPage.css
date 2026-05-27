@@ -1,13 +1,20 @@
 .dashboard-header {
-  transition: all 220ms ease;
+  transition: transform 280ms ease;
 }
 
 .dashboard-toolbar {
   --background: #050507;
+  --padding-top: 12px;
+  --padding-bottom: 3px;
+  --padding-start: 4px;
+  --padding-end: 4px;
+  --min-height: 44px;
   display: flex;
+  align-items: center;
   justify-content: flex-start;
-  padding: 24px 0 20px;
-  transition: padding 220ms ease;
+  min-height: 44px;
+  padding: 0;
+  transition: min-height 280ms ease, padding 280ms ease, --min-height 280ms ease;
 }
 
 .dashboard-logo {
@@ -16,11 +23,17 @@
   height: auto;
   margin: 0 0 0 14px;
   transform-origin: left center;
-  transition: width 220ms ease, margin 220ms ease, transform 220ms ease;
+  transition: width 280ms ease, margin 280ms ease, transform 280ms ease;
 }
 
 .dashboard-header--compact .dashboard-toolbar {
-  padding: 10px 0 8px;
+  --padding-top: 6px;
+  --padding-bottom: 2px;
+  --padding-start: 4px;
+  --padding-end: 4px;
+  --min-height: 28px;
+  min-height: 28px;
+  padding: 0;
 }
 
 .dashboard-header--compact .dashboard-logo {
@@ -80,12 +93,24 @@
   margin-top: 4px;
   text-align: center;
   color: #a8aec3;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
+  font-size: 0.9rem;
+}
+
+.clock-alert {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 201, 107, 0.38);
+  background: linear-gradient(140deg, rgba(255, 171, 58, 0.12), rgba(255, 98, 81, 0.12));
+  text-align: center;
 }
 
 .clock-note {
-  margin: 12px 0 2px;
-  text-align: center;
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.25;
+  color: #ffe6bc;
 }
 
 .metrics-grid {

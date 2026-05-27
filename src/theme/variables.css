@@ -65,9 +65,9 @@ ion-content {
 }
 
 ion-tab-bar.app-tab-bar {
-  padding-top: 10px;
-  padding-bottom: calc(10px + var(--ion-safe-area-bottom, 0px));
-  min-height: 72px;
+  padding-top: 7px;
+  padding-bottom: calc(7px + var(--ion-safe-area-bottom, 0px));
+  min-height: 66px;
 }
 
 ion-menu.profile-drawer {

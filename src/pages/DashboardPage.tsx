@@ -9,7 +9,6 @@ import {
   IonHeader,
   IonIcon,
   IonPage,
-  IonText,
   useIonAlert,
   IonToolbar
 } from '@ionic/react';
@@ -106,19 +105,23 @@ const DashboardPage: React.FC = () => {
     return () => window.clearInterval(intervalId);
   }, []);
 
-  const timeZoneLabel = useMemo(() => {
-    const timezonePart = Intl.DateTimeFormat(undefined, { timeZoneName: 'short' })
-      .formatToParts(currentTime)
-      .find((part) => part.type === 'timeZoneName');
-    return timezonePart?.value ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
-  }, [currentTime]);
-
   const timeLabel = useMemo(
     () =>
       currentTime.toLocaleTimeString([], {
         hour: 'numeric',
         minute: '2-digit',
         second: '2-digit'
+      }),
+    [currentTime]
+  );
+
+  const dateLabel = useMemo(
+    () =>
+      currentTime.toLocaleDateString([], {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
       }),
     [currentTime]
   );
@@ -148,18 +151,18 @@ const DashboardPage: React.FC = () => {
             <IonCard className="clock-card ios-surface">
               <IonCardHeader>
                 <IonCardTitle>{timeLabel}</IonCardTitle>
-                <IonCardSubtitle>{timeZoneLabel}</IonCardSubtitle>
+                <IonCardSubtitle>{dateLabel}</IonCardSubtitle>
               </IonCardHeader>
               <IonCardContent>
                 <IonButton expand="block" color="success">
                   <IonIcon icon={checkmarkCircleOutline} slot="start" />
                   Clock In
                 </IonButton>
-                <IonText color="medium">
+                <div className="clock-alert" role="note" aria-live="polite">
                   <p className="clock-note">
                     You have not been added to a team yet. Please contact your employer.
                   </p>
-                </IonText>
+                </div>
               </IonCardContent>
             </IonCard>
           </div>
