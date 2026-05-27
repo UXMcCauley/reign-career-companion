@@ -64,6 +64,12 @@ ion-content {
   --background: transparent;
 }
 
+ion-tab-bar.app-tab-bar {
+  padding-top: 10px;
+  padding-bottom: calc(10px + var(--ion-safe-area-bottom, 0px));
+  min-height: 72px;
+}
+
 ion-menu.profile-drawer {
   --width: min(82vw, 340px);
 }

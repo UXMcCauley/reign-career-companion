@@ -187,7 +187,7 @@ const AppTabs: React.FC = () => {
           </Route>
         </IonRouterOutlet>
 
-        <IonTabBar slot="bottom">
+        <IonTabBar slot="bottom" className="app-tab-bar">
           <IonTabButton selected={currentTab === 'dashboard'} tab="dashboard" href="/dashboard">
             <IonIcon aria-hidden="true" icon={gridOutline} />
             <IonLabel>Dashboard</IonLabel>

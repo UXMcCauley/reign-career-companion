@@ -10,20 +10,51 @@ import {
   IonIcon,
   IonPage,
   IonText,
+  useIonAlert,
   IonToolbar
 } from '@ionic/react';
-import { checkmarkCircleOutline, timeOutline } from 'ionicons/icons';
+import { checkmarkCircleOutline, helpCircleOutline, timeOutline } from 'ionicons/icons';
+import type { ScrollDetail } from '@ionic/core';
+import { useEffect, useMemo, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import logo from '../assets/reignos-logo.png';
 import './DashboardPage.css';
 
 const metrics = [
-  { label: 'PPI', value: '1.0', total: '/5' },
-  { label: 'OTS', value: '132', total: '/365' },
-  { label: 'Daily', value: '0.0', total: '/10' },
-  { label: 'Team', value: '8.7', total: '/10' },
-  { label: 'Success', value: '87.9%' },
-  { label: 'Productivity', value: '93.3%' }
+  {
+    label: 'PPI',
+    value: '1.0',
+    total: '/5',
+    description: 'Predictive Performance Indicator projects consistency and expected delivery quality.'
+  },
+  {
+    label: 'OTS',
+    value: '132',
+    total: '/365',
+    description: 'On-time Streak tracks how many shifts you started on schedule in the rolling year.'
+  },
+  {
+    label: 'Daily',
+    value: '0.0',
+    total: '/10',
+    description: 'Daily score summarizes your current shift performance using attendance and outcomes.'
+  },
+  {
+    label: 'Team',
+    value: '8.7',
+    total: '/10',
+    description: 'Team score reflects overall performance quality across your assigned work group.'
+  },
+  {
+    label: 'Success',
+    value: '87.9%',
+    description: 'Success estimates your likelihood of completing key goals based on trend signals.'
+  },
+  {
+    label: 'Productivity',
+    value: '93.3%',
+    description: 'Productivity measures output efficiency relative to expected effort and pace.'
+  }
 ];
 
 const announcements = [
@@ -59,24 +90,65 @@ const announcements = [
 
 const DashboardPage: React.FC = () => {
   const history = useHistory();
+  const [presentAlert] = useIonAlert();
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [isHeaderCompact, setIsHeaderCompact] = useState(false);
 
   const onAnnouncementTap = (announcementId: string) => {
     history.push(`/announcements/${announcementId}`);
   };
 
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  const timeZoneLabel = useMemo(() => {
+    const timezonePart = Intl.DateTimeFormat(undefined, { timeZoneName: 'short' })
+      .formatToParts(currentTime)
+      .find((part) => part.type === 'timeZoneName');
+    return timezonePart?.value ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+  }, [currentTime]);
+
+  const timeLabel = useMemo(
+    () =>
+      currentTime.toLocaleTimeString([], {
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit'
+      }),
+    [currentTime]
+  );
+
+  const onMetricHelpTap = (label: string, description: string) => {
+    presentAlert({
+      header: `${label} metric`,
+      message: description,
+      buttons: ['Got it']
+    });
+  };
+
+  const onContentScroll = (event: CustomEvent<ScrollDetail>) => {
+    setIsHeaderCompact(event.detail.scrollTop > 36);
+  };
+
   return (
     <IonPage>
-      <IonHeader translucent>
+      <IonHeader translucent className={isHeaderCompact ? 'dashboard-header dashboard-header--compact' : 'dashboard-header'}>
         <IonToolbar className="dashboard-toolbar">
           <img alt="ReignOS" src={logo} className="dashboard-logo" />
         </IonToolbar>
       </IonHeader>
-      <IonContent fullscreen>
+      <IonContent fullscreen scrollEvents onIonScroll={onContentScroll}>
         <div className="dashboard-content">
           <div className="dashboard-section">
             <IonCard className="clock-card ios-surface">
               <IonCardHeader>
-                <IonCardTitle>00:00:00</IonCardTitle>
+                <IonCardTitle>{timeLabel}</IonCardTitle>
+                <IonCardSubtitle>{timeZoneLabel}</IonCardSubtitle>
               </IonCardHeader>
               <IonCardContent>
                 <IonButton expand="block" color="success">
@@ -97,7 +169,18 @@ const DashboardPage: React.FC = () => {
               {metrics.map((metric) => (
                 <IonCard key={metric.label} className="metric-card ios-surface">
                   <IonCardHeader>
-                    <IonCardSubtitle>{metric.label}</IonCardSubtitle>
+                    <div className="metric-header-row">
+                      <IonCardSubtitle>{metric.label}</IonCardSubtitle>
+                      <IonButton
+                        aria-label={`More about ${metric.label}`}
+                        className="metric-help-button"
+                        fill="clear"
+                        size="small"
+                        onClick={() => onMetricHelpTap(metric.label, metric.description)}
+                      >
+                        <IonIcon icon={helpCircleOutline} />
+                      </IonButton>
+                    </div>
                   </IonCardHeader>
                   <IonCardContent>
                     <div className="metric-reading">
