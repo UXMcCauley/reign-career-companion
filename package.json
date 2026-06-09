@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "ionic:build": "npm run build",
+    "ionic:serve": "vite --host=0.0.0.0 --port=8100",
     "preview": "vite preview",
     "test.e2e": "cypress run",
     "test.unit": "vitest",
@@ -28,7 +30,6 @@
     "@types/react-router": "^5.1.20",
     "@types/react-router-dom": "^5.3.3",
     "@vercel/blob": "^2.4.0",
-    "capacitor": "^0.5.6",
     "ionicons": "^7.4.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
@@ -37,6 +38,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "8.3.4",
+    "@ionic/cli": "^7.2.1",
     "@testing-library/dom": ">=7.21.4",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^16.2.0",

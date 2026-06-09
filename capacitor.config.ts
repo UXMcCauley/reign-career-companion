@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.yourdomain.photogallery',
+  appId: 'com.mccauley.reigncareercompanion',
   appName: 'photo-gallery',
   webDir: 'dist'
 };

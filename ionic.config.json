@@ -1,5 +1,7 @@
 {
   "name": "photo-gallery",
-  "integrations": {},
-  "type": "react-vite"
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "custom"
 }
