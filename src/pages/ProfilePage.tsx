@@ -3,56 +3,29 @@ import {
   addOutline,
   cameraOutline,
   chatbubbleEllipsesOutline,
+  checkmarkOutline,
+  closeOutline,
   copyOutline,
+  eyeOutline,
   mailOutline,
   qrCodeOutline,
   trashOutline
 } from 'ionicons/icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { PROFILE_STORAGE_KEY, readStoredProfile, type EditableProfile } from '../data/profileData';
 import { demoEmployeeTalentCards } from '../data/talentCards';
 import './ProfilePage.css';
 
-type EditableProfile = {
-  headshotDataUrl: string;
-  bio: string;
-  phones: string[];
-  emails: string[];
-  linkedIn: string;
-  portfolioUrl: string;
-};
-
-const PROFILE_STORAGE_KEY = 'reign_profile_data_v1';
-
-const defaultProfile = (userName: string): EditableProfile => ({
-  headshotDataUrl: '',
-  bio: `${userName || 'Demo employee'} is building a strong cross-functional digital product and engineering path.`,
-  phones: [''],
-  emails: [''],
-  linkedIn: '',
-  portfolioUrl: ''
-});
-
 const ProfilePage: React.FC = () => {
+  const history = useHistory();
   const { userName } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [profile, setProfile] = useState<EditableProfile>(() => {
-    const saved = localStorage.getItem(PROFILE_STORAGE_KEY);
-    if (saved) {
-      try {
-        return JSON.parse(saved) as EditableProfile;
-      } catch {
-        return defaultProfile(userName);
-      }
-    }
-    return defaultProfile(userName);
-  });
+  const [profile, setProfile] = useState<EditableProfile>(() => readStoredProfile(userName));
+  const [savedProfile, setSavedProfile] = useState<EditableProfile>(() => readStoredProfile(userName));
   const [feedback, setFeedback] = useState('');
-
-  useEffect(() => {
-    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
-  }, [profile]);
 
   useEffect(() => {
     if (!feedback) return;
@@ -61,14 +34,16 @@ const ProfilePage: React.FC = () => {
   }, [feedback]);
 
   const displayName = useMemo(() => userName || 'Demo Employee', [userName]);
+  const profileSlug = useMemo(() => encodeURIComponent(displayName.toLowerCase().replace(/\s+/g, '-')), [displayName]);
   const profileLink = useMemo(
-    () => `${window.location.origin}/profile/${encodeURIComponent(displayName.toLowerCase().replace(/\s+/g, '-'))}`,
-    [displayName]
+    () => `${window.location.origin}/profile/public/${profileSlug}`,
+    [profileSlug]
   );
   const qrCodeSrc = useMemo(
     () => `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(profileLink)}`,
     [profileLink]
   );
+  const hasChanges = useMemo(() => JSON.stringify(profile) !== JSON.stringify(savedProfile), [profile, savedProfile]);
 
   const updatePhone = (index: number, value: string) => {
     setProfile(current => ({
@@ -121,6 +96,16 @@ const ProfilePage: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
+  const saveProfile = () => {
+    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+    setSavedProfile(profile);
+    setFeedback('Profile saved');
+  };
+
+  const closeProfile = () => {
+    history.push('/dashboard');
+  };
+
   const copyShareLink = async () => {
     try {
       await navigator.clipboard.writeText(profileLink);
@@ -145,8 +130,17 @@ const ProfilePage: React.FC = () => {
       <IonContent fullscreen>
         <div className="profile-scene">
           <header className="profile-header">
-            <h1>Profile</h1>
+            <div className="profile-header-top">
+              <h1>Profile</h1>
+              <button className="profile-close-btn" onClick={closeProfile} aria-label="Close profile editor">
+                <IonIcon icon={closeOutline} />
+              </button>
+            </div>
             <p>Manage your headshot, bio, contact info, and share settings.</p>
+            <button className="public-profile-link" onClick={() => history.push(`/profile/public/${profileSlug}`)}>
+              <IonIcon icon={eyeOutline} />
+              View public profile experience
+            </button>
           </header>
 
           <section className="profile-card">
@@ -246,6 +240,17 @@ const ProfilePage: React.FC = () => {
               onChange={onHeadshotSelected}
               style={{ display: 'none' }}
             />
+
+            <div className="profile-actions">
+              <button
+                className={`profile-save-btn${hasChanges ? ' active' : ''}`}
+                onClick={saveProfile}
+                disabled={!hasChanges}
+              >
+                <IonIcon icon={checkmarkOutline} />
+                Save Changes
+              </button>
+            </div>
           </section>
 
           <section className="profile-card">

@@ -9,8 +9,9 @@
 .profile-scene {
   min-height: 100%;
   padding: max(var(--ion-safe-area-top, 24px), 34px) 16px calc(var(--ion-safe-area-bottom, 0px) + 104px);
-  display: grid;
-  gap: 12px;
+  display: flex; 
+  flex-direction: column;
+  gap: 20px;
   background:
     radial-gradient(circle at 18% 6%, rgba(121, 80, 255, 0.26), transparent 42%),
     radial-gradient(circle at 88% 10%, rgba(84, 201, 255, 0.2), transparent 40%),
@@ -23,10 +24,48 @@
   color: #f6f8ff;
 }
 
+.profile-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.public-preview-close-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 2px;
+}
+
+.profile-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f6f8ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .profile-header p {
   margin: 4px 0 0;
   color: rgba(223, 230, 250, 0.72);
   font-size: 0.82rem;
+}
+
+.public-profile-link {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #c8d8ff;
+  font-size: 0.76rem;
+  text-decoration: none;
+  border: none;
+  background: transparent;
+  padding: 0;
 }
 
 .profile-card {
@@ -64,6 +103,10 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.headshot-btn ion-icon {
+  font-size: 2.5rem;
 }
 
 .headshot-overlay {
@@ -168,6 +211,34 @@
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(255, 103, 132, 0.18);
   color: #ffd9e0;
+}
+
+.profile-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.profile-save-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(238, 243, 255, 0.72);
+  padding: 8px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+}
+
+.profile-save-btn.active {
+  background: linear-gradient(135deg, rgba(95, 183, 255, 0.55), rgba(130, 103, 255, 0.62));
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(57, 133, 255, 0.34);
+}
+
+.profile-save-btn:disabled {
+  opacity: 0.7;
 }
 
 .section-title {

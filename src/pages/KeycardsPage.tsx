@@ -1,5 +1,13 @@
 import { IonContent, IonIcon, IonPage } from '@ionic/react';
-import { arrowBackOutline, arrowForwardOutline, statsChartOutline, timeOutline, trophyOutline } from 'ionicons/icons';
+import {
+  arrowBackOutline,
+  arrowForwardOutline,
+  gridOutline,
+  listOutline,
+  statsChartOutline,
+  timeOutline,
+  trophyOutline
+} from 'ionicons/icons';
 import { useEffect, useMemo, useRef, useState, type TouchEvent } from 'react';
 import { demoEmployeeTalentCards } from '../data/talentCards';
 import './KeycardsPage.css';
@@ -251,15 +259,17 @@ const KeycardsPage: React.FC = () => {
                 className={viewMode === 'grid' ? 'active' : ''}
                 onClick={() => setViewMode('grid')}
                 aria-pressed={viewMode === 'grid'}
+                aria-label="Grid view"
               >
-                Grid
+                <IonIcon icon={gridOutline} />
               </button>
               <button
                 className={viewMode === 'list' ? 'active' : ''}
                 onClick={() => setViewMode('list')}
                 aria-pressed={viewMode === 'list'}
+                aria-label="List view"
               >
-                List
+                <IonIcon icon={listOutline} />
               </button>
             </div>
             <div className="keycards-toggle">
