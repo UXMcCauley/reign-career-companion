@@ -1,13 +1,11 @@
 import {
   IonButton,
   IonContent,
-  IonHeader,
   IonIcon,
   IonPage,
-  IonTitle,
-  IonToolbar
+  useIonAlert,
 } from '@ionic/react';
-import { calendarOutline, chevronBackOutline, chevronForwardOutline } from 'ionicons/icons';
+import { calendarOutline, checkmarkCircleOutline, chevronBackOutline, chevronForwardOutline, closeCircleOutline, paperPlaneOutline } from 'ionicons/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { loadShifts } from '../data/blobStorage';
@@ -23,6 +21,9 @@ import './SchedulePage.css';
 
 type ViewMode = 'week' | 'month';
 type MonthCell = { date: Date | null; shift: Shift | null; isToday: boolean };
+type ShiftRequestStatus = 'submitted' | 'approved' | 'denied';
+type ShiftChangeRequestMap = Record<string, { mode: 'swap' | 'off'; submittedAt: number; targetName?: string; status: ShiftRequestStatus }>;
+const SHIFT_CHANGE_REQUESTS_LOCAL_KEY = 'reign_shift_change_requests_v1';
 
 function startOfDay(date: Date): Date {
   const copy = new Date(date);
@@ -46,6 +47,10 @@ function daysBetween(a: Date, b: Date): number {
   return Math.floor((startOfDay(a).getTime() - startOfDay(b).getTime()) / 86400000);
 }
 
+function isSameDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
 function buildWeekDays(cursorDate: Date): Date[] {
   const weekStart = startOfWeek(cursorDate);
   return Array.from({ length: 7 }, (_, idx) => addDays(weekStart, idx));
@@ -61,9 +66,12 @@ function buildMonthDays(cursorDate: Date): Date[] {
 const SchedulePage: React.FC = () => {
   const today = useMemo(() => new Date(), []);
   const history = useHistory();
+  const [presentAlert] = useIonAlert();
   const [cursorDate, setCursorDate] = useState(today);
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [shifts, setShifts] = useState<Record<string, DaySchedule['shift']>>({});
+  const [changeRequests, setChangeRequests] = useState<ShiftChangeRequestMap>({});
+  const [selectedWeekDate, setSelectedWeekDate] = useState(startOfDay(today));
 
   useEffect(() => {
     let active = true;
@@ -74,6 +82,17 @@ const SchedulePage: React.FC = () => {
     return () => {
       active = false;
     };
+  }, []);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SHIFT_CHANGE_REQUESTS_LOCAL_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as ShiftChangeRequestMap;
+      setChangeRequests(parsed);
+    } catch {
+      // Ignore malformed local request state.
+    }
   }, []);
 
   const orderedShifts = useMemo(
@@ -122,6 +141,19 @@ const SchedulePage: React.FC = () => {
     return cells;
   }, [cursorDate, schedule, viewMode]);
 
+  useEffect(() => {
+    if (viewMode !== 'week') return;
+    const weekDay = schedule.find(({ date }) => isSameDay(date, selectedWeekDate));
+    if (weekDay) return;
+    const todayInWeek = schedule.find(({ date }) => isSameDay(date, today));
+    setSelectedWeekDate(startOfDay(todayInWeek ? todayInWeek.date : schedule[0]?.date ?? today));
+  }, [schedule, selectedWeekDate, today, viewMode]);
+
+  const selectedWeekEntry = useMemo(
+    () => (viewMode === 'week' ? schedule.find(({ date }) => isSameDay(date, selectedWeekDate)) ?? null : null),
+    [schedule, selectedWeekDate, viewMode]
+  );
+
   const rangeLabel = useMemo(() => {
     if (viewMode === 'month') {
       return `${MONTH_NAMES[cursorDate.getMonth()]} ${cursorDate.getFullYear()}`;
@@ -140,6 +172,64 @@ const SchedulePage: React.FC = () => {
     });
   };
 
+  const saveRequest = (shiftId: string, status: ShiftRequestStatus = 'submitted') => {
+    setChangeRequests(prev => {
+      const next: ShiftChangeRequestMap = {
+        ...prev,
+        [shiftId]: {
+          mode: 'off',
+          submittedAt: Date.now(),
+          status,
+        },
+      };
+      localStorage.setItem(SHIFT_CHANGE_REQUESTS_LOCAL_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const requestOff = () => {
+    const options = schedule
+      .filter(item => item.shift)
+      .map(item => ({
+        date: item.date,
+        shift: item.shift as Shift,
+        label: `${DAY_NAMES[item.date.getDay()]}, ${MONTH_NAMES[item.date.getMonth()]} ${item.date.getDate()} · ${shiftDurationShort(item.shift as Shift)}`,
+      }));
+
+    if (!options.length) {
+      presentAlert({ header: 'No shifts', message: 'No shifts are available in this view to request off.', buttons: ['OK'] });
+      return;
+    }
+
+    presentAlert({
+      header: 'Request Off',
+      message: 'Pick a shift day to submit your request.',
+      inputs: options.map((option, index) => ({
+        type: 'radio' as const,
+        name: 'shiftDay',
+        label: option.label,
+        value: option.shift.id,
+        checked: index === 0,
+      })),
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Submit',
+          handler: (data: { shiftDay?: string }) => {
+            const selectedShiftId = data?.shiftDay || options[0]?.shift.id;
+            if (!selectedShiftId) return;
+            saveRequest(selectedShiftId, 'submitted');
+            presentAlert({
+              header: 'Request Submitted',
+              message: 'Your request off was submitted.',
+              buttons: ['OK'],
+            });
+          },
+        },
+      ],
+    });
+  };
+
   const navigateToShift = (
     event: React.MouseEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLButtonElement>,
     shiftId: string
@@ -153,12 +243,6 @@ const SchedulePage: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader translucent className="schedule-header">
-        <IonToolbar className="schedule-toolbar">
-          <IonTitle className="schedule-title">Schedule</IonTitle>
-        </IonToolbar>
-      </IonHeader>
-
       <IonContent fullscreen className="schedule-content">
         <div className="schedule-range-controls">
           <IonButton fill="clear" className="schedule-nav-btn" onClick={() => moveRange(-1)} aria-label="Previous range">
@@ -169,80 +253,87 @@ const SchedulePage: React.FC = () => {
             <IonIcon icon={chevronForwardOutline} />
           </IonButton>
         </div>
-        <div className="schedule-view-toggle">
-          <button
-            type="button"
-            className={`schedule-view-btn${viewMode === 'week' ? ' active' : ''}`}
-            onClick={() => setViewMode('week')}
-          >
-            Week
-          </button>
-          <button
-            type="button"
-            className={`schedule-view-btn${viewMode === 'month' ? ' active' : ''}`}
-            onClick={() => setViewMode('month')}
-          >
-            <IonIcon icon={calendarOutline} />
-            Month
+        <div className="schedule-controls-row">
+          <div className="schedule-view-toggle list-filter-tabs">
+            <div
+              className="list-filter-slider schedule-view-slider"
+              style={{ left: viewMode === 'week' ? '3px' : 'calc(50% - 1.5px)', width: 'calc(50% - 3px)' }}
+            />
+            <button
+              type="button"
+              className={`list-filter-btn schedule-view-btn${viewMode === 'week' ? ' active' : ''}`}
+              onClick={() => setViewMode('week')}
+            >
+              Week
+            </button>
+            <button
+              type="button"
+              className={`list-filter-btn schedule-view-btn${viewMode === 'month' ? ' active' : ''}`}
+              onClick={() => setViewMode('month')}
+            >
+              <IonIcon icon={calendarOutline} />
+              Month
+            </button>
+          </div>
+          <button type="button" className="schedule-request-off-btn" onClick={requestOff}>
+            <IonIcon icon={paperPlaneOutline} />
+            Request Off
           </button>
         </div>
 
         {viewMode === 'week' ? (
-          <div className="schedule-list schedule-list--week">
-            {schedule.map(({ date, shift }, index) => {
-              const dayIndex = date.getDay();
-              const today_ = isToday(date);
-              const startPct = shift ? Math.max(0, Math.min(100, (shift.startHour / 24) * 100)) : 0;
-              const endPct = shift ? Math.max(0, Math.min(100, (Math.min(24, shift.endHour) / 24) * 100)) : 0;
-
-              return (
-                <div className="schedule-day-section" key={`${date.toISOString()}-${index}`}>
-                  <div className={`schedule-day-header${today_ ? ' schedule-day-header--today' : ''}`}>
-                    <span>{DAY_NAMES[dayIndex]}, {MONTH_NAMES[date.getMonth()]} {date.getDate()}</span>
-                    <span className={`schedule-day-duration${!shift ? ' schedule-day-duration--off' : ''}`}>
-                      {shift ? shiftDurationShort(shift) : 'Day Off'}
-                    </span>
+          <div className="schedule-week-layout">
+            <div className="schedule-week-detail">
+              <div className="schedule-week-detail-heading">
+                {selectedWeekEntry ? `${DAY_NAMES[selectedWeekEntry.date.getDay()]}` : 'Today'}
+              </div>
+              {selectedWeekEntry?.shift ? (
+                <button
+                  type="button"
+                  className="schedule-week-shift-card"
+                  onClick={(event) => navigateToShift(event, selectedWeekEntry.shift!.id)}
+                >
+                  <div className="schedule-week-shift-time">
+                    {formatHour(selectedWeekEntry.shift.startHour)} - {formatHour(selectedWeekEntry.shift.endHour)}
                   </div>
-
-                  {shift ? (
-                    <button
-                      className={[
-                        'schedule-day-card',
-                        today_ ? 'schedule-day-card--today' : ''
-                      ]
-                        .filter(Boolean)
-                        .join(' ')}
-                      onClick={(event) => navigateToShift(event, shift.id)}
-                      type="button"
-                    >
-                      <div className="schedule-timeline" aria-hidden="true">
-                        <div className="schedule-timeline-half-hour-ticks" />
-                        <div className="schedule-timeline-hour-ticks" />
-                        <div
-                          className="schedule-shift-bar"
-                          style={{
-                            left: `${startPct}%`,
-                            width: `${Math.max(1.5, endPct - startPct)}%`,
-                          }}
-                        />
-                        <span
-                          className="schedule-shift-marker schedule-shift-marker--start"
-                          style={{ left: `${startPct}%` }}
-                        >
-                          {formatHour(shift.startHour)}
-                        </span>
-                        <span
-                          className="schedule-shift-marker schedule-shift-marker--end"
-                          style={{ left: `${endPct}%` }}
-                        >
-                          {formatHour(Math.min(24, shift.endHour))}
-                        </span>
-                      </div>
-                    </button>
-                  ) : null}
+                  <div className="schedule-week-shift-role">{selectedWeekEntry.shift.role}</div>
+                  <div className="schedule-week-shift-duration">{shiftDurationShort(selectedWeekEntry.shift)}</div>
+                </button>
+              ) : (
+                <div className="schedule-week-off-card">
+                  <span>Day Off</span>
+                  <small>No shift scheduled for this day.</small>
                 </div>
-              );
-            })}
+              )}
+            </div>
+
+            <div className="schedule-week-dock">
+              {selectedWeekEntry ? (
+                <div className="schedule-week-floating-date">
+                  <strong>{DAY_NAMES[selectedWeekEntry.date.getDay()]}</strong>
+                  <span>
+                    {MONTH_NAMES[selectedWeekEntry.date.getMonth()]} {selectedWeekEntry.date.getDate()}, {selectedWeekEntry.date.getFullYear()}
+                  </span>
+                </div>
+              ) : null}
+
+              <div className="schedule-weekday-strip">
+                {schedule.map(({ date, shift }) => {
+                  const active = isSameDay(date, selectedWeekDate);
+                  return (
+                    <button
+                      key={date.toISOString()}
+                      type="button"
+                      className={`schedule-weekday-dot-btn${active ? ' active' : ''}`}
+                      onClick={() => setSelectedWeekDate(startOfDay(date))}
+                    >
+                      <span className="schedule-weekday-letter">{DAY_NAMES[date.getDay()].charAt(0)}</span>
+                      {shift ? <span className="schedule-weekday-scheduled-dot" /> : <span className="schedule-weekday-scheduled-dot schedule-weekday-scheduled-dot--off" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         ) : (
           <div className="schedule-month">
@@ -255,6 +346,8 @@ const SchedulePage: React.FC = () => {
               {monthCells.map((cell, index) => {
                 if (!cell.date) return <div key={`blank-${index}`} className="schedule-month-cell schedule-month-cell--blank" />;
                 const shift = cell.shift;
+                const request = shift ? changeRequests[shift.id] : undefined;
+                const requestStatusClass = request?.status ? ` schedule-month-request--${request.status}` : '';
                 return (
                   <button
                     key={cell.date.toISOString()}
@@ -264,6 +357,11 @@ const SchedulePage: React.FC = () => {
                     disabled={!shift}
                   >
                     <span className="schedule-month-day">{cell.date.getDate()}</span>
+                    {request ? (
+                      <span className={`schedule-month-request${requestStatusClass}`} aria-label={`Request ${request.status}`}>
+                        <IonIcon icon={request.status === 'approved' ? checkmarkCircleOutline : request.status === 'denied' ? closeCircleOutline : paperPlaneOutline} />
+                      </span>
+                    ) : null}
                     <span className="schedule-month-meta">
                       {shift ? shiftDurationShort(shift) : 'Off'}
                     </span>
