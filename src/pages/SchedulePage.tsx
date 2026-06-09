@@ -300,16 +300,8 @@ const SchedulePage: React.FC = () => {
   return (
     <IonPage>
       <IonContent fullscreen className="schedule-content">
-        <div className="schedule-range-controls">
-          <IonButton fill="clear" className="schedule-nav-btn" onClick={() => moveRange(-1)} aria-label="Previous range">
-            <IonIcon icon={chevronBackOutline} />
-          </IonButton>
-          <div className="schedule-week-label">{rangeLabel}</div>
-          <IonButton fill="clear" className="schedule-nav-btn" onClick={() => moveRange(1)} aria-label="Next range">
-            <IonIcon icon={chevronForwardOutline} />
-          </IonButton>
-        </div>
         <div className="schedule-controls-row">
+          <div className="schedule-range-inline">{rangeLabel}</div>
           <div className="schedule-view-toggle list-filter-tabs">
             <div
               className="list-filter-slider schedule-view-slider"
@@ -331,10 +323,17 @@ const SchedulePage: React.FC = () => {
               Month
             </button>
           </div>
-          <button type="button" className="schedule-request-off-btn" onClick={() => requestOff()}>
-            <IonIcon icon={paperPlaneOutline} />
-            Request Off
-          </button>
+          {/* <div className="schedule-range-inline">{rangeLabel}</div> */}
+          {viewMode === 'month' ? (
+            <div className="schedule-month-nav-inline">
+              <IonButton fill="clear" className="schedule-nav-btn" onClick={() => moveRange(-1)} aria-label="Previous range">
+                <IonIcon icon={chevronBackOutline} />
+              </IonButton>
+              <IonButton fill="clear" className="schedule-nav-btn" onClick={() => moveRange(1)} aria-label="Next range">
+                <IonIcon icon={chevronForwardOutline} />
+              </IonButton>
+            </div>
+          ) : null}
         </div>
 
         {viewMode === 'week' ? (
@@ -439,6 +438,12 @@ const SchedulePage: React.FC = () => {
             </div>
 
             <div className="schedule-week-dock">
+              <IonButton fill="clear" className="schedule-week-dock-nav schedule-week-dock-nav--left" onClick={() => moveRange(-1)} aria-label="Previous week">
+                <IonIcon icon={chevronBackOutline} />
+              </IonButton>
+              <IonButton fill="clear" className="schedule-week-dock-nav schedule-week-dock-nav--right" onClick={() => moveRange(1)} aria-label="Next week">
+                <IonIcon icon={chevronForwardOutline} />
+              </IonButton>
               {selectedWeekEntry ? (
                 <div className="schedule-week-selected-date-line">
                   {DAY_NAMES[selectedWeekEntry.date.getDay()]}, {MONTH_NAMES[selectedWeekEntry.date.getMonth()]} {selectedWeekEntry.date.getDate()}, {selectedWeekEntry.date.getFullYear()}
