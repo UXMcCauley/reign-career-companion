@@ -23,7 +23,9 @@ import type { ScrollDetail } from '@ionic/core';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { loadShifts } from '../data/blobStorage';
 import { defaultLoggedInEmployee } from '../data/defaultLoggedInEmployee';
+import { formatHour, type Shift } from '../data/scheduleData';
 import { demoEmployeeTalentCards } from '../data/talentCards';
 import './DashboardPage.css';
 
@@ -77,6 +79,7 @@ const DashboardPage: React.FC = () => {
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [activeKeyCardId, setActiveKeyCardId] = useState<string | null>(null);
   const [onBreak, setOnBreak] = useState(false);
+  const [shiftMap, setShiftMap] = useState<Record<string, Shift>>({});
   const { userName } = useAuth();
   const metricsRef = useRef<(HTMLElement | null)[]>([]);
 
@@ -172,6 +175,17 @@ const DashboardPage: React.FC = () => {
     return () => window.clearInterval(intervalId);
   }, []);
 
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const loaded = await loadShifts();
+      if (active) setShiftMap(loaded);
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const timeLabel = useMemo(
     () =>
       currentTime.toLocaleTimeString([], {
@@ -182,22 +196,24 @@ const DashboardPage: React.FC = () => {
   );
 
   const upcomingShifts = useMemo(() => {
+    const orderedShifts = Object.values(shiftMap)
+      .sort((a, b) => Number(a.id) - Number(b.id));
+    if (orderedShifts.length === 0) return [];
     const now = new Date();
-    const day = now.getDay(); // 0 Sunday
-    const daysUntilSunday = (7 - day) % 7;
-    const shifts = [];
-    for (let i = 0; i <= daysUntilSunday; i += 1) {
+    const shiftCards = [];
+    for (let i = 0; i < Math.min(6, orderedShifts.length); i += 1) {
       const shiftDate = new Date(now);
       shiftDate.setDate(now.getDate() + i);
       const label = shiftDate.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
-      shifts.push({
+      const shift = orderedShifts[i];
+      shiftCards.push({
         id: `shift-${i}`,
         title: i === 0 ? 'Today Shift' : `${label} Shift`,
-        time: i % 2 === 0 ? '8:00 AM - 4:00 PM' : '9:00 AM - 5:00 PM',
+        time: `${formatHour(shift.startHour)} - ${formatHour(shift.endHour)}`,
       });
     }
-    return shifts;
-  }, [currentTime]);
+    return shiftCards;
+  }, [currentTime, shiftMap]);
 
   const activeKeyCardName = useMemo(
     () => demoEmployeeTalentCards.find(card => card.id === activeKeyCardId)?.name ?? 'No key card selected',

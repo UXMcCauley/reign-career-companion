@@ -3,6 +3,7 @@ import { list, put } from '@vercel/blob';
 export interface BlobGatewayConfig {
   token: string;
   prefix: string;
+  access: 'public' | 'private';
 }
 
 export function resolveBlobConfig(env: Record<string, string | undefined>): BlobGatewayConfig {
@@ -16,6 +17,7 @@ export function resolveBlobConfig(env: Record<string, string | undefined>): Blob
   return {
     token,
     prefix: env.BLOB_PREFIX || env.VITE_BLOB_PREFIX || 'leadership-demo',
+    access: (env.BLOB_ACCESS === 'public' || env.VITE_BLOB_ACCESS === 'public') ? 'public' : 'private',
   };
 }
 
@@ -40,7 +42,10 @@ export async function readBlobDocument<T>(
   const blob = blobs.find(item => item.pathname === pathname) ?? blobs[0];
   if (!blob) return null;
 
-  const response = await fetch(blob.url, { cache: 'no-store' });
+  const response = await fetch(blob.url, {
+    cache: 'no-store',
+    headers: { Authorization: `Bearer ${config.token}` },
+  });
   if (!response.ok) return null;
   return (await response.json()) as T;
 }
@@ -54,7 +59,7 @@ export async function writeBlobDocument(
   const pathname = pathFor(config.prefix, name);
   await put(pathname, JSON.stringify(data), {
     token: config.token,
-    access: 'public',
+    access: config.access,
     addRandomSuffix: false,
     contentType: 'application/json',
   });
