@@ -24,13 +24,14 @@ import {
 } from 'ionicons/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
+import { loadShifts, loadShiftRuntime, saveShiftRuntime } from '../data/blobStorage';
 import {
   DAY_NAMES,
   MONTH_NAMES,
-  MOCK_SHIFTS,
   formatHour,
   shiftDuration,
   getWeekDays,
+  type Shift,
   type Break
 } from '../data/scheduleData';
 import './ShiftDetailPage.css';
@@ -86,11 +87,23 @@ const ShiftDetailPage: React.FC = () => {
   const { shiftId } = useParams<{ shiftId: string }>();
   const history = useHistory();
   const [presentAlert] = useIonAlert();
-  const shift = MOCK_SHIFTS[shiftId];
+  const [shifts, setShifts] = useState<Record<string, Shift>>({});
+  const shift = shifts[shiftId];
 
   const [isClockedIn, setIsClockedIn] = useState(false);
   // null = no active break, MISC (-1) = misc/away, 0+ = scheduled break index
   const [activeBreakIndex, setActiveBreakIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const loaded = await loadShifts();
+      if (active) setShifts(loaded);
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const shiftDate = useMemo(() => getShiftDateForDayId(shiftId), [shiftId]);
   const status = useMemo(
@@ -108,38 +121,46 @@ const ShiftDetailPage: React.FC = () => {
 
   // Restore persisted state and surface active-break prompt on each visit
   useEffect(() => {
-    if (localStorage.getItem(`ci_${shiftId}`)) {
-      setIsClockedIn(true);
-    }
-    const savedBreak = localStorage.getItem(`brk_${shiftId}`);
-    if (savedBreak !== null) {
-      const idx = parseInt(savedBreak, 10);
-      setActiveBreakIndex(idx);
-      const label = idx === MISC
-        ? 'miscellaneous break'
-        : shift?.breaks[idx] ? breakAlertLabel(shift.breaks[idx]) : 'break';
-      presentAlert({
-        header: 'Break in progress',
-        message: `Your ${label} is still active. Ready to end it?`,
-        buttons: [
-          { text: 'Not yet', role: 'cancel' },
-          {
-            text: 'End Break',
-            handler: () => {
-              setActiveBreakIndex(null);
-              localStorage.removeItem(`brk_${shiftId}`);
+    (async () => {
+      const runtime = await loadShiftRuntime(shiftId);
+      setIsClockedIn(runtime.isClockedIn);
+
+      if (runtime.activeBreakIndex !== null) {
+        const idx = runtime.activeBreakIndex;
+        const currentShift = shifts[shiftId];
+        if (!currentShift) return;
+
+        setActiveBreakIndex(idx);
+        const label = idx === MISC
+          ? 'miscellaneous break'
+          : currentShift.breaks[idx] ? breakAlertLabel(currentShift.breaks[idx]) : 'break';
+        presentAlert({
+          header: 'Break in progress',
+          message: `Your ${label} is still active. Ready to end it?`,
+          buttons: [
+            { text: 'Not yet', role: 'cancel' },
+            {
+              text: 'End Break',
+              handler: () => {
+                setActiveBreakIndex(null);
+                void saveShiftRuntime(shiftId, { isClockedIn: runtime.isClockedIn, activeBreakIndex: null });
+              }
             }
-          }
-        ]
-      });
-    }
+          ]
+        });
+      }
+    })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shiftId]);
+  }, [shiftId, shifts]);
+
+  const persistRuntime = (clockedIn: boolean, breakIndex: number | null) => {
+    void saveShiftRuntime(shiftId, { isClockedIn: clockedIn, activeBreakIndex: breakIndex });
+  };
 
   // ── Clock in / out ──
   const handleClockIn = () => {
     setIsClockedIn(true);
-    localStorage.setItem(`ci_${shiftId}`, '1');
+    persistRuntime(true, activeBreakIndex);
   };
 
   const handleClockOut = () => {
@@ -153,7 +174,7 @@ const ShiftDetailPage: React.FC = () => {
           cssClass: 'alert-button-danger',
           handler: () => {
             setIsClockedIn(false);
-            localStorage.removeItem(`ci_${shiftId}`);
+            persistRuntime(false, activeBreakIndex);
           }
         }
       ]
@@ -174,7 +195,7 @@ const ShiftDetailPage: React.FC = () => {
           text: 'Start Break',
           handler: () => {
             setActiveBreakIndex(index);
-            localStorage.setItem(`brk_${shiftId}`, String(index));
+            persistRuntime(isClockedIn, index);
           }
         }
       ]
@@ -194,7 +215,7 @@ const ShiftDetailPage: React.FC = () => {
           text: 'End Break',
           handler: () => {
             setActiveBreakIndex(null);
-            localStorage.removeItem(`brk_${shiftId}`);
+            persistRuntime(isClockedIn, null);
           }
         }
       ]

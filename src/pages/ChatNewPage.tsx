@@ -12,6 +12,7 @@ import {
   timeOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
+import { loadEmployees } from '../data/blobStorage';
 import { DEMO_EMPLOYEES } from '../data/employees';
 import './ChatPage.css';
 
@@ -36,19 +37,31 @@ const ChatNewPage: React.FC = () => {
   const [scheduledAt, setScheduledAt] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [recipientFocused, setRecipientFocused] = useState(false);
+  const [employees, setEmployees] = useState(DEMO_EMPLOYEES);
 
   const matchingEmployees = useMemo(() => {
     const query = recipientQuery.trim().toLowerCase();
     if (!query) return [];
 
-    return DEMO_EMPLOYEES
+    return employees
       .filter(employee => !selectedRecipients.includes(employee.name))
       .filter(employee =>
         employee.firstName.toLowerCase().includes(query) ||
         employee.lastName.toLowerCase().includes(query)
       )
       .slice(0, 8);
-  }, [recipientQuery, selectedRecipients]);
+  }, [recipientQuery, selectedRecipients, employees]);
+
+  React.useEffect(() => {
+    let active = true;
+    (async () => {
+      const loaded = await loadEmployees();
+      if (active && loaded.length > 0) setEmployees(loaded);
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const onRecipientChange = (nextValue: string) => {
     setRecipientQuery(nextValue);

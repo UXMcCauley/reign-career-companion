@@ -6,68 +6,51 @@ import {
   sendOutline, volumeMuteOutline,
 } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
-import { DEMO_EMPLOYEES, initialsFromName } from '../data/employees';
+import { loadChats, loadEmployees, saveChats } from '../data/blobStorage';
+import type { Conversation, Message } from '../data/chatTypes';
+import { DEMO_EMPLOYEES, initialsFromName, type DemoEmployee } from '../data/employees';
 import './ChatPage.css';
 
 const isIOS = isPlatform('ios') || /iphone|ipad|ipod/i.test(
   typeof navigator !== 'undefined' ? navigator.userAgent : ''
 );
 
-const STORAGE_KEY = 'reign_chat_v2';
 const CONTACT_COLORS = ['#7b3fff', '#2e85ff', '#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#e87d30'];
 
-interface Message {
-  id: string;
-  text: string;
-  sender: 'me' | 'other';
-  ts: number;
+function buildContacts(employees: DemoEmployee[]): Omit<Conversation, 'pinned' | 'muted' | 'archived' | 'messages' | 'unread'>[] {
+  const employeeContacts = employees.slice(0, 7);
+  return [
+    {
+      id: 'manager',
+      name: employeeContacts[0]?.name ?? 'Store Manager',
+      role: employeeContacts[0]?.role ?? 'Store Manager',
+      initials: initialsFromName(employeeContacts[0]?.name ?? 'Store Manager'),
+      color: CONTACT_COLORS[0],
+      type: 'dm',
+    },
+    { id: 'coach',    name: 'REIGN AI Coach', role: 'Career assistant',    initials: 'AI', color: '#c840e8', type: 'dm'    },
+    { id: 'team',     name: 'Team Channel',   role: '12 members',          initials: 'TC', color: '#46c9ff', type: 'group' },
+    { id: 'hr',       name: 'HR Support',     role: 'Benefits & policies', initials: 'HR', color: '#00c875', type: 'dm'    },
+    {
+      id: 'prev-mgr',
+      name: employeeContacts[1]?.name ?? 'Previous Manager',
+      role: employeeContacts[1]?.role ?? 'Previous Manager',
+      initials: initialsFromName(employeeContacts[1]?.name ?? 'Previous Manager'),
+      color: CONTACT_COLORS[6],
+      type: 'dm',
+    },
+    ...employeeContacts.slice(2).map((employee, idx) => ({
+      id: employee.id,
+      name: employee.name,
+      role: employee.role,
+      initials: initialsFromName(employee.name),
+      color: CONTACT_COLORS[(idx + 1) % CONTACT_COLORS.length],
+      type: 'dm' as const,
+    })),
+  ];
 }
 
-interface Conversation {
-  id: string;
-  name: string;
-  role: string;
-  initials: string;
-  color: string;
-  type: 'dm' | 'group';
-  pinned: boolean;
-  muted: boolean;
-  archived: boolean;
-  messages: Message[];
-  unread: number;
-}
-
-const employeeContacts = DEMO_EMPLOYEES.slice(0, 7);
-
-const CONTACTS: Omit<Conversation, 'pinned' | 'muted' | 'archived' | 'messages' | 'unread'>[] = [
-  {
-    id: 'manager',
-    name: employeeContacts[0]?.name ?? 'Store Manager',
-    role: employeeContacts[0]?.role ?? 'Store Manager',
-    initials: initialsFromName(employeeContacts[0]?.name ?? 'Store Manager'),
-    color: CONTACT_COLORS[0],
-    type: 'dm',
-  },
-  { id: 'coach',    name: 'REIGN AI Coach', role: 'Career assistant',    initials: 'AI', color: '#c840e8', type: 'dm'    },
-  { id: 'team',     name: 'Team Channel',   role: '12 members',          initials: 'TC', color: '#46c9ff', type: 'group' },
-  { id: 'hr',       name: 'HR Support',     role: 'Benefits & policies', initials: 'HR', color: '#00c875', type: 'dm'    },
-  {
-    id: 'prev-mgr',
-    name: employeeContacts[1]?.name ?? 'Previous Manager',
-    role: employeeContacts[1]?.role ?? 'Previous Manager',
-    initials: initialsFromName(employeeContacts[1]?.name ?? 'Previous Manager'),
-    color: CONTACT_COLORS[6],
-    type: 'dm',
-  },
-  ...employeeContacts.slice(2).map((employee, idx) => ({
-    id: employee.id,
-    name: employee.name,
-    role: employee.role,
-    initials: initialsFromName(employee.name),
-    color: CONTACT_COLORS[(idx + 1) % CONTACT_COLORS.length],
-    type: 'dm' as const,
-  })),
-];
+const CONTACTS = buildContacts(DEMO_EMPLOYEES);
 
 const AUTO_REPLIES: Record<string, string[]> = {
   manager: [
@@ -96,11 +79,11 @@ const AUTO_REPLIES: Record<string, string[]> = {
   ],
 };
 
-function makeSeedConversations(): Conversation[] {
+function makeSeedConversations(contacts: Omit<Conversation, 'pinned' | 'muted' | 'archived' | 'messages' | 'unread'>[] = CONTACTS): Conversation[] {
   const now = Date.now();
   return [
     {
-      ...CONTACTS[0], pinned: false, muted: false, archived: false, unread: 0,
+      ...contacts[0], pinned: false, muted: false, archived: false, unread: 0,
       messages: [
         { id: 'm1', text: "Hey! Checking your availability for next week.", sender: 'other', ts: now - 86400000 * 2 },
         { id: 'm2', text: "I'm free Tuesday through Friday — Saturday works too!", sender: 'me', ts: now - 86400000 * 2 + 300000 },
@@ -108,13 +91,13 @@ function makeSeedConversations(): Conversation[] {
       ],
     },
     {
-      ...CONTACTS[1], pinned: false, muted: false, archived: false, unread: 1,
+      ...contacts[1], pinned: false, muted: false, archived: false, unread: 1,
       messages: [
         { id: 'c1', text: "Welcome back! Your streak is at 7 days. Keep it going 🔥", sender: 'other', ts: now - 3600000 },
       ],
     },
     {
-      ...CONTACTS[2], pinned: false, muted: false, archived: false, unread: 2,
+      ...contacts[2], pinned: false, muted: false, archived: false, unread: 2,
       messages: [
         { id: 't1', text: "Team meeting today at 3pm — don't be late! 🕒", sender: 'other', ts: now - 7200000 },
         { id: 't2', text: "On my way! 👍", sender: 'me', ts: now - 7100000 },
@@ -122,13 +105,13 @@ function makeSeedConversations(): Conversation[] {
       ],
     },
     {
-      ...CONTACTS[3], pinned: false, muted: false, archived: false, unread: 0,
+      ...contacts[3], pinned: false, muted: false, archived: false, unread: 0,
       messages: [
         { id: 'h1', text: "Your PTO request for Dec 24–26 has been approved ✅", sender: 'other', ts: now - 86400000 },
       ],
     },
     {
-      ...CONTACTS[4], pinned: false, muted: false, archived: true, unread: 0,
+      ...contacts[4], pinned: false, muted: false, archived: true, unread: 0,
       messages: [
         { id: 'j1', text: "Thanks for all your hard work this quarter!", sender: 'other', ts: now - 86400000 * 14 },
         { id: 'j2', text: "Learned a lot from you. Thanks for the mentorship 🙏", sender: 'me', ts: now - 86400000 * 14 + 60000 },
@@ -136,20 +119,6 @@ function makeSeedConversations(): Conversation[] {
       ],
     },
   ];
-}
-
-function loadOrSeed(): Conversation[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as Conversation[];
-  } catch {}
-  const seed = makeSeedConversations();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
-  return seed;
-}
-
-function persist(convs: Conversation[]) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(convs)); } catch {}
 }
 
 function formatTime(ts: number): string {
@@ -170,7 +139,7 @@ const FILTER_TABS: { id: FilterTab; label: string }[] = [
   { id: 'group', label: 'Groups' },
 ];
 
-const EMPLOYEES = DEMO_EMPLOYEES.slice(0, 10).map(employee => ({
+const DEFAULT_EMPLOYEES = DEMO_EMPLOYEES.slice(0, 10).map(employee => ({
   name: employee.name,
   role: employee.role,
 }));
@@ -180,11 +149,12 @@ const ChatPage: React.FC = () => {
   const location = useLocation<{ openConvId?: string }>();
   const [presentActionSheet] = useIonActionSheet();
 
-  const [convs, setConvs]         = useState<Conversation[]>(loadOrSeed);
+  const [convs, setConvs]         = useState<Conversation[]>([]);
   const [activeId, setActiveId]   = useState<string | null>(null);
   const [inputText, setInputText] = useState('');
   const [typing, setTyping]       = useState(false);
   const [menuOpen, setMenuOpen]   = useState(false);
+  const [sheetEmployees, setSheetEmployees] = useState(DEFAULT_EMPLOYEES);
   const [search, setSearch]       = useState('');
   const [filter, setFilter]       = useState<FilterTab>('all');
   const [swipedId, setSwipedId]   = useState<string | null>(null);
@@ -212,10 +182,38 @@ const ChatPage: React.FC = () => {
   const unpinnedConvs = filtered.filter(c => !c.pinned);
 
   useEffect(() => {
+    let active = true;
+    (async () => {
+      const loadedEmployees = await loadEmployees();
+      const contactsForSeed = buildContacts(loadedEmployees.length ? loadedEmployees : DEMO_EMPLOYEES);
+      const loadedConversations = await loadChats(() => makeSeedConversations(contactsForSeed));
+
+      if (!active) return;
+
+      setConvs(loadedConversations);
+      if (loadedEmployees.length > 0) {
+        const employeeOptions = loadedEmployees.slice(0, 10).map(employee => ({
+          name: employee.name,
+          role: employee.role,
+        }));
+        setSheetEmployees(employeeOptions);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!activeId) return;
     const t = setTimeout(() => msgEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 60);
     return () => clearTimeout(t);
   }, [activeId, convs]);
+
+  const persist = (nextConversations: Conversation[]) => {
+    void saveChats(nextConversations);
+  };
 
   // Open a conversation when returning from the archived page
   useEffect(() => {
@@ -307,7 +305,7 @@ const ChatPage: React.FC = () => {
     presentActionSheet({
       header: 'Add Employee to Chat',
       buttons: [
-        ...EMPLOYEES.map(emp => ({
+        ...sheetEmployees.map(emp => ({
           text: `${emp.name}  ·  ${emp.role}`,
           handler: () => {},
         })),

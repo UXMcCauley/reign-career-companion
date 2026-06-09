@@ -2,13 +2,13 @@ import React, { useState, useRef } from 'react';
 import { IonContent, IonPage, IonIcon, isPlatform } from '@ionic/react';
 import { archiveOutline, chevronBackOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
+import { loadChats, saveChats } from '../data/blobStorage';
+import type { Conversation } from '../data/chatTypes';
 import './ChatPage.css';
 
 const isIOS = isPlatform('ios') || /iphone|ipad|ipod/i.test(
   typeof navigator !== 'undefined' ? navigator.userAgent : ''
 );
-
-const STORAGE_KEY = 'reign_chat_v2';
 
 function formatTime(ts: number): string {
   const d = new Date(ts);
@@ -21,27 +21,25 @@ function formatTime(ts: number): string {
   return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
 
-interface Message { id: string; text: string; sender: 'me' | 'other'; ts: number; }
-interface Conversation {
-  id: string; name: string; role: string; initials: string; color: string;
-  type: 'dm' | 'group'; pinned: boolean; muted: boolean; archived: boolean;
-  messages: Message[]; unread: number;
-}
-
 const ChatArchivedPage: React.FC = () => {
   const history = useHistory();
-
-  const [convs, setConvs] = useState<Conversation[]>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return (JSON.parse(raw) as Conversation[]).filter(c => c.archived);
-    } catch {}
-    return [];
-  });
+  const [convs, setConvs] = useState<Conversation[]>([]);
 
   const [swipedId, setSwipedId] = useState<string | null>(null);
   const touchX = useRef(0);
   const touchY = useRef(0);
+
+  React.useEffect(() => {
+    let active = true;
+    (async () => {
+      const all = await loadChats(() => []);
+      if (!active) return;
+      setConvs(all.filter(c => c.archived));
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const onTouchStart = (e: React.TouchEvent) => {
     touchX.current = e.touches[0].clientX;
@@ -57,14 +55,11 @@ const ChatArchivedPage: React.FC = () => {
   };
 
   const unarchiveConv = (id: string) => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const all = JSON.parse(raw) as Conversation[];
-        const updated = all.map(c => c.id === id ? { ...c, archived: false } : c);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      }
-    } catch {}
+    void (async () => {
+      const all = await loadChats(() => []);
+      const updated = all.map(c => c.id === id ? { ...c, archived: false } : c);
+      await saveChats(updated);
+    })();
     setConvs(prev => prev.filter(c => c.id !== id));
     setSwipedId(null);
     history.push('/chat');

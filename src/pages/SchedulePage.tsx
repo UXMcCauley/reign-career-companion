@@ -5,12 +5,12 @@ import {
   IonTitle,
   IonToolbar
 } from '@ionic/react';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useHistory } from 'react-router-dom';
+import { loadShifts } from '../data/blobStorage';
 import {
   DAY_NAMES,
   MONTH_NAMES,
-  MOCK_SHIFTS,
   getWeekDays,
   formatHour,
   shiftDurationShort,
@@ -22,10 +22,22 @@ const SchedulePage: React.FC = () => {
   const today = useMemo(() => new Date(), []);
   const history = useHistory();
   const weekDays = useMemo(() => getWeekDays(today), [today]);
+  const [shifts, setShifts] = useState<Record<string, DaySchedule['shift']>>({});
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const loaded = await loadShifts();
+      if (active) setShifts(loaded);
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const schedule: DaySchedule[] = useMemo(
-    () => weekDays.map((date) => ({ date, shift: MOCK_SHIFTS[String(date.getDay())] ?? null })),
-    [weekDays]
+    () => weekDays.map((date) => ({ date, shift: shifts[String(date.getDay())] ?? null })),
+    [weekDays, shifts]
   );
 
   const weekLabel = useMemo(() => {
