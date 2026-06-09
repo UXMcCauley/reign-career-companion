@@ -26,6 +26,8 @@ import {
 } from 'ionicons/icons';
 import DashboardPage from './pages/DashboardPage';
 import PlaceholderPage from './pages/PlaceholderPage';
+import SchedulePage from './pages/SchedulePage';
+import ShiftDetailPage from './pages/ShiftDetailPage';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -135,10 +137,10 @@ const AppTabs: React.FC = () => {
             />
           </Route>
           <Route exact path="/schedule">
-            <PlaceholderPage
-              title="Schedule"
-              subtitle="Calendar, sessions, and reminders will be organized here."
-            />
+            <SchedulePage />
+          </Route>
+          <Route exact path="/schedule/:shiftId">
+            <ShiftDetailPage />
           </Route>
           <Route exact path="/ai-coach">
             <PlaceholderPage
