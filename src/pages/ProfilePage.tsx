@@ -35,9 +35,10 @@ const ProfilePage: React.FC = () => {
 
   const displayName = useMemo(() => userName || 'Demo Employee', [userName]);
   const profileSlug = useMemo(() => encodeURIComponent(displayName.toLowerCase().replace(/\s+/g, '-')), [displayName]);
+  const shareBaseUrl = (import.meta.env.VITE_API_BASE_URL || window.location.origin).replace(/\/+$/, '');
   const profileLink = useMemo(
-    () => `${window.location.origin}/profile/public/${profileSlug}`,
-    [profileSlug]
+    () => `${shareBaseUrl}/profile/public/${profileSlug}`,
+    [profileSlug, shareBaseUrl]
   );
   const qrCodeSrc = useMemo(
     () => `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(profileLink)}`,
@@ -223,6 +224,14 @@ const ProfilePage: React.FC = () => {
                 placeholder="https://linkedin.com/in/your-profile"
               />
             </label>
+            <label className="profile-label">
+              LinkedIn custom title (optional)
+              <input
+                value={profile.linkedInTitle}
+                onChange={event => setProfile(current => ({ ...current, linkedInTitle: event.target.value }))}
+                placeholder="e.g. My LinkedIn Profile"
+              />
+            </label>
 
             <label className="profile-label">
               Portfolio URL
@@ -230,6 +239,14 @@ const ProfilePage: React.FC = () => {
                 value={profile.portfolioUrl}
                 onChange={event => setProfile(current => ({ ...current, portfolioUrl: event.target.value }))}
                 placeholder="https://portfolio.example.com"
+              />
+            </label>
+            <label className="profile-label">
+              Portfolio custom title (optional)
+              <input
+                value={profile.portfolioTitle}
+                onChange={event => setProfile(current => ({ ...current, portfolioTitle: event.target.value }))}
+                placeholder="e.g. Product Case Studies"
               />
             </label>
 

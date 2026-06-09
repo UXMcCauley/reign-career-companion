@@ -1,5 +1,5 @@
 import { IonContent, IonIcon, IonPage } from '@ionic/react';
-import { closeOutline, linkOutline, mailOutline, personCircleOutline } from 'ionicons/icons';
+import { closeOutline, mailOutline, personCircleOutline } from 'ionicons/icons';
 import { useMemo } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -60,17 +60,15 @@ const PublicProfilePage: React.FC = () => {
 
           <section className="profile-card">
             <h3 className="section-title">Links</h3>
-            <div className="share-button-grid">
+            <div className="public-plain-links">
               {profile.linkedIn ? (
-                <a href={profile.linkedIn} target="_blank" rel="noreferrer">
-                  <IonIcon icon={linkOutline} />
-                  LinkedIn
+                <a className="public-plain-link" href={profile.linkedIn} target="_blank" rel="noreferrer">
+                  {profile.linkedInTitle.trim() || profile.linkedIn}
                 </a>
               ) : null}
               {profile.portfolioUrl ? (
-                <a href={profile.portfolioUrl} target="_blank" rel="noreferrer">
-                  <IonIcon icon={linkOutline} />
-                  Portfolio
+                <a className="public-plain-link" href={profile.portfolioUrl} target="_blank" rel="noreferrer">
+                  {profile.portfolioTitle.trim() || profile.portfolioUrl}
                 </a>
               ) : null}
             </div>
