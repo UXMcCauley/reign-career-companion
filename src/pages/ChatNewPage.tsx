@@ -11,7 +11,7 @@ import {
   sendOutline,
   timeOutline,
 } from 'ionicons/icons';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import { loadEmployees } from '../data/blobStorage';
 import { DEMO_EMPLOYEES } from '../data/employees';
 import './ChatPage.css';
@@ -22,6 +22,7 @@ const isIOS = isPlatform('ios') || /iphone|ipad|ipod/i.test(
 
 const ChatNewPage: React.FC = () => {
   const history = useHistory();
+  const location = useLocation();
   const recipientInputRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const photoRef = useRef<HTMLInputElement>(null);
@@ -38,6 +39,15 @@ const ChatNewPage: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [recipientFocused, setRecipientFocused] = useState(false);
   const [employees, setEmployees] = useState(DEMO_EMPLOYEES);
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const recipientName = params.get('recipient')?.trim();
+    if (!recipientName) return;
+
+    setSelectedRecipients(prev => (prev.includes(recipientName) ? prev : [...prev, recipientName]));
+    setStatus(`Message draft started with ${recipientName}.`);
+  }, [location.search]);
 
   const matchingEmployees = useMemo(() => {
     const query = recipientQuery.trim().toLowerCase();

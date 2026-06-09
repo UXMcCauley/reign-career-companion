@@ -1,5 +1,5 @@
 import { IonContent, IonIcon, IonPage } from '@ionic/react';
-import { closeOutline, mailOutline, personCircleOutline } from 'ionicons/icons';
+import { chatbubbleEllipsesOutline, closeOutline, mailOutline, personCircleOutline } from 'ionicons/icons';
 import { useMemo } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -44,6 +44,14 @@ const PublicProfilePage: React.FC = () => {
                 <h1 className="profile-identity-name">{displayName}</h1>
                 <h2 className="profile-identity-role">{defaultLoggedInEmployee.roleTitle}</h2>
               </div>
+              <button
+                type="button"
+                className="profile-chat-launch-btn"
+                onClick={() => history.push(`/chat/new?recipient=${encodeURIComponent(displayName)}`)}
+                aria-label={`Start chat with ${displayName}`}
+              >
+                <IonIcon icon={chatbubbleEllipsesOutline} />
+              </button>
             </div>
             <p className="share-intro">{profile.bio}</p>
           </section>

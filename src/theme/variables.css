@@ -7,6 +7,16 @@ http://ionicframework.com/docs/theming/ */
   --app-aurora-3: rgba(70, 201, 255, 0.2);
   --app-aurora-4: rgba(120, 255, 183, 0.16);
   --app-night-base: #070814;
+  --app-brand-dark-blue: #0f2f73;
+  --app-warning-bg: linear-gradient(140deg, rgba(255, 171, 58, 0.14), rgba(255, 98, 81, 0.14));
+  --app-warning-border: rgba(255, 201, 107, 0.44);
+  --app-warning-text: #ffe6bc;
+  --app-info-bg: linear-gradient(140deg, rgba(84, 156, 255, 0.18), rgba(70, 201, 255, 0.12));
+  --app-info-border: rgba(130, 193, 255, 0.44);
+  --app-info-text: #d7ebff;
+  --app-brand-accent-bg: linear-gradient(120deg, rgba(15, 47, 115, 0.9), rgba(33, 84, 181, 0.82));
+  --app-brand-accent-border: rgba(126, 177, 255, 0.44);
+  --app-brand-light-blue: #1a3653;
   /* --ion-background-color: #ffffff;
 	--ion-background-color-rgb: 255,255,255;
 
@@ -162,8 +172,9 @@ ion-content {
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  background: #FF47A9;
-  opacity: 0.9;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--app-brand-light-blue);
+  opacity: 0.95;
 }
 
 .tab-btn {
@@ -183,7 +194,7 @@ ion-content {
 }
 
 .tab-btn ion-icon {
-  font-size: 22px;
+  font-size: 25px;
   color: rgba(255, 255, 255, 0.38);
   transition: color 0.2s ease;
   pointer-events: none;
@@ -191,13 +202,13 @@ ion-content {
 
 .tab-notification-dot {
   position: absolute;
-  top: 13px;
-  right: 14px;
-  width: 8px;
-  height: 8px;
+  top: 16px;
+  right: 16px;
+  width: 10px; 
+  height: 10px;
   border-radius: 50%;
   background: #ff4f8d;
-  box-shadow: 0 0 0 2px rgba(10, 8, 28, 0.95);
+  box-shadow: 0 0 0 2px rgba(10, 8, 28, 0.98);
 }
 
 .tab-btn.active ion-icon {

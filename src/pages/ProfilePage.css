@@ -83,6 +83,24 @@
   margin-bottom: 10px;
 }
 
+.profile-chat-launch-btn {
+  margin-left: auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(109, 154, 255, 0.6);
+  background: rgba(13, 39, 95, 0.85);
+  color: #eaf2ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 14px rgba(5, 10, 28, 0.42);
+}
+
+.profile-chat-launch-btn ion-icon {
+  font-size: 1.02rem;
+}
+
 .headshot-btn {
   width: 86px;
   height: 86px;

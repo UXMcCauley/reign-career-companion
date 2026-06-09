@@ -29,6 +29,36 @@ import './DashboardPage.css';
 
 const metrics = defaultLoggedInEmployee.dashboard.metrics;
 const announcements = defaultLoggedInEmployee.dashboard.announcements;
+const activeContests = [
+  {
+    id: 'contest-peak-service',
+    title: 'Peak Service Sprint',
+    subtitle: '7-day challenge',
+    details: 'Complete 5 shift check-ins on time and keep guest feedback above 4.7.',
+    cta: 'Join Sprint',
+  },
+  {
+    id: 'contest-gamecation-ops',
+    title: 'Ops Gamecation League',
+    subtitle: 'Team game vacation',
+    details: 'Pair with 2 teammates, clear weekly ops quests, and unlock leaderboard badges.',
+    cta: 'Enter League',
+  },
+  {
+    id: 'contest-upsell-arcade',
+    title: 'Upsell Arcade',
+    subtitle: 'Sales mini-season',
+    details: 'Hit 12 premium add-ons this week to earn bonus points and profile flair.',
+    cta: 'Play Now',
+  },
+  {
+    id: 'contest-rescue-run',
+    title: 'Shift Rescue Run',
+    subtitle: 'Flex challenge',
+    details: 'Pick up one optional shift and finish all close-out tasks for extra XP.',
+    cta: 'Accept Mission',
+  },
+];
 
 function pickGreeting(): string {
   const h = new Date().getHours();
@@ -294,12 +324,16 @@ const DashboardPage: React.FC = () => {
                   </button>
                 </div>
               )}
-              <div className="clock-alert">
-                <p className="clock-note">
-                  {isClockedIn
-                    ? `Clocked into: ${activeKeyCardName}${onBreak ? ' (On break)' : ''}`
-                    : defaultLoggedInEmployee.dashboard.clockAlert}
-                </p>
+              <div className={`clock-alert ${isClockedIn ? 'clock-alert--info' : 'clock-alert--warning'}`}>
+                {isClockedIn ? (
+                  <p className="clock-note">
+                    <span className="clock-note-label">Current Key Card</span>
+                    <span className="clock-note-value">{activeKeyCardName}</span>
+                    {onBreak ? <span className="clock-note-meta">On break</span> : null}
+                  </p>
+                ) : (
+                  <p className="clock-note">{defaultLoggedInEmployee.dashboard.clockAlert}</p>
+                )}
               </div>
             </div>
 
@@ -322,6 +356,26 @@ const DashboardPage: React.FC = () => {
                 <IonIcon icon={chevronForwardOutline} />
                 <span>View all</span>
               </button>
+            </div>
+
+            <div className="dash-section-header">
+              <span className="dash-section-label">Active Contests &amp; Game Vacations</span>
+            </div>
+            <div className="contest-rail">
+              {activeContests.map(contest => (
+                <IonCard key={contest.id} className="contest-card ios-surface">
+                  <IonCardHeader>
+                    <IonCardSubtitle>{contest.subtitle}</IonCardSubtitle>
+                    <IonCardTitle>{contest.title}</IonCardTitle>
+                  </IonCardHeader>
+                  <IonCardContent>
+                    <p>{contest.details}</p>
+                    <button className="contest-enter-btn" type="button">
+                      {contest.cta}
+                    </button>
+                  </IonCardContent>
+                </IonCard>
+              ))}
             </div>
 
             {/* Announcements */}
