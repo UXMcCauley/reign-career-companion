@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { defaultLoggedInEmployee } from '../data/defaultLoggedInEmployee';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -24,9 +25,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const validPass = import.meta.env.VITE_DEMO_PASSWORD;
     if (username === validUser && password === validPass) {
       localStorage.setItem('reign_auth', 'true');
-      localStorage.setItem('reign_user_name', 'Alex');
+      localStorage.setItem('reign_user_name', defaultLoggedInEmployee.displayName);
       setIsAuthenticated(true);
-      setUserName('Alex');
+      setUserName(defaultLoggedInEmployee.displayName);
       return { success: true };
     }
     return { success: false, error: 'Invalid credentials. Try the demo account below.' };

@@ -34,6 +34,7 @@ import LoginPage from './pages/LoginPage';
 import PlaceholderPage from './pages/PlaceholderPage';
 import ProfilePage from './pages/ProfilePage';
 import PublicProfilePage from './pages/PublicProfilePage';
+import RealTimeResumePage from './pages/RealTimeResumePage';
 import SchedulePage from './pages/SchedulePage';
 import ShiftDetailPage from './pages/ShiftDetailPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -244,10 +245,7 @@ const AppTabs: React.FC = () => {
             <ProfilePage />
           </Route>
           <Route exact path="/real-time-resume">
-            <PlaceholderPage
-              title="Real-time Resume"
-              subtitle="Live achievements, milestones, and impact snapshots."
-            />
+            <RealTimeResumePage />
           </Route>
           <Route exact path="/">
             <Redirect to="/dashboard" />

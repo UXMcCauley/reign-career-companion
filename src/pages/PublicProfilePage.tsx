@@ -3,6 +3,7 @@ import { closeOutline, mailOutline, personCircleOutline } from 'ionicons/icons';
 import { useMemo } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { defaultLoggedInEmployee } from '../data/defaultLoggedInEmployee';
 import { readStoredProfile } from '../data/profileData';
 import { demoEmployeeTalentCards } from '../data/talentCards';
 import './ProfilePage.css';
@@ -10,8 +11,11 @@ import './ProfilePage.css';
 const PublicProfilePage: React.FC = () => {
   const history = useHistory();
   const { userName } = useAuth();
-  const displayName = useMemo(() => userName || 'Demo Employee', [userName]);
   const profile = useMemo(() => readStoredProfile(userName), [userName]);
+  const displayName = useMemo(() => {
+    const full = `${defaultLoggedInEmployee.firstName || ''} ${defaultLoggedInEmployee.lastName || ''}`.trim();
+    return profile.displayName.trim() || full || userName || defaultLoggedInEmployee.displayName || 'Demo Employee';
+  }, [profile.displayName, userName]);
 
   return (
     <IonPage className="profile-page">
@@ -37,8 +41,8 @@ const PublicProfilePage: React.FC = () => {
                 )}
               </div>
               <div>
-                <h2>{displayName}</h2>
-                <p>Talent profile</p>
+                <h1 className="profile-identity-name">{displayName}</h1>
+                <h2 className="profile-identity-role">{defaultLoggedInEmployee.roleTitle}</h2>
               </div>
             </div>
             <p className="share-intro">{profile.bio}</p>
@@ -63,7 +67,7 @@ const PublicProfilePage: React.FC = () => {
             <div className="public-plain-links">
               {profile.linkedIn ? (
                 <a className="public-plain-link" href={profile.linkedIn} target="_blank" rel="noreferrer">
-                  {profile.linkedInTitle.trim() || profile.linkedIn}
+                  LinkedIn
                 </a>
               ) : null}
               {profile.portfolioUrl ? (

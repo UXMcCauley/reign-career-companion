@@ -20,75 +20,11 @@ import type { ScrollDetail } from '@ionic/core';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { defaultLoggedInEmployee } from '../data/defaultLoggedInEmployee';
 import './DashboardPage.css';
 
-const metrics = [
-  {
-    label: 'PPI',
-    value: '1.0',
-    total: '/5',
-    description: 'Predictive Performance Indicator projects consistency and expected delivery quality.'
-  },
-  {
-    label: 'OTS',
-    value: '132',
-    total: '/365',
-    description: 'On-time Streak tracks how many shifts you started on schedule in the rolling year.'
-  },
-  {
-    label: 'Daily',
-    value: '0.0',
-    total: '/10',
-    description: 'Daily score summarizes your current shift performance using attendance and outcomes.'
-  },
-  {
-    label: 'Team',
-    value: '8.7',
-    total: '/10',
-    description: 'Team score reflects overall performance quality across your assigned work group.'
-  },
-  {
-    label: 'Success',
-    value: '87.9%',
-    description: 'Success estimates your likelihood of completing key goals based on trend signals.'
-  },
-  {
-    label: 'Productivity',
-    value: '93.3%',
-    description: 'Productivity measures output efficiency relative to expected effort and pace.'
-  }
-];
-
-const announcements = [
-  {
-    id: 'cricket-game',
-    title: 'Cricket Game after work',
-    time: '6:00 PM',
-    image:
-      'https://images.unsplash.com/photo-1593766788306-28561086694e?auto=format&fit=crop&w=1200&q=80'
-  },
-  {
-    id: 'team-townhall',
-    title: 'Team Townhall Broadcast',
-    time: '9:30 AM',
-    image:
-      'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1200&q=80'
-  },
-  {
-    id: 'coaching-clinic',
-    title: 'AI Coaching Clinic',
-    time: '2:15 PM',
-    image:
-      'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1200&q=80'
-  },
-  {
-    id: 'shift-swaps',
-    title: 'Shift Swap Window Open',
-    time: '4:45 PM',
-    image:
-      'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=1200&q=80'
-  }
-];
+const metrics = defaultLoggedInEmployee.dashboard.metrics;
+const announcements = defaultLoggedInEmployee.dashboard.announcements;
 
 function pickGreeting(): string {
   const h = new Date().getHours();
@@ -136,7 +72,7 @@ const DashboardPage: React.FC = () => {
     ? userName.includes('@')
       ? userName.split('@')[0]
       : userName.split(' ')[0]
-    : 'there';
+    : defaultLoggedInEmployee.firstName || 'there';
 
   const [greeting] = useState(pickGreeting);
 
@@ -241,15 +177,18 @@ const DashboardPage: React.FC = () => {
               ref={(el) => { metricsRef.current[6] = el as HTMLElement; }}
             >
               <div className="dash-mastery-header">
-                <span className="dash-mastery-title">Trade Mastery</span>
-                <span className="dash-mastery-level">Lv. 4 → 5</span>
+                <span className="dash-mastery-title">{defaultLoggedInEmployee.dashboard.mastery.title}</span>
+                <span className="dash-mastery-level">{defaultLoggedInEmployee.dashboard.mastery.levelLabel}</span>
               </div>
               <div className="dash-mastery-track">
-                <div className="dash-mastery-fill" style={{ width: '20%' }} />
+                <div
+                  className="dash-mastery-fill"
+                  style={{ width: `${defaultLoggedInEmployee.dashboard.mastery.fillPercent}%` }}
+                />
               </div>
               <div className="dash-mastery-footer">
-                <span className="dash-mastery-pts">2,340 pts</span>
-                <span className="dash-mastery-remaining">960 to Level 5</span>
+                <span className="dash-mastery-pts">{defaultLoggedInEmployee.dashboard.mastery.pointsLabel}</span>
+                <span className="dash-mastery-remaining">{defaultLoggedInEmployee.dashboard.mastery.remainingLabel}</span>
               </div>
             </div>
           </div>
@@ -268,7 +207,7 @@ const DashboardPage: React.FC = () => {
               </IonButton>
               <div className="clock-alert">
                 <p className="clock-note">
-                  You have not been added to a team yet. Please contact your employer.
+                  {defaultLoggedInEmployee.dashboard.clockAlert}
                 </p>
               </div>
             </div>

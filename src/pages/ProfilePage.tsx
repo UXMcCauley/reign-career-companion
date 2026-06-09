@@ -14,6 +14,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { defaultLoggedInEmployee } from '../data/defaultLoggedInEmployee';
 import { PROFILE_STORAGE_KEY, readStoredProfile, type EditableProfile } from '../data/profileData';
 import { demoEmployeeTalentCards } from '../data/talentCards';
 import './ProfilePage.css';
@@ -33,7 +34,11 @@ const ProfilePage: React.FC = () => {
     return () => window.clearTimeout(timeout);
   }, [feedback]);
 
-  const displayName = useMemo(() => userName || 'Demo Employee', [userName]);
+  const fallbackName = useMemo(() => {
+    const full = `${defaultLoggedInEmployee.firstName || ''} ${defaultLoggedInEmployee.lastName || ''}`.trim();
+    return full || userName || 'Demo Employee';
+  }, [userName]);
+  const displayName = useMemo(() => profile.displayName.trim() || fallbackName, [profile.displayName, fallbackName]);
   const profileSlug = useMemo(() => encodeURIComponent(displayName.toLowerCase().replace(/\s+/g, '-')), [displayName]);
   const shareBaseUrl = (import.meta.env.VITE_API_BASE_URL || window.location.origin).replace(/\/+$/, '');
   const profileLink = useMemo(
@@ -158,10 +163,19 @@ const ProfilePage: React.FC = () => {
                 </div>
               </button>
               <div>
-                <h2>{displayName}</h2>
-                <p>Demo employee profile</p>
+                <h1 className="profile-identity-name">{displayName}</h1>
+                <h2 className="profile-identity-role">{defaultLoggedInEmployee.roleTitle}</h2>
               </div>
             </div>
+
+            <label className="profile-label">
+              Display name
+              <input
+                value={profile.displayName}
+                onChange={event => setProfile(current => ({ ...current, displayName: event.target.value }))}
+                placeholder={`${defaultLoggedInEmployee.firstName} ${defaultLoggedInEmployee.lastName}`}
+              />
+            </label>
 
             <label className="profile-label">
               Personal bio
@@ -224,15 +238,6 @@ const ProfilePage: React.FC = () => {
                 placeholder="https://linkedin.com/in/your-profile"
               />
             </label>
-            <label className="profile-label">
-              LinkedIn custom title (optional)
-              <input
-                value={profile.linkedInTitle}
-                onChange={event => setProfile(current => ({ ...current, linkedInTitle: event.target.value }))}
-                placeholder="e.g. My LinkedIn Profile"
-              />
-            </label>
-
             <label className="profile-label">
               Portfolio URL
               <input

@@ -1,0 +1,95 @@
+{
+  "id": "emp-demo-alex",
+  "firstName": "Alex",
+  "lastName": "Rivera",
+  "displayName": "Alex Rivera",
+  "roleTitle": "Field Operations Specialist",
+  "primaryEmail": "alex.rivera@reign.os",
+  "phoneNumbers": [
+    "(555) 294-1001"
+  ],
+  "avatarUrl": "",
+  "bio": "Operations-focused teammate with a strong track record in shift quality, safety, and cross-team delivery.",
+  "linkedInUrl": "https://linkedin.com/in/alex-rivera-reign",
+  "portfolioUrl": "https://reign-career-companion.vercel.app/profile/public/alex",
+  "portfolioTitle": "Alex's Public Career Profile",
+  "talentCardIds": [
+    "soc-11-3020",
+    "soc-15-1210",
+    "soc-15-1250",
+    "soc-17-2050",
+    "soc-27-1020"
+  ],
+  "dashboard": {
+    "metrics": [
+      {
+        "label": "PPI",
+        "value": "1.2",
+        "total": "/5",
+        "description": "Predictive Performance Indicator projects consistency and expected delivery quality."
+      },
+      {
+        "label": "OTS",
+        "value": "146",
+        "total": "/365",
+        "description": "On-time Streak tracks how many shifts you started on schedule in the rolling year."
+      },
+      {
+        "label": "Daily",
+        "value": "7.8",
+        "total": "/10",
+        "description": "Daily score summarizes your current shift performance using attendance and outcomes."
+      },
+      {
+        "label": "Team",
+        "value": "8.9",
+        "total": "/10",
+        "description": "Team score reflects overall performance quality across your assigned work group."
+      },
+      {
+        "label": "Success",
+        "value": "90.4%",
+        "description": "Success estimates your likelihood of completing key goals based on trend signals."
+      },
+      {
+        "label": "Productivity",
+        "value": "94.1%",
+        "description": "Productivity measures output efficiency relative to expected effort and pace."
+      }
+    ],
+    "mastery": {
+      "title": "Trade Mastery",
+      "levelLabel": "Lv. 4 -> 5",
+      "fillPercent": 34,
+      "pointsLabel": "2,960 pts",
+      "remainingLabel": "640 to Level 5"
+    },
+    "clockAlert": "You are scheduled with Team Blue this week. Confirm your clock-ins at shift start.",
+    "announcements": [
+      {
+        "id": "safety-briefing",
+        "title": "Weekly Safety Briefing",
+        "time": "8:15 AM",
+        "image": "https://images.unsplash.com/photo-1581093806997-124204d9fa9d?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "id": "quality-review",
+        "title": "Quality Review Session",
+        "time": "1:30 PM",
+        "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "id": "career-coaching",
+        "title": "Career Coaching Roundtable",
+        "time": "3:45 PM",
+        "image": "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "id": "team-sync",
+        "title": "Cross-team Sync",
+        "time": "5:00 PM",
+        "image": "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1200&q=80"
+      }
+    ]
+  }
+}
