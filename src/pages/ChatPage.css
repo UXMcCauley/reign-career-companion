@@ -225,6 +225,14 @@
   flex: 1;
 }
 
+.conv-search-highlight {
+  background: rgba(255, 215, 64, 0.28);
+  color: rgba(255, 244, 199, 0.98);
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 0 1px;
+}
+
 .conv-badge {
   display: inline-flex;
   align-items: center;
@@ -823,8 +831,23 @@
   color: rgba(165, 130, 255, 0.65);
 }
 
+.conv-section-label--toggle {
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  justify-content: flex-start;
+  font-family: inherit;
+}
+
 .conv-section-label ion-icon {
   font-size: 0.8rem;
+}
+
+.conv-collapse-icon {
+  margin-left: auto;
+  font-size: 0.92rem !important;
 }
 
 .conv-section-divider {

@@ -18,11 +18,11 @@ import {
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import {
+  albumsOutline,
   calendarOutline,
   chatbubbleEllipsesOutline,
   gridOutline,
   logOutOutline,
-  personCircleOutline,
   sparklesOutline
 } from 'ionicons/icons';
 import ChatArchivedPage from './pages/ChatArchivedPage';
@@ -64,14 +64,15 @@ const tabDefs = [
   { id: 'dashboard', href: '/dashboard', icon: gridOutline },
   { id: 'chat', href: '/chat', icon: chatbubbleEllipsesOutline },
   { id: 'schedule', href: '/schedule', icon: calendarOutline },
+  { id: 'projects', href: '/projects', icon: albumsOutline },
   { id: 'ai-coach', href: '/ai-coach', icon: sparklesOutline },
-  { id: 'profile-menu', href: null, icon: personCircleOutline },
 ] as const;
 
 const tabPathPrefixes: Record<string, string> = {
   '/dashboard': 'dashboard',
   '/chat': 'chat',
   '/schedule': 'schedule',
+  '/projects': 'projects',
   '/ai-coach': 'ai-coach',
 };
 
@@ -84,15 +85,12 @@ function resolveTab(pathname: string): string {
 
 const FloatingTabBar: React.FC<{
   currentTab: string;
-  onProfileTap: () => void;
-}> = ({ currentTab, onProfileTap }) => {
+}> = ({ currentTab }) => {
   const history = useHistory();
   const activeIndex = tabDefs.findIndex(t => t.id === currentTab);
 
   const handleTap = (tab: (typeof tabDefs)[number]) => {
-    if (tab.id === 'profile-menu') {
-      onProfileTap();
-    } else if (tab.href) {
+    if (tab.href) {
       history.push(tab.href);
     }
   };
@@ -127,13 +125,6 @@ const AppTabs: React.FC = () => {
   const { logout } = useAuth();
 
   const currentTab = resolveTab(location.pathname);
-
-  const onProfileTap = () => {
-    const profileMenu = document.querySelector('ion-menu[menu-id="profile-drawer"]') as
-      | HTMLIonMenuElement
-      | null;
-    profileMenu?.open();
-  };
 
   const onMenuItemTap = async (destination: string) => {
     const profileMenu = document.querySelector('ion-menu[menu-id="profile-drawer"]') as
@@ -216,6 +207,12 @@ const AppTabs: React.FC = () => {
               subtitle="Training plans, prompts, and progress insights go here."
             />
           </Route>
+          <Route exact path="/projects">
+            <PlaceholderPage
+              title="Projects"
+              subtitle="Project groups, team spaces, and card stacks."
+            />
+          </Route>
           <Route exact path="/announcements">
             <PlaceholderPage
               title="Announcements"
@@ -265,7 +262,7 @@ const AppTabs: React.FC = () => {
         </IonTabBar>
       </IonTabs>
 
-      <FloatingTabBar currentTab={currentTab} onProfileTap={onProfileTap} />
+      <FloatingTabBar currentTab={currentTab} />
     </>
   );
 };

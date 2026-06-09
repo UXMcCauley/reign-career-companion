@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { IonContent, IonPage, IonIcon, isPlatform, useIonActionSheet } from '@ionic/react';
 import {
   addOutline, archiveOutline, attachOutline, cameraOutline,
-  chevronBackOutline, createOutline, imagesOutline, personAddOutline, pinOutline, searchOutline,
+  chevronBackOutline, chevronDownOutline, chevronForwardOutline, createOutline, imagesOutline, personAddOutline, pinOutline, searchOutline,
   sendOutline, volumeMuteOutline,
 } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
@@ -132,11 +132,12 @@ function formatTime(ts: number): string {
   return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
 
-type FilterTab = 'all' | 'dm' | 'group';
+type FilterTab = 'all' | 'dm' | 'group' | 'archived';
 const FILTER_TABS: { id: FilterTab; label: string }[] = [
   { id: 'all',   label: 'All'    },
   { id: 'dm',    label: 'DMs'    },
   { id: 'group', label: 'Groups' },
+  { id: 'archived', label: 'Archived' },
 ];
 
 const DEFAULT_EMPLOYEES = DEMO_EMPLOYEES.slice(0, 10).map(employee => ({
@@ -157,6 +158,7 @@ const ChatPage: React.FC = () => {
   const [sheetEmployees, setSheetEmployees] = useState(DEFAULT_EMPLOYEES);
   const [search, setSearch]       = useState('');
   const [filter, setFilter]       = useState<FilterTab>('all');
+  const [pinnedCollapsed, setPinnedCollapsed] = useState(false);
   const [swipedId, setSwipedId]   = useState<string | null>(null);
 
   const msgEndRef   = useRef<HTMLDivElement>(null);
@@ -173,9 +175,16 @@ const ChatPage: React.FC = () => {
 
   const archivedCount = convs.filter(c => c.archived).length;
   const filtered      = convs.filter(c => {
-    if (c.archived) return false;
-    const matchSearch = !search || c.name.toLowerCase().includes(search.toLowerCase());
-    const matchFilter = filter === 'all' || c.type === filter;
+    const query = search.trim().toLowerCase();
+    const isArchivedView = filter === 'archived';
+    if (isArchivedView && !c.archived) return false;
+    if (!isArchivedView && c.archived) return false;
+    const lastText = c.messages[c.messages.length - 1]?.text ?? '';
+    const matchSearch = !query ||
+      c.name.toLowerCase().includes(query) ||
+      c.role.toLowerCase().includes(query) ||
+      lastText.toLowerCase().includes(query);
+    const matchFilter = filter === 'all' || filter === 'archived' || c.type === filter;
     return matchSearch && matchFilter;
   });
   const pinnedConvs   = filtered.filter(c => c.pinned);
@@ -327,7 +336,7 @@ const ChatPage: React.FC = () => {
 
   // Filter slider
   const filterIdx  = FILTER_TABS.findIndex(t => t.id === filter);
-  const sliderLeft = filterIdx === 0 ? '3px' : `calc(${filterIdx} * 33.33%)`;
+  const sliderLeft = filterIdx === 0 ? '3px' : `calc(${filterIdx} * 25%)`;
 
   const listClass   = activeId ? 'panel-exit-left' : 'panel-enter';
   const threadClass = activeId ? 'panel-enter'    : 'panel-exit-right';
@@ -337,6 +346,30 @@ const ChatPage: React.FC = () => {
     const last     = conv.messages[conv.messages.length - 1];
     const preview  = last ? (last.sender === 'me' ? `You: ${last.text}` : last.text) : 'No messages yet';
     const isSwiped = swipedId === conv.id;
+    const query = search.trim();
+
+    const renderHighlightedText = (text: string) => {
+      if (!query) return text;
+      const q = query.toLowerCase();
+      const lower = text.toLowerCase();
+      const nodes: React.ReactNode[] = [];
+      let cursor = 0;
+      let idx = lower.indexOf(q);
+
+      while (idx !== -1) {
+        if (idx > cursor) nodes.push(text.slice(cursor, idx));
+        nodes.push(
+          <mark key={`${conv.id}-${idx}`} className="conv-search-highlight">
+            {text.slice(idx, idx + query.length)}
+          </mark>
+        );
+        cursor = idx + query.length;
+        idx = lower.indexOf(q, cursor);
+      }
+
+      if (cursor < text.length) nodes.push(text.slice(cursor));
+      return nodes;
+    };
 
     return (
       <div key={conv.id} className="conv-swipe-wrap">
@@ -376,7 +409,7 @@ const ChatPage: React.FC = () => {
               </div>
             </div>
             <div className="conv-bottom">
-              <span className={`conv-preview${conv.muted ? ' muted' : ''}`}>{preview}</span>
+              <span className={`conv-preview${conv.muted ? ' muted' : ''}`}>{renderHighlightedText(preview)}</span>
               {conv.unread > 0 && !conv.muted && <span className="conv-badge">{conv.unread}</span>}
             </div>
           </div>
@@ -384,6 +417,21 @@ const ChatPage: React.FC = () => {
       </div>
     );
   };
+
+  const renderSearch = (
+    <div className="chat-search-row">
+      <div className="chat-search-wrap">
+        <IonIcon icon={searchOutline} className="chat-search-icon" />
+        <input
+          type="search"
+          className="chat-search"
+          placeholder="Search"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
+    </div>
+  );
 
   return (
     <IonPage className={`chat-page ${platformClass}`}>
@@ -399,38 +447,15 @@ const ChatPage: React.FC = () => {
                   Chats
                   {totalUnread > 0 && <span className="chat-unread-chip">{totalUnread}</span>}
                 </h1>
-                <button className="new-chat-btn" onClick={() => history.push('/chat/new')}>
-                  <IonIcon icon={createOutline} />
-                  <span>New Chat</span>
-                </button>
+                <span style={{ width: 40 }} />
               </div>
-
-              {/* Search + Archived inline */}
-              <div className="chat-search-row">
-                <div className="chat-search-wrap">
-                  <IonIcon icon={searchOutline} className="chat-search-icon" />
-                  <input
-                    type="search"
-                    className="chat-search"
-                    placeholder="Search"
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                  />
-                </div>
-                <button className="archive-access-btn" onClick={() => history.push('/chat/archived')}>
-                  <IonIcon icon={archiveOutline} />
-                  <span>Archived</span>
-                  {archivedCount > 0 && (
-                    <span className="archive-count">{archivedCount}</span>
-                  )}
-                </button>
-              </div>
+              {renderSearch}
 
               {/* Filter tabs — matching login page auth-tabs */}
               <div className="list-filter-tabs">
                 <div
                   className="list-filter-slider"
-                  style={{ left: sliderLeft, width: 'calc(33.33% - 3px)' }}
+                  style={{ left: sliderLeft, width: 'calc(25% - 3px)' }}
                 />
                 {FILTER_TABS.map(tab => (
                   <button
@@ -439,6 +464,7 @@ const ChatPage: React.FC = () => {
                     onClick={() => setFilter(tab.id)}
                   >
                     {tab.label}
+                    {tab.id === 'archived' && archivedCount > 0 && ` (${archivedCount})`}
                   </button>
                 ))}
               </div>
@@ -451,12 +477,20 @@ const ChatPage: React.FC = () => {
               {/* Pinned section */}
               {pinnedConvs.length > 0 && (
                 <>
-                  <div className="conv-section-label">
+                  <button
+                    className="conv-section-label conv-section-label--toggle"
+                    onClick={() => setPinnedCollapsed(v => !v)}
+                  >
                     <IonIcon icon={pinOutline} />
                     Pinned
-                  </div>
-                  {pinnedConvs.map(renderRow)}
-                  <div className="conv-section-divider" />
+                    <IonIcon icon={pinnedCollapsed ? chevronForwardOutline : chevronDownOutline} className="conv-collapse-icon" />
+                  </button>
+                  {!pinnedCollapsed && (
+                    <>
+                      {pinnedConvs.map(renderRow)}
+                      <div className="conv-section-divider" />
+                    </>
+                  )}
                 </>
               )}
 
@@ -468,6 +502,10 @@ const ChatPage: React.FC = () => {
                 </div>
               )}
             </div>
+
+            <button className="new-message-fab" onClick={() => history.push('/chat/new')} aria-label="New chat">
+              <IonIcon icon={createOutline} />
+            </button>
           </div>
 
           {/* ── Thread view ── */}
