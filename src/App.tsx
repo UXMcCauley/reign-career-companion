@@ -243,9 +243,6 @@ const AppTabs: React.FC = () => {
           <Route exact path="/profile">
             <ProfilePage />
           </Route>
-          <Route exact path="/profile/public/:profileSlug">
-            <PublicProfilePage />
-          </Route>
           <Route exact path="/real-time-resume">
             <PlaceholderPage
               title="Real-time Resume"
@@ -272,6 +269,12 @@ const AppTabs: React.FC = () => {
 
 const AppContent: React.FC = () => {
   const { isAuthenticated } = useAuth();
+  const location = useLocation();
+
+  if (location.pathname.startsWith('/profile/public/')) {
+    return <PublicProfilePage />;
+  }
+
   return isAuthenticated ? <AppTabs /> : <LoginPage />;
 };
 
