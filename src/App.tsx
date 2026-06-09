@@ -30,6 +30,7 @@ import {
 import ChatArchivedPage from './pages/ChatArchivedPage';
 import ChatNewPage from './pages/ChatNewPage';
 import ChatPage from './pages/ChatPage';
+import AICoachPage from './pages/AICoachPage';
 import DashboardPage from './pages/DashboardPage';
 import KeycardsPage from './pages/KeycardsPage';
 import LoginPage from './pages/LoginPage';
@@ -243,10 +244,7 @@ const AppTabs: React.FC = () => {
             <ShiftDetailPage />
           </Route>
           <Route exact path="/ai-coach">
-            <PlaceholderPage
-              title="AI Coach"
-              subtitle="Training plans, prompts, and progress insights go here."
-            />
+            <AICoachPage />
           </Route>
           <Route exact path="/keycards">
             <KeycardsPage />

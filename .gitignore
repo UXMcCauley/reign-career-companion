@@ -29,3 +29,7 @@ yarn-error.log*
 
 # Optional eslint cache
 .eslintcache
+.env copy
+.env
+.env.bkp
+.env

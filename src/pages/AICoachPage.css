@@ -1,0 +1,170 @@
+.ai-coach-page,
+.ai-coach-page ion-content {
+  --background: transparent;
+}
+
+.ai-coach-field {
+  display: grid;
+  gap: 6px;
+  color: rgba(220, 230, 250, 0.88);
+  font-size: 0.72rem;
+}
+
+.ai-coach-field + .ai-coach-field {
+  margin-top: 8px;
+}
+
+.ai-coach-field input,
+.ai-coach-field select,
+.ai-category-create input {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f5f8ff;
+  font-size: 0.76rem;
+  padding: 9px 10px;
+}
+
+.ai-category-create {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+}
+
+.ai-category-create button,
+.ai-settings-save {
+  border-radius: 10px;
+  border: 1px solid var(--app-brand-accent-border);
+  background: var(--app-brand-accent-bg);
+  color: #f6f9ff;
+  font-weight: 700;
+}
+
+.ai-category-create button {
+  width: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-category-chip {
+  border-radius: 999px;
+  border: 1px solid rgba(126, 177, 255, 0.46);
+  background: rgba(6, 119, 240, 0.2);
+  color: #ddecff;
+  font-size: 0.67rem;
+  padding: 4px 8px;
+}
+
+.ai-filter-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.ai-filter-row label {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.ai-filter-select {
+  border-radius: 10px;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.055);
+  color: rgba(255, 255, 255, 0.88);
+  padding: 9px 10px;
+  font-size: 0.83rem;
+}
+
+.ai-settings-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.82);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-settings-btn ion-icon {
+  font-size: 1.02rem;
+}
+
+.ai-title-icon {
+  font-size: 1rem;
+  color: rgba(126, 177, 255, 0.94);
+}
+
+.ai-conv-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ai-thread-category-select {
+  max-width: 146px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.73rem;
+  padding: 6px 8px;
+}
+
+.ai-settings-view {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.ai-settings-sheet {
+  margin: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(160deg, rgba(16, 24, 48, 0.96), rgba(16, 12, 36, 0.95));
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.44), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.ai-settings-sheet--full {
+  flex: 1;
+  align-content: start;
+}
+
+.ai-settings-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  padding: 7px 10px;
+}
+
+.ai-category-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ai-assistant-label {
+  margin-left: 2px;
+  margin-bottom: 3px;
+  font-size: 0.66rem;
+  color: rgba(206, 218, 248, 0.72);
+}
+
+.ai-thinking {
+  margin: 6px 0 0 34px;
+  color: rgba(212, 223, 250, 0.72);
+  font-size: 0.74rem;
+}
+
+.ai-error {
+  margin: 6px 16px calc(var(--ion-safe-area-bottom, 0px) + 96px);
+  color: #ffd0dd;
+  font-size: 0.7rem;
+}
