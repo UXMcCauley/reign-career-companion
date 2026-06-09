@@ -139,7 +139,7 @@
   min-height: calc(100vh - 220px - var(--ion-safe-area-bottom, 0px));
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: space-around;
   padding: 0 12px calc(106px + var(--ion-safe-area-bottom, 0px));
 }
 
@@ -147,8 +147,8 @@
   margin-top: 6px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  max-height: calc(100vh - 360px - var(--ion-safe-area-bottom, 0px));
+  gap: 16px;
+  max-height: calc(100vh - 290px - var(--ion-safe-area-bottom, 0px));
   overflow-y: auto;
   padding-bottom: 8px;
 }
@@ -431,14 +431,14 @@
 
 .schedule-week-dock {
   position: fixed;
-  left: 30px;
-  right: 30px;
-  bottom: calc(var(--ion-safe-area-bottom, 0px) + 70px);
-  background: linear-gradient(180deg, rgba(22, 22, 52, 0.95), rgba(17, 17, 38, 0.92));
+  left: 16px;
+  right: 16px;
+  bottom: calc(var(--ion-safe-area-bottom, 0px) + 50px);
+  background: linear-gradient(110deg, rgba(94, 35, 143, 0.85), rgba(14, 53, 100, 0.82));
   border-top-left-radius: 14px;
   border-top-right-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 10px 8px 18px;
+  border: 1px solid rgba(177, 110, 232, 0.18);
+  padding: 10px 8px 38px;
   z-index: 5;
 }
 
