@@ -280,6 +280,11 @@ const ChatPage: React.FC = () => {
     setSwipedId(null);
   };
 
+  const restoreConv = (id: string) => {
+    setConvs(prev => { const n = prev.map(c => c.id === id ? { ...c, archived: false } : c); persist(n); return n; });
+    setSwipedId(null);
+  };
+
   // ── Send ──
   const sendMessage = useCallback(() => {
     const text = inputText.trim();
@@ -346,6 +351,7 @@ const ChatPage: React.FC = () => {
     const last     = conv.messages[conv.messages.length - 1];
     const preview  = last ? (last.sender === 'me' ? `You: ${last.text}` : last.text) : 'No messages yet';
     const isSwiped = swipedId === conv.id;
+    const isArchivedThread = conv.archived;
     const query = search.trim();
 
     const renderHighlightedText = (text: string) => {
@@ -372,26 +378,35 @@ const ChatPage: React.FC = () => {
     };
 
     return (
-      <div key={conv.id} className="conv-swipe-wrap">
+      <div key={conv.id} className={`conv-swipe-wrap${isArchivedThread ? ' conv-swipe-wrap--single' : ''}`}>
         {/* Revealed actions */}
         <div className="conv-actions">
-          <button className="conv-action conv-action--pin" onClick={() => pinConv(conv.id)}>
-            <IonIcon icon={pinOutline} />
-            <span>{conv.pinned ? 'Unpin' : 'Pin'}</span>
-          </button>
-          <button className="conv-action conv-action--mute" onClick={() => muteConv(conv.id)}>
-            <IonIcon icon={volumeMuteOutline} />
-            <span>{conv.muted ? 'Unmute' : 'Mute'}</span>
-          </button>
-          <button className="conv-action conv-action--archive" onClick={() => archiveConv(conv.id)}>
-            <IonIcon icon={archiveOutline} />
-            <span>Archive</span>
-          </button>
+          {isArchivedThread ? (
+            <button className="conv-action conv-action--unarchive" onClick={() => restoreConv(conv.id)}>
+              <IonIcon icon={archiveOutline} />
+              <span>Restore</span>
+            </button>
+          ) : (
+            <>
+              <button className="conv-action conv-action--pin" onClick={() => pinConv(conv.id)}>
+                <IonIcon icon={pinOutline} />
+                <span>{conv.pinned ? 'Unpin' : 'Pin'}</span>
+              </button>
+              <button className="conv-action conv-action--mute" onClick={() => muteConv(conv.id)}>
+                <IonIcon icon={volumeMuteOutline} />
+                <span>{conv.muted ? 'Unmute' : 'Mute'}</span>
+              </button>
+              <button className="conv-action conv-action--archive" onClick={() => archiveConv(conv.id)}>
+                <IonIcon icon={archiveOutline} />
+                <span>Archive</span>
+              </button>
+            </>
+          )}
         </div>
 
         {/* Slideable row */}
         <button
-          className={`conv-row${isSwiped ? ' swiped' : ''}`}
+          className={`conv-row${isSwiped ? (isArchivedThread ? ' swiped-single' : ' swiped') : ''}`}
           onClick={() => openConv(conv.id)}
           onTouchStart={onTouchStart}
           onTouchEnd={e => onTouchEnd(conv.id, e)}
