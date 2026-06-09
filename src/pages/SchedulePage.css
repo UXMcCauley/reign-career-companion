@@ -148,6 +148,9 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  max-height: calc(100vh - 360px - var(--ion-safe-area-bottom, 0px));
+  overflow-y: auto;
+  padding-bottom: 8px;
 }
 
 .schedule-week-detail-heading {
@@ -204,45 +207,249 @@
   color: rgba(186, 201, 228, 0.72);
 }
 
+.schedule-inline-card {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, rgba(42, 44, 63, 0.55), rgba(20, 21, 35, 0.65));
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.schedule-inline-hero {
+  position: relative;
+  padding: 22px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.schedule-inline-request {
+  position: absolute;
+  top: 10px;
+  right: 8px;
+  --color: rgba(168, 174, 195, 0.55);
+  --padding-start: 6px;
+  --padding-end: 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  height: 28px;
+  margin: 0;
+}
+
+.schedule-inline-request--submitted {
+  --color: var(--app-brand-light-green);
+}
+
+.schedule-inline-status {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 3px 9px;
+  border-radius: 20px;
+  margin-bottom: 4px;
+}
+
+.schedule-inline-status--upcoming {
+  background: rgba(99, 179, 237, 0.18);
+  color: rgba(99, 179, 237, 0.95);
+  border: 1px solid rgba(99, 179, 237, 0.3);
+}
+
+.schedule-inline-status--in-progress {
+  background: rgba(72, 199, 142, 0.18);
+  color: rgba(72, 199, 142, 0.95);
+  border: 1px solid rgba(72, 199, 142, 0.3);
+}
+
+.schedule-inline-status--completed {
+  background: rgba(168, 174, 195, 0.1);
+  color: rgba(168, 174, 195, 0.6);
+  border: 1px solid rgba(168, 174, 195, 0.2);
+}
+
+.schedule-inline-time {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #f4f5f8;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.schedule-inline-arrow {
+  font-weight: 400;
+  color: rgba(168, 174, 195, 0.5);
+  font-size: 1.6rem;
+}
+
+.schedule-inline-duration {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(168, 174, 195, 0.65);
+  margin-top: 2px;
+}
+
+.schedule-inline-countdown {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(99, 179, 237, 0.9);
+  letter-spacing: 0.02em;
+}
+
+.schedule-inline-info-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.schedule-inline-info-tile {
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.schedule-inline-info-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(168, 174, 195, 0.5);
+}
+
+.schedule-inline-info-value {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e8eaf6;
+  line-height: 1.2;
+}
+
+.schedule-inline-section-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(168, 174, 195, 0.65);
+  padding-left: 4px;
+  margin-top: 4px;
+}
+
+.schedule-inline-section-card {
+  padding: 0 14px;
+  overflow: hidden;
+}
+
+.schedule-inline-break-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.schedule-inline-break-row--divider {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.schedule-inline-break-icon {
+  font-size: 1rem;
+  color: rgba(99, 179, 237, 0.7);
+  flex-shrink: 0;
+}
+
+.schedule-inline-break-label {
+  flex: 1;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: rgba(220, 224, 240, 0.85);
+}
+
+.schedule-inline-break-time {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(168, 174, 195, 0.55);
+}
+
+.schedule-inline-team-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+}
+
+.schedule-inline-team-row--divider {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.schedule-inline-team-name {
+  flex: 1;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: rgba(220, 224, 240, 0.9);
+}
+
+.schedule-inline-team-role {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(168, 174, 195, 0.5);
+}
+
+.schedule-inline-team-chat-btn {
+  --padding-start: 6px;
+  --padding-end: 6px;
+  --color: rgba(99, 179, 237, 0.55);
+  margin: 0;
+  min-height: auto;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.schedule-inline-team-chat-btn ion-icon {
+  font-size: 1rem;
+}
+
+.schedule-inline-notes-text {
+  margin: 0;
+  padding: 14px 0;
+  font-size: 0.84rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: rgba(200, 206, 225, 0.75);
+}
+
+.schedule-inline-open-btn {
+  border-radius: 12px;
+  border: 1px solid rgba(99, 179, 237, 0.45);
+  background: rgba(99, 179, 237, 0.12);
+  color: rgba(224, 240, 255, 0.95);
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 .schedule-week-dock {
   position: fixed;
   left: 30px;
   right: 30px;
-  bottom: calc(var(--ion-safe-area-bottom, 0px) + 60px);
+  bottom: calc(var(--ion-safe-area-bottom, 0px) + 70px);
   background: linear-gradient(180deg, rgba(22, 22, 52, 0.95), rgba(17, 17, 38, 0.92));
-  border-radius: 14px;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 30px 8px 38px;
+  padding: 10px 8px 18px;
   z-index: 5;
 }
 
-.schedule-week-floating-date {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  transform: translate(-50%, -65%);
-  min-width: 190px;
-  border-radius: 999px;
-  padding: 6px 18px;
-  background: linear-gradient(135deg, rgba(255, 56, 139, 0.95), rgba(232, 38, 118, 0.9));
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow: 0 12px 22px rgba(232, 38, 118, 0.3);
+.schedule-week-selected-date-line {
   text-align: center;
-  display: grid;
-  gap: 2px;
-}
-
-.schedule-week-floating-date strong {
-  font-size: 1.16rem;
-  line-height: 1;
-  color: #fff;
-}
-
-.schedule-week-floating-date span {
+  margin-bottom: 8px;
   font-size: 0.74rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: rgba(255, 240, 248, 0.88);
+  font-weight: 700;
 }
 
 .schedule-weekday-strip {
