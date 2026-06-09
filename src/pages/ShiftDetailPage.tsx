@@ -38,8 +38,11 @@ import type { DemoEmployee } from '../data/employees';
 import './ShiftDetailPage.css';
 
 type ShiftStatus = 'upcoming' | 'in-progress' | 'completed';
+type ChangeRequestMode = 'swap' | 'off';
+type ShiftChangeRequestMap = Record<string, { mode: ChangeRequestMode; submittedAt: number; targetName?: string }>;
 
 const MISC = -1;
+const SHIFT_CHANGE_REQUESTS_LOCAL_KEY = 'reign_shift_change_requests_v1';
 
 function getShiftDateForShiftId(id: string): Date {
   const numericId = parseInt(id, 10);
@@ -100,6 +103,8 @@ const ShiftDetailPage: React.FC = () => {
   const [employees, setEmployees] = useState<DemoEmployee[]>([]);
   const [isChangeModalOpen, setIsChangeModalOpen] = useState(false);
   const [changeSearch, setChangeSearch] = useState('');
+  const [changeMode, setChangeMode] = useState<ChangeRequestMode>('swap');
+  const [changeRequests, setChangeRequests] = useState<ShiftChangeRequestMap>({});
   const shift = shifts[shiftId];
 
   const [isClockedIn, setIsClockedIn] = useState(false);
@@ -118,6 +123,17 @@ const ShiftDetailPage: React.FC = () => {
     return () => {
       active = false;
     };
+  }, []);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SHIFT_CHANGE_REQUESTS_LOCAL_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as ShiftChangeRequestMap;
+      setChangeRequests(parsed);
+    } catch {
+      // Ignore malformed local request state.
+    }
   }, []);
 
   useEffect(() => {
@@ -272,16 +288,45 @@ const ShiftDetailPage: React.FC = () => {
     );
   }, [changeSearch, employees, shift]);
 
+  const hasSubmittedChangeRequest = Boolean(changeRequests[shiftId]);
+
   const onRequestChange = () => {
     setChangeSearch('');
+    setChangeMode('swap');
     setIsChangeModalOpen(true);
+  };
+
+  const saveChangeRequest = (payload: { mode: ChangeRequestMode; targetName?: string }) => {
+    setChangeRequests(prev => {
+      const next = {
+        ...prev,
+        [shiftId]: {
+          mode: payload.mode,
+          submittedAt: Date.now(),
+          ...(payload.targetName ? { targetName: payload.targetName } : {}),
+        },
+      };
+      localStorage.setItem(SHIFT_CHANGE_REQUESTS_LOCAL_KEY, JSON.stringify(next));
+      return next;
+    });
   };
 
   const onChooseChangeEmployee = (employee: DemoEmployee) => {
     setIsChangeModalOpen(false);
+    saveChangeRequest({ mode: 'swap', targetName: employee.name });
     presentAlert({
       header: 'Shift change request sent',
       message: `We sent a request to ${employee.name} for this ${shift?.role ?? 'shift'}.`,
+      buttons: ['OK'],
+    });
+  };
+
+  const onSubmitAskOff = () => {
+    setIsChangeModalOpen(false);
+    saveChangeRequest({ mode: 'off' });
+    presentAlert({
+      header: 'Time-off request sent',
+      message: 'Your ask-off request has been submitted for this shift.',
       buttons: ['OK'],
     });
   };
@@ -348,9 +393,14 @@ const ShiftDetailPage: React.FC = () => {
 
           {/* Hero card */}
           <div className="sdc sdc--hero">
-            <IonButton fill="clear" size="small" className="shift-hero-request" onClick={onRequestChange}>
-              <IonIcon icon={swapHorizontalOutline} slot="start" />
-              Request Change
+            <IonButton
+              fill="clear"
+              size="small"
+              className={`shift-hero-request${hasSubmittedChangeRequest ? ' shift-hero-request--submitted' : ''}`}
+              onClick={onRequestChange}
+            >
+              <IonIcon icon={hasSubmittedChangeRequest ? checkmarkCircleOutline : swapHorizontalOutline} slot="start" />
+              {hasSubmittedChangeRequest ? 'Request Submitted' : 'Request Change'}
             </IonButton>
             <div className={`shift-status-pill shift-status-pill--${status}`}>
               {STATUS_LABELS[status]}
@@ -526,33 +576,59 @@ const ShiftDetailPage: React.FC = () => {
               Close
             </IonButton>
           </div>
-          <p className="shift-change-modal-subtitle">
-            Type to find teammates with the <strong>{shift.role}</strong> key card.
-          </p>
-          <input
-            className="shift-change-search"
-            type="search"
-            placeholder="Search employees"
-            value={changeSearch}
-            onChange={event => setChangeSearch(event.target.value)}
-          />
-          <div className="shift-change-list">
-            {matchingChangeEmployees.length ? (
-              matchingChangeEmployees.map(employee => (
-                <button
-                  key={employee.id}
-                  type="button"
-                  className="shift-change-item"
-                  onClick={() => onChooseChangeEmployee(employee)}
-                >
-                  <span className="shift-change-item-name">{employee.name}</span>
-                  <span className="shift-change-item-role">{employee.role}</span>
-                </button>
-              ))
-            ) : (
-              <div className="shift-change-empty">No matching employees found for this key card.</div>
-            )}
+          <div className="shift-change-mode-toggle">
+            <button
+              type="button"
+              className={`shift-change-mode-btn${changeMode === 'swap' ? ' active' : ''}`}
+              onClick={() => setChangeMode('swap')}
+            >
+              Find Swap
+            </button>
+            <button
+              type="button"
+              className={`shift-change-mode-btn${changeMode === 'off' ? ' active' : ''}`}
+              onClick={() => setChangeMode('off')}
+            >
+              Ask Off
+            </button>
           </div>
+          <p className="shift-change-modal-subtitle">
+            {changeMode === 'swap'
+              ? <>Type to find teammates with the <strong>{shift.role}</strong> key card.</>
+              : 'Submit a direct request to be off for this shift.'}
+          </p>
+          {changeMode === 'swap' ? (
+            <>
+              <input
+                className="shift-change-search"
+                type="search"
+                placeholder="Search employees"
+                value={changeSearch}
+                onChange={event => setChangeSearch(event.target.value)}
+              />
+              <div className="shift-change-list">
+                {matchingChangeEmployees.length ? (
+                  matchingChangeEmployees.map(employee => (
+                    <button
+                      key={employee.id}
+                      type="button"
+                      className="shift-change-item"
+                      onClick={() => onChooseChangeEmployee(employee)}
+                    >
+                      <span className="shift-change-item-name">{employee.name}</span>
+                      <span className="shift-change-item-role">{employee.role}</span>
+                    </button>
+                  ))
+                ) : (
+                  <div className="shift-change-empty">No matching employees found for this key card.</div>
+                )}
+              </div>
+            </>
+          ) : (
+            <IonButton expand="block" className="shift-change-askoff-btn" onClick={onSubmitAskOff}>
+              Submit Ask-Off Request
+            </IonButton>
+          )}
         </div>
       </IonModal>
     </IonPage>

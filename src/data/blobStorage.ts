@@ -6,6 +6,7 @@ const CHAT_LOCAL_KEY = 'reign_chat_v2';
 const EMPLOYEE_LOCAL_KEY = 'reign_employees_v1';
 const SCHEDULE_LOCAL_KEY = 'reign_schedule_v1';
 const SHIFT_RUNTIME_LOCAL_KEY = 'reign_shift_runtime_v1';
+const EMPLOYEE_BLOB_NAMES = ['employees', 'Employees'];
 const CHAT_BLOB_NAMES = ['chats', 'chat-data', 'chat'];
 let activeChatBlobName = CHAT_BLOB_NAMES[0];
 let blobReadDisabled = false;
@@ -191,10 +192,12 @@ function writeLocalJson(key: string, data: unknown) {
 }
 
 export async function loadEmployees(): Promise<DemoEmployee[]> {
-  const blobData = await readBlobJson<DemoEmployee[]>('employees');
-  if (blobData?.length) {
-    writeLocalJson(EMPLOYEE_LOCAL_KEY, blobData);
-    return blobData;
+  for (const employeeBlobName of EMPLOYEE_BLOB_NAMES) {
+    const blobData = await readBlobJson<DemoEmployee[]>(employeeBlobName);
+    if (blobData?.length) {
+      writeLocalJson(EMPLOYEE_LOCAL_KEY, blobData);
+      return blobData;
+    }
   }
 
   const localData = readLocalJson<DemoEmployee[]>(EMPLOYEE_LOCAL_KEY);
