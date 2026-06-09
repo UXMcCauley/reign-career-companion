@@ -9,6 +9,7 @@ const BLOB_TOKEN =
   '';
 
 const BLOB_PREFIX = import.meta.env.VITE_BLOB_PREFIX || 'leadership-demo';
+const BLOB_BROWSER_WRITE_ENABLED = import.meta.env.VITE_ENABLE_BLOB_BROWSER_WRITE === 'true';
 
 const CHAT_LOCAL_KEY = 'reign_chat_v2';
 const EMPLOYEE_LOCAL_KEY = 'reign_employees_v1';
@@ -16,6 +17,8 @@ const SCHEDULE_LOCAL_KEY = 'reign_schedule_v1';
 const SHIFT_RUNTIME_LOCAL_KEY = 'reign_shift_runtime_v1';
 const CHAT_BLOB_NAMES = ['chats', 'chat-data', 'chat'];
 let activeChatBlobName = CHAT_BLOB_NAMES[0];
+let blobReadDisabled = false;
+let blobWriteDisabled = !BLOB_BROWSER_WRITE_ENABLED;
 
 const pathFor = (name: string) => `${BLOB_PREFIX}/${name}.json`;
 
@@ -142,7 +145,7 @@ function toExternalChats(conversations: Conversation[]): ExternalChatConversatio
 }
 
 async function readBlobJson<T>(name: string): Promise<T | null> {
-  if (!BLOB_TOKEN) return null;
+  if (!BLOB_TOKEN || blobReadDisabled) return null;
   try {
     const pathname = pathFor(name);
     const { blobs } = await list({ token: BLOB_TOKEN, prefix: pathname, limit: 1 });
@@ -152,12 +155,14 @@ async function readBlobJson<T>(name: string): Promise<T | null> {
     if (!response.ok) return null;
     return (await response.json()) as T;
   } catch {
+    // Avoid repeated noisy network failures in client runtime.
+    blobReadDisabled = true;
     return null;
   }
 }
 
 async function writeBlobJson(name: string, data: unknown): Promise<boolean> {
-  if (!BLOB_TOKEN) return false;
+  if (!BLOB_TOKEN || blobWriteDisabled) return false;
   try {
     await put(pathFor(name), JSON.stringify(data), {
       token: BLOB_TOKEN,
@@ -167,6 +172,8 @@ async function writeBlobJson(name: string, data: unknown): Promise<boolean> {
     });
     return true;
   } catch {
+    // Browser write path often fails due CORS/preflight policy unless explicitly supported.
+    blobWriteDisabled = true;
     return false;
   }
 }
