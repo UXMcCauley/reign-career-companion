@@ -111,9 +111,9 @@ const DashboardPage: React.FC = () => {
     const s = e.detail.scrollTop;
     metricsRef.current.forEach((el, i) => {
       if (!el) return;
-      // i=6 → mastery bar (fades first); i=3-5 → bottom row; i=0-2 → top row (fades last)
-      const start = i === 6 ? -15 : i < 3 ? 35 : 0;
-      const range = i === 6 ? 80  : 110;
+      // i=6 → mastery bar; i=3-5 → bottom row; i=0-2 → top row (fades last)
+      const start = i < 3 ? 35 : 0;
+      const range = i === 6 ? 80 : 110;
       const p = Math.min(1, Math.max(0, (s - start) / range));
 
       if (p === 0) {
