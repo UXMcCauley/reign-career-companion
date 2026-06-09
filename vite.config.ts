@@ -95,7 +95,7 @@ interface CoachApiRequest {
 function aiCoachGatewayPlugin(mode: string): Plugin {
   const env = loadEnv(mode, process.cwd(), '')
   const apiKey = env.ANTHROPIC_API_KEY || env.VITE_ANTHROPIC_API_KEY || ''
-  const model = env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-latest'
+  const model = env.ANTHROPIC_MODEL || env.VITE_ANTHROPIC_MODEL || 'claude-sonnet-4-6'
 
   const styleGuidance: Record<'concise' | 'witty' | 'mean', string> = {
     concise: 'Keep responses practical and concise.',
@@ -163,9 +163,13 @@ function aiCoachGatewayPlugin(mode: string): Plugin {
             }
 
             if (!anthropicResponse.ok) {
+              const upstreamError = parsed.error?.message || 'Anthropic request failed'
+              const normalizedError = upstreamError.includes('model:')
+                ? `Unsupported model "${model}". Set a valid model in ANTHROPIC_MODEL.`
+                : upstreamError
               res.statusCode = anthropicResponse.status
               res.setHeader('Content-Type', 'application/json')
-              res.end(JSON.stringify({ error: parsed.error?.message || 'Anthropic request failed' }))
+              res.end(JSON.stringify({ error: normalizedError }))
               return
             }
 
