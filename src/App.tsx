@@ -21,13 +21,16 @@ import {
   calendarOutline,
   chatbubbleEllipsesOutline,
   gridOutline,
+  logOutOutline,
   personCircleOutline,
   sparklesOutline
 } from 'ionicons/icons';
 import DashboardPage from './pages/DashboardPage';
+import LoginPage from './pages/LoginPage';
 import PlaceholderPage from './pages/PlaceholderPage';
 import SchedulePage from './pages/SchedulePage';
 import ShiftDetailPage from './pages/ShiftDetailPage';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -44,13 +47,6 @@ import '@ionic/react/css/text-alignment.css';
 import '@ionic/react/css/text-transformation.css';
 import '@ionic/react/css/flex-utils.css';
 import '@ionic/react/css/display.css';
-
-/**
- * Ionic Dark Mode
- * -----------------------------------------------------
- * For more info, please see:
- * https://ionicframework.com/docs/theming/dark-mode
- */
 
 /* import '@ionic/react/css/palettes/dark.always.css'; */
 /* import '@ionic/react/css/palettes/dark.class.css'; */
@@ -71,6 +67,7 @@ const tabByPath: Record<string, string> = {
 const AppTabs: React.FC = () => {
   const location = useLocation();
   const history = useHistory();
+  const { logout } = useAuth();
 
   const currentTab = tabByPath[location.pathname] ?? 'dashboard';
 
@@ -88,6 +85,14 @@ const AppTabs: React.FC = () => {
       | null;
     await profileMenu?.close();
     history.push(destination);
+  };
+
+  const handleLogout = async () => {
+    const profileMenu = document.querySelector('ion-menu[menu-id="profile-drawer"]') as
+      | HTMLIonMenuElement
+      | null;
+    await profileMenu?.close();
+    logout();
   };
 
   return (
@@ -120,6 +125,10 @@ const AppTabs: React.FC = () => {
             </IonItem>
             <IonItem button detail onClick={() => onMenuItemTap('/real-time-resume')}>
               Real-time Resume
+            </IonItem>
+            <IonItem button onClick={handleLogout} style={{ marginTop: '16px' }}>
+              <IonIcon icon={logOutOutline} slot="start" color="danger" />
+              <IonLabel color="danger">Sign Out</IonLabel>
             </IonItem>
           </IonList>
         </IonContent>
@@ -216,12 +225,19 @@ const AppTabs: React.FC = () => {
   );
 };
 
+const AppContent: React.FC = () => {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? <AppTabs /> : <LoginPage />;
+};
+
 const App: React.FC = () => (
-  <IonApp>
-    <IonReactRouter>
-      <AppTabs />
-    </IonReactRouter>
-  </IonApp>
+  <AuthProvider>
+    <IonApp>
+      <IonReactRouter>
+        <AppContent />
+      </IonReactRouter>
+    </IonApp>
+  </AuthProvider>
 );
 
 export default App;

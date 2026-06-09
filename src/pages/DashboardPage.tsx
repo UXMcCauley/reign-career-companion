@@ -140,15 +140,15 @@ const DashboardPage: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader translucent className={isHeaderCompact ? 'dashboard-header dashboard-header--compact' : 'dashboard-header'}>
+      {/* <IonHeader translucent className={isHeaderCompact ? 'dashboard-header dashboard-header--compact' : 'dashboard-header'}>
         <IonToolbar className="dashboard-toolbar">
           <img alt="ReignOS" src={logo} className="dashboard-logo" />
         </IonToolbar>
-      </IonHeader>
+      </IonHeader> */}
       <IonContent fullscreen scrollEvents onIonScroll={onContentScroll}>
         <div className="dashboard-content">
           <div className="dashboard-section">
-            <IonCard className="clock-card ios-surface">
+            <IonCard className="clock-card ios-surface-transparent no-border dashboard-header">
               <IonCardHeader>
                 <IonCardTitle>{timeLabel}</IonCardTitle>
                 <IonCardSubtitle>{dateLabel}</IonCardSubtitle>
@@ -158,9 +158,9 @@ const DashboardPage: React.FC = () => {
                   <IonIcon icon={checkmarkCircleOutline} slot="start" />
                   Clock In
                 </IonButton>
-                <div className="clock-alert" role="note" aria-live="polite">
-                  <p className="clock-note">
-                    You have not been added to a team yet. Please contact your employer.
+                <div className={`clock-alert ${isHeaderCompact ? 'dashboard-header--compact' : ''}`} role="note" aria-live="polite">
+                  <p className={`clock-note ${isHeaderCompact ? 'dashboard-header--compact' : ''}`}>
+                    {isHeaderCompact ? 'You have not been added to a team yet. Please contact your employer.' : 'You have not been added to a team yet. Please contact your employer.'} 
                   </p>
                 </div>
               </IonCardContent>
