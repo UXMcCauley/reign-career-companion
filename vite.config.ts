@@ -139,6 +139,8 @@ function aiCoachGatewayPlugin(mode: string): Plugin {
               `Current category: ${category}.`,
               styleGuidance[style],
               'Use employee context and metrics when giving recommendations.',
+              'Output plain text only. Do not use markdown syntax (no headings with #, no **bold**, no bullet markers like - or *).',
+              'For readability, use short lines, emojis, and standard punctuation/labels (for example: "Goal:", "Next step:", "Tip:").',
               `Employee context: ${JSON.stringify(body.employeeContext ?? {})}`,
             ].join('\n')
 

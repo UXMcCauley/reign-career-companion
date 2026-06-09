@@ -1,9 +1,10 @@
 import { IonContent, IonIcon, IonPage } from '@ionic/react';
 import {
   addOutline,
+  archiveOutline,
   chevronBackOutline,
   createOutline,
-  pinOutline,
+  funnelOutline,
   saveOutline,
   searchOutline,
   sendOutline,
@@ -25,6 +26,7 @@ type CoachConversation = {
   title: string;
   categoryId: string;
   pinned?: boolean;
+  archived?: boolean;
   createdAt: number;
   updatedAt: number;
   messages: CoachMessage[];
@@ -38,7 +40,14 @@ type CoachState = {
 };
 
 const STORAGE_KEY = 'reign_ai_coach_v1';
+const ARCHIVED_FILTER_ID = '__archived__';
 const STYLE_LABELS: Record<CoachStyle, string> = { concise: 'Concise', witty: 'Witty', mean: 'Mean' };
+const SUGGESTION_PROMPTS = [
+  'How can I handle conflict with a teammate without escalating things?',
+  'Help me build a 30-day plan to improve my leadership visibility.',
+  'What should I say in a difficult conversation with my manager?',
+  'How do I prepare for a promotion conversation next quarter?',
+];
 
 type CoachApiPayload = {
   coachName: string;
@@ -97,10 +106,13 @@ const AICoachPage: React.FC = () => {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState('');
-  const [showSearch, setShowSearch] = useState(false);
+  const [showFilterSelect, setShowFilterSelect] = useState(false);
   const [swipedId, setSwipedId] = useState<string | null>(null);
+  const [suggestionIndex, setSuggestionIndex] = useState(0);
+  const [suggestionPhase, setSuggestionPhase] = useState<'idle' | 'exiting' | 'entering'>('idle');
   const swipeStartX = useRef(0);
   const swipeStartY = useRef(0);
+  const didSwipeRef = useRef(false);
 
   useEffect(() => {
     try {
@@ -124,11 +136,23 @@ const AICoachPage: React.FC = () => {
 
   useEffect(() => {
     if (!state.categories.length) return;
-    if (filterCategoryId === 'all') return;
+    if (filterCategoryId === 'all' || filterCategoryId === ARCHIVED_FILTER_ID) return;
     if (!state.categories.some(category => category.id === filterCategoryId)) {
       setFilterCategoryId('all');
     }
   }, [state.categories, filterCategoryId]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setSuggestionPhase('exiting');
+      window.setTimeout(() => {
+        setSuggestionIndex(prev => (prev + 1) % SUGGESTION_PROMPTS.length);
+        setSuggestionPhase('entering');
+        window.setTimeout(() => setSuggestionPhase('idle'), 280);
+      }, 280);
+    }, 9000);
+    return () => window.clearInterval(interval);
+  }, []);
 
   const employeeContext = useMemo(() => ({
     employeeName: defaultLoggedInEmployee.displayName,
@@ -150,14 +174,14 @@ const AICoachPage: React.FC = () => {
   const filteredConversations = useMemo(() => {
     const query = search.trim().toLowerCase();
     return state.conversations.filter(conversation => {
-      if (filterCategoryId !== 'all' && conversation.categoryId !== filterCategoryId) return false;
+      const isArchivedView = filterCategoryId === ARCHIVED_FILTER_ID;
+      if (isArchivedView && !conversation.archived) return false;
+      if (!isArchivedView && conversation.archived) return false;
+      if (!isArchivedView && filterCategoryId !== 'all' && conversation.categoryId !== filterCategoryId) return false;
       if (!query) return true;
       const latest = conversation.messages[conversation.messages.length - 1]?.content ?? '';
       return conversation.title.toLowerCase().includes(query) || latest.toLowerCase().includes(query);
-    }).sort((a, b) => {
-      if (Boolean(a.pinned) !== Boolean(b.pinned)) return a.pinned ? -1 : 1;
-      return b.updatedAt - a.updatedAt;
-    });
+    }).sort((a, b) => b.updatedAt - a.updatedAt);
   }, [state.conversations, filterCategoryId, search]);
 
   const openSettingsView = () => {
@@ -191,7 +215,7 @@ const AICoachPage: React.FC = () => {
     const conversation: CoachConversation = {
       id: uid('conv'),
       title: 'New Coaching Chat',
-      categoryId: filterCategoryId === 'all'
+      categoryId: filterCategoryId === 'all' || filterCategoryId === ARCHIVED_FILTER_ID
         ? (state.categories[0]?.id || 'cat-general')
         : filterCategoryId,
       createdAt: now,
@@ -226,32 +250,57 @@ const AICoachPage: React.FC = () => {
     setSwipedId(null);
   };
 
-  const toggleConversationPin = (conversationId: string) => {
+  const archiveConversation = (conversationId: string) => {
     setState(prev => ({
       ...prev,
       conversations: prev.conversations.map(conversation =>
         conversation.id === conversationId
-          ? { ...conversation, pinned: !conversation.pinned, updatedAt: Date.now() }
+          ? { ...conversation, archived: !conversation.archived, updatedAt: Date.now() }
           : conversation
       ),
     }));
     setSwipedId(null);
   };
 
-  const onPointerDown = (event: React.PointerEvent) => {
-    swipeStartX.current = event.clientX;
-    swipeStartY.current = event.clientY;
+  const beginSwipe = (x: number, y: number) => {
+    swipeStartX.current = x;
+    swipeStartY.current = y;
   };
 
-  const onPointerUp = (conversationId: string, event: React.PointerEvent) => {
-    const dx = event.clientX - swipeStartX.current;
-    const dy = event.clientY - swipeStartY.current;
+  const finishSwipe = (conversationId: string, x: number, y: number) => {
+    const dx = x - swipeStartX.current;
+    const dy = y - swipeStartY.current;
     if (Math.abs(dx) < Math.abs(dy)) return;
-    if (dx < -60) setSwipedId(conversationId);
-    else if (dx > 20) setSwipedId(null);
+    if (dx < -60) {
+      didSwipeRef.current = true;
+      setSwipedId(conversationId);
+    } else if (dx > 20) {
+      didSwipeRef.current = true;
+      setSwipedId(null);
+    }
+  };
+
+  const onTouchStart = (event: React.TouchEvent) => {
+    beginSwipe(event.touches[0].clientX, event.touches[0].clientY);
+  };
+
+  const onTouchEnd = (conversationId: string, event: React.TouchEvent) => {
+    finishSwipe(conversationId, event.changedTouches[0].clientX, event.changedTouches[0].clientY);
+  };
+
+  const onMouseDown = (event: React.MouseEvent) => {
+    beginSwipe(event.clientX, event.clientY);
+  };
+
+  const onMouseUp = (conversationId: string, event: React.MouseEvent) => {
+    finishSwipe(conversationId, event.clientX, event.clientY);
   };
 
   const openConversation = (conversationId: string) => {
+    if (didSwipeRef.current) {
+      didSwipeRef.current = false;
+      return;
+    }
     if (swipedId) {
       setSwipedId(null);
       return;
@@ -272,6 +321,7 @@ const AICoachPage: React.FC = () => {
           : conversation
       ),
     }));
+    setSwipedId(null);
   };
 
   const getConversationPromptTitle = (conversation: CoachConversation | null): string => {
@@ -287,15 +337,27 @@ const AICoachPage: React.FC = () => {
     const text = draft.trim();
     if (!text || !activeConversation || isSending) return;
 
-    const userMessage: CoachMessage = { id: uid('msg-user'), role: 'user', content: text, ts: Date.now() };
-    const nextConversations = state.conversations.map(conversation => {
-      if (conversation.id !== activeConversation.id) return conversation;
-      const nextTitle = conversation.title === 'New Coaching Chat' ? text.slice(0, 34) + (text.length > 34 ? '...' : '') : conversation.title;
-      return { ...conversation, title: nextTitle, updatedAt: Date.now(), messages: [...conversation.messages, userMessage] };
-    });
-
-    setState(prev => ({ ...prev, conversations: nextConversations }));
     setDraft('');
+    await sendPromptToConversation(activeConversation, text);
+  };
+
+  const sendPromptToConversation = async (conversation: CoachConversation, text: string) => {
+    const userMessage: CoachMessage = { id: uid('msg-user'), role: 'user', content: text, ts: Date.now() };
+    const nextTitle = conversation.title === 'New Coaching Chat'
+      ? text.slice(0, 34) + (text.length > 34 ? '...' : '')
+      : conversation.title;
+    const conversationCategoryName =
+      state.categories.find(category => category.id === conversation.categoryId)?.name ?? 'General Coaching';
+
+    setState(prev => ({
+      ...prev,
+      conversations: prev.conversations.map(candidate =>
+        candidate.id === conversation.id
+          ? { ...candidate, title: nextTitle, updatedAt: Date.now(), messages: [...candidate.messages, userMessage] }
+          : candidate
+      ),
+      activeConversationId: conversation.id,
+    }));
     setError('');
     setIsSending(true);
 
@@ -303,9 +365,9 @@ const AICoachPage: React.FC = () => {
       const payload: CoachApiPayload = {
         coachName: state.coachName,
         style: state.style,
-        categoryName: activeCategoryName,
+        categoryName: conversationCategoryName,
         employeeContext,
-        messages: [...(activeConversation.messages ?? []), userMessage].map(message => ({ role: message.role, content: message.content })),
+        messages: [...(conversation.messages ?? []), userMessage].map(message => ({ role: message.role, content: message.content })),
       };
 
       const reply = await requestCoachReply(payload);
@@ -313,10 +375,10 @@ const AICoachPage: React.FC = () => {
 
       setState(prev => ({
         ...prev,
-        conversations: prev.conversations.map(conversation =>
-          conversation.id === activeConversation.id
-            ? { ...conversation, updatedAt: Date.now(), messages: [...conversation.messages, assistantMessage] }
-            : conversation
+        conversations: prev.conversations.map(candidate =>
+          candidate.id === conversation.id
+            ? { ...candidate, updatedAt: Date.now(), messages: [...candidate.messages, assistantMessage] }
+            : candidate
         ),
       }));
     } catch (err) {
@@ -324,6 +386,28 @@ const AICoachPage: React.FC = () => {
     } finally {
       setIsSending(false);
     }
+  };
+
+  const sendSuggestionPrompt = () => {
+    if (isSending) return;
+    const prompt = SUGGESTION_PROMPTS[suggestionIndex];
+    const now = Date.now();
+    const conversation: CoachConversation = {
+      id: uid('conv'),
+      title: prompt.slice(0, 34) + (prompt.length > 34 ? '...' : ''),
+      categoryId: state.categories[0]?.id || 'cat-general',
+      createdAt: now,
+      updatedAt: now,
+      messages: [],
+    };
+    setState(prev => ({
+      ...prev,
+      activeConversationId: conversation.id,
+      conversations: [conversation, ...prev.conversations],
+    }));
+    setSwipedId(null);
+    setShowFilterSelect(false);
+    void sendPromptToConversation(conversation, prompt);
   };
 
   const onComposerKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -387,31 +471,32 @@ const AICoachPage: React.FC = () => {
                     AI Coach
                     <span className="chat-unread-chip">{filteredConversations.length}</span>
                   </h1>
+                </div>
+                <div className="ai-search-controls-row">
+                  <button
+                    type="button"
+                    className={`ai-filter-toggle-btn${showFilterSelect ? ' active' : ''}`}
+                    aria-label={showFilterSelect ? 'Hide chat filter' : 'Show chat filter'}
+                    onClick={() => setShowFilterSelect(prev => !prev)}
+                  >
+                    <IonIcon icon={funnelOutline} />
+                  </button>
+                  <div className="chat-search-wrap">
+                    <IonIcon icon={searchOutline} className="chat-search-icon" />
+                    <input type="search" className="chat-search" placeholder="Search AI chats" value={search} onChange={event => setSearch(event.target.value)} />
+                  </div>
                   <button className="ai-settings-btn" onClick={openSettingsView} aria-label="AI coach settings">
                     <IonIcon icon={settingsOutline} />
                   </button>
                 </div>
-                <div className="ai-filter-row">
-                  <label htmlFor="ai-category-filter">Filter</label>
-                  <select id="ai-category-filter" className="ai-filter-select" value={filterCategoryId} onChange={event => setFilterCategoryId(event.target.value)}>
-                    <option value="all">All</option>
-                    {state.categories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
-                  </select>
-                  <button
-                    type="button"
-                    className={`ai-filter-search-toggle${showSearch ? ' active' : ''}`}
-                    aria-label={showSearch ? 'Hide AI chat search' : 'Show AI chat search'}
-                    onClick={() => setShowSearch(prev => !prev)}
-                  >
-                    <IonIcon icon={searchOutline} />
-                  </button>
-                </div>
-                {showSearch ? (
-                  <div className="chat-search-row ai-filter-search-row">
-                    <div className="chat-search-wrap">
-                      <IonIcon icon={searchOutline} className="chat-search-icon" />
-                      <input type="search" className="chat-search" placeholder="Search AI chats" value={search} onChange={event => setSearch(event.target.value)} />
-                    </div>
+                {showFilterSelect ? (
+                  <div className="ai-filter-row">
+                    <label htmlFor="ai-category-filter">Filter</label>
+                    <select id="ai-category-filter" className="ai-filter-select" value={filterCategoryId} onChange={event => setFilterCategoryId(event.target.value)}>
+                      <option value="all">All</option>
+                      {state.categories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
+                      <option value={ARCHIVED_FILTER_ID}>Archived</option>
+                    </select>
                   </div>
                 ) : null}
               </div>
@@ -423,12 +508,8 @@ const AICoachPage: React.FC = () => {
                   return (
                     <div key={conversation.id} className="conv-swipe-wrap ai-conv-swipe">
                       <div className="conv-actions ai-conv-actions">
-                        <button type="button" className="conv-action ai-conv-action ai-conv-action--pin" onClick={() => toggleConversationPin(conversation.id)}>
-                          <IonIcon icon={pinOutline} />
-                          <span>{conversation.pinned ? 'Unpin' : 'Pin'}</span>
-                        </button>
                         <label className="conv-action ai-conv-action ai-conv-action--category">
-                          <span>Category</span>
+                          <span>Project</span>
                           <select
                             className="ai-conv-category-select"
                             value={conversation.categoryId}
@@ -439,13 +520,23 @@ const AICoachPage: React.FC = () => {
                             ))}
                           </select>
                         </label>
+                        <button type="button" className="conv-action ai-conv-action ai-conv-action--rename" onClick={() => renameConversation(conversation.id)}>
+                          <IonIcon icon={createOutline} />
+                          <span>Name</span>
+                        </button>
+                        <button type="button" className="conv-action ai-conv-action ai-conv-action--archive" onClick={() => archiveConversation(conversation.id)}>
+                          <IonIcon icon={archiveOutline} />
+                          <span>{conversation.archived ? 'Restore' : 'Archive'}</span>
+                        </button>
                       </div>
 
                       <button
                         className={`conv-row ai-conv-row${isSwiped ? ' swiped' : ''}`}
                         onClick={() => openConversation(conversation.id)}
-                        onPointerDown={onPointerDown}
-                        onPointerUp={event => onPointerUp(conversation.id, event)}
+                        onTouchStart={onTouchStart}
+                        onTouchEnd={event => onTouchEnd(conversation.id, event)}
+                        onMouseDown={onMouseDown}
+                        onMouseUp={event => onMouseUp(conversation.id, event)}
                       >
                         <div className="chat-avatar" style={{ background: colorForConversation(conversation.id) }}>
                           {(state.coachName || 'AI').slice(0, 2).toUpperCase()}
@@ -454,7 +545,6 @@ const AICoachPage: React.FC = () => {
                           <div className="conv-top">
                             <span className="conv-name">{conversation.title}</span>
                             <div className="conv-top-right">
-                              {conversation.pinned ? <IonIcon icon={pinOutline} className="conv-status-pin" /> : null}
                               <span className="conv-time">{new Date(conversation.updatedAt).toLocaleDateString()}</span>
                             </div>
                           </div>
@@ -471,6 +561,17 @@ const AICoachPage: React.FC = () => {
               <button className="new-message-fab" onClick={createConversation} aria-label="New AI coach chat">
                 <IonIcon icon={addOutline} />
               </button>
+              {!activeConversation ? (
+                <button
+                  type="button"
+                  className={`ai-suggestion-chip ai-suggestion-chip--${suggestionPhase}`}
+                  onClick={sendSuggestionPrompt}
+                  disabled={isSending}
+                >
+                  <span className="ai-suggestion-chip-label">Try asking</span>
+                  <span className="ai-suggestion-chip-text">{SUGGESTION_PROMPTS[suggestionIndex]}</span>
+                </button>
+              ) : null}
             </section>
 
             <section className={`chat-panel chat-thread-panel ${threadClass}`}>
