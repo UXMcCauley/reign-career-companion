@@ -1,0 +1,1454 @@
+[
+    {
+        "id": "soc-11-1010",
+        "socCode": "11-1010",
+        "majorGroupCode": "11-0000",
+        "majorGroupName": "Management Occupations",
+        "name": "Chief Executives",
+        "initials": "CE",
+        "isActive": true,
+        "category": "Management Occupations",
+        "description": "11-1010 · Management Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.155Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-11-3020",
+        "socCode": "11-3020",
+        "majorGroupCode": "11-0000",
+        "majorGroupName": "Management Occupations",
+        "name": "Computer and Information Systems Managers",
+        "initials": "CA",
+        "isActive": true,
+        "category": "Management Occupations",
+        "description": "11-3020 · Management Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.155Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-13-2010",
+        "socCode": "13-2010",
+        "majorGroupCode": "13-0000",
+        "majorGroupName": "Business and Financial Operations Occupations",
+        "name": "Accountants and Auditors",
+        "initials": "AA",
+        "isActive": true,
+        "category": "Business and Financial Operations Occupations",
+        "description": "13-2010 · Business and Financial Operations Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.155Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-13-2050",
+        "socCode": "13-2050",
+        "majorGroupCode": "13-0000",
+        "majorGroupName": "Business and Financial Operations Occupations",
+        "name": "Financial and Investment Analysts",
+        "initials": "FA",
+        "isActive": true,
+        "category": "Business and Financial Operations Occupations",
+        "description": "13-2050 · Business and Financial Operations Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.155Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-15-1210",
+        "socCode": "15-1210",
+        "majorGroupCode": "15-0000",
+        "majorGroupName": "Computer and Mathematical Occupations",
+        "name": "Computer Occupations",
+        "initials": "CO",
+        "isActive": true,
+        "category": "Computer and Mathematical Occupations",
+        "description": "15-1210 · Computer and Mathematical Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.155Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-15-1250",
+        "socCode": "15-1250",
+        "majorGroupCode": "15-0000",
+        "majorGroupName": "Computer and Mathematical Occupations",
+        "name": "Software Developers and Quality Assurance Analysts and Testers",
+        "initials": "SD",
+        "isActive": true,
+        "category": "Computer and Mathematical Occupations",
+        "description": "15-1250 · Computer and Mathematical Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.155Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-17-2050",
+        "socCode": "17-2050",
+        "majorGroupCode": "17-0000",
+        "majorGroupName": "Architecture and Engineering Occupations",
+        "name": "Engineers",
+        "initials": "E",
+        "isActive": true,
+        "category": "Architecture and Engineering Occupations",
+        "description": "17-2050 · Architecture and Engineering Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.155Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-17-3010",
+        "socCode": "17-3010",
+        "majorGroupCode": "17-0000",
+        "majorGroupName": "Architecture and Engineering Occupations",
+        "name": "Drafters, Engineering Technicians, and Mapping Technicians",
+        "initials": "DE",
+        "isActive": true,
+        "category": "Architecture and Engineering Occupations",
+        "description": "17-3010 · Architecture and Engineering Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.155Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-19-1010",
+        "socCode": "19-1010",
+        "majorGroupCode": "19-0000",
+        "majorGroupName": "Life, Physical, and Social Science Occupations",
+        "name": "Life Scientists",
+        "initials": "LS",
+        "isActive": true,
+        "category": "Life, Physical, and Social Science Occupations",
+        "description": "19-1010 · Life, Physical, and Social Science Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.155Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-19-2040",
+        "socCode": "19-2040",
+        "majorGroupCode": "19-0000",
+        "majorGroupName": "Life, Physical, and Social Science Occupations",
+        "name": "Environmental Scientists and Geoscientists",
+        "initials": "ES",
+        "isActive": true,
+        "category": "Life, Physical, and Social Science Occupations",
+        "description": "19-2040 · Life, Physical, and Social Science Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.155Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-21-1020",
+        "socCode": "21-1020",
+        "majorGroupCode": "21-0000",
+        "majorGroupName": "Community and Social Service Occupations",
+        "name": "Counselors",
+        "initials": "C",
+        "isActive": true,
+        "category": "Community and Social Service Occupations",
+        "description": "21-1020 · Community and Social Service Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-21-1090",
+        "socCode": "21-1090",
+        "majorGroupCode": "21-0000",
+        "majorGroupName": "Community and Social Service Occupations",
+        "name": "Community and Social Service Specialists",
+        "initials": "CA",
+        "isActive": true,
+        "category": "Community and Social Service Occupations",
+        "description": "21-1090 · Community and Social Service Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-23-1010",
+        "socCode": "23-1010",
+        "majorGroupCode": "23-0000",
+        "majorGroupName": "Legal Occupations",
+        "name": "Lawyers, Judges, and Related Workers",
+        "initials": "LJ",
+        "isActive": true,
+        "category": "Legal Occupations",
+        "description": "23-1010 · Legal Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-23-2010",
+        "socCode": "23-2010",
+        "majorGroupCode": "23-0000",
+        "majorGroupName": "Legal Occupations",
+        "name": "Legal Support Workers",
+        "initials": "LS",
+        "isActive": true,
+        "category": "Legal Occupations",
+        "description": "23-2010 · Legal Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-25-2000",
+        "socCode": "25-2000",
+        "majorGroupCode": "25-0000",
+        "majorGroupName": "Educational Instruction and Library Occupations",
+        "name": "Preschool, Elementary, Middle, Secondary, and Special Education Teachers",
+        "initials": "PE",
+        "isActive": true,
+        "category": "Educational Instruction and Library Occupations",
+        "description": "25-2000 · Educational Instruction and Library Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-25-3000",
+        "socCode": "25-3000",
+        "majorGroupCode": "25-0000",
+        "majorGroupName": "Educational Instruction and Library Occupations",
+        "name": "Other Teachers and Instructors",
+        "initials": "OT",
+        "isActive": true,
+        "category": "Educational Instruction and Library Occupations",
+        "description": "25-3000 · Educational Instruction and Library Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-27-1020",
+        "socCode": "27-1020",
+        "majorGroupCode": "27-0000",
+        "majorGroupName": "Arts, Design, Entertainment, Sports, and Media Occupations",
+        "name": "Designers",
+        "initials": "D",
+        "isActive": true,
+        "category": "Arts, Design, Entertainment, Sports, and Media Occupations",
+        "description": "27-1020 · Arts, Design, Entertainment, Sports, and Media Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-27-3000",
+        "socCode": "27-3000",
+        "majorGroupCode": "27-0000",
+        "majorGroupName": "Arts, Design, Entertainment, Sports, and Media Occupations",
+        "name": "Media and Communication Workers",
+        "initials": "MA",
+        "isActive": true,
+        "category": "Arts, Design, Entertainment, Sports, and Media Occupations",
+        "description": "27-3000 · Arts, Design, Entertainment, Sports, and Media Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-29-1140",
+        "socCode": "29-1140",
+        "majorGroupCode": "29-0000",
+        "majorGroupName": "Healthcare Practitioners and Technical Occupations",
+        "name": "Registered Nurses",
+        "initials": "RN",
+        "isActive": true,
+        "category": "Healthcare Practitioners and Technical Occupations",
+        "description": "29-1140 · Healthcare Practitioners and Technical Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-29-2000",
+        "socCode": "29-2000",
+        "majorGroupCode": "29-0000",
+        "majorGroupName": "Healthcare Practitioners and Technical Occupations",
+        "name": "Health Technologists and Technicians",
+        "initials": "HT",
+        "isActive": true,
+        "category": "Healthcare Practitioners and Technical Occupations",
+        "description": "29-2000 · Healthcare Practitioners and Technical Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-31-1100",
+        "socCode": "31-1100",
+        "majorGroupCode": "31-0000",
+        "majorGroupName": "Healthcare Support Occupations",
+        "name": "Nursing, Psychiatric, and Home Health Aides",
+        "initials": "NP",
+        "isActive": true,
+        "category": "Healthcare Support Occupations",
+        "description": "31-1100 · Healthcare Support Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-31-9000",
+        "socCode": "31-9000",
+        "majorGroupCode": "31-0000",
+        "majorGroupName": "Healthcare Support Occupations",
+        "name": "Other Healthcare Support Occupations",
+        "initials": "OH",
+        "isActive": true,
+        "category": "Healthcare Support Occupations",
+        "description": "31-9000 · Healthcare Support Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-33-1000",
+        "socCode": "33-1000",
+        "majorGroupCode": "33-0000",
+        "majorGroupName": "Protective Service Occupations",
+        "name": "First-Line Supervisors of Protective Service Workers",
+        "initials": "FS",
+        "isActive": true,
+        "category": "Protective Service Occupations",
+        "description": "33-1000 · Protective Service Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-33-3000",
+        "socCode": "33-3000",
+        "majorGroupCode": "33-0000",
+        "majorGroupName": "Protective Service Occupations",
+        "name": "Law Enforcement Workers",
+        "initials": "LE",
+        "isActive": true,
+        "category": "Protective Service Occupations",
+        "description": "33-3000 · Protective Service Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-35-2000",
+        "socCode": "35-2000",
+        "majorGroupCode": "35-0000",
+        "majorGroupName": "Food Preparation and Serving Related Occupations",
+        "name": "Cooks and Food Preparation Workers",
+        "initials": "CA",
+        "isActive": true,
+        "category": "Food Preparation and Serving Related Occupations",
+        "description": "35-2000 · Food Preparation and Serving Related Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-35-9000",
+        "socCode": "35-9000",
+        "majorGroupCode": "35-0000",
+        "majorGroupName": "Food Preparation and Serving Related Occupations",
+        "name": "Other Food Preparation and Serving Related Workers",
+        "initials": "OF",
+        "isActive": true,
+        "category": "Food Preparation and Serving Related Occupations",
+        "description": "35-9000 · Food Preparation and Serving Related Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-37-1000",
+        "socCode": "37-1000",
+        "majorGroupCode": "37-0000",
+        "majorGroupName": "Building and Grounds Cleaning and Maintenance Occupations",
+        "name": "Supervisors of Building and Grounds Cleaning and Maintenance Workers",
+        "initials": "SO",
+        "isActive": true,
+        "category": "Building and Grounds Cleaning and Maintenance Occupations",
+        "description": "37-1000 · Building and Grounds Cleaning and Maintenance Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-37-3000",
+        "socCode": "37-3000",
+        "majorGroupCode": "37-0000",
+        "majorGroupName": "Building and Grounds Cleaning and Maintenance Occupations",
+        "name": "Grounds Maintenance Workers",
+        "initials": "GM",
+        "isActive": true,
+        "category": "Building and Grounds Cleaning and Maintenance Occupations",
+        "description": "37-3000 · Building and Grounds Cleaning and Maintenance Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-39-5000",
+        "socCode": "39-5000",
+        "majorGroupCode": "39-0000",
+        "majorGroupName": "Personal Care and Service Occupations",
+        "name": "Personal Appearance Workers",
+        "initials": "PA",
+        "isActive": true,
+        "category": "Personal Care and Service Occupations",
+        "description": "39-5000 · Personal Care and Service Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-39-9000",
+        "socCode": "39-9000",
+        "majorGroupCode": "39-0000",
+        "majorGroupName": "Personal Care and Service Occupations",
+        "name": "Other Personal Care and Service Workers",
+        "initials": "OP",
+        "isActive": true,
+        "category": "Personal Care and Service Occupations",
+        "description": "39-9000 · Personal Care and Service Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-41-1000",
+        "socCode": "41-1000",
+        "majorGroupCode": "41-0000",
+        "majorGroupName": "Sales and Related Occupations",
+        "name": "Supervisors of Sales Workers",
+        "initials": "SO",
+        "isActive": true,
+        "category": "Sales and Related Occupations",
+        "description": "41-1000 · Sales and Related Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-41-9000",
+        "socCode": "41-9000",
+        "majorGroupCode": "41-0000",
+        "majorGroupName": "Sales and Related Occupations",
+        "name": "Other Sales and Related Workers",
+        "initials": "OS",
+        "isActive": true,
+        "category": "Sales and Related Occupations",
+        "description": "41-9000 · Sales and Related Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-43-4000",
+        "socCode": "43-4000",
+        "majorGroupCode": "43-0000",
+        "majorGroupName": "Office and Administrative Support Occupations",
+        "name": "Information and Record Clerks",
+        "initials": "IA",
+        "isActive": true,
+        "category": "Office and Administrative Support Occupations",
+        "description": "43-4000 · Office and Administrative Support Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-43-9000",
+        "socCode": "43-9000",
+        "majorGroupCode": "43-0000",
+        "majorGroupName": "Office and Administrative Support Occupations",
+        "name": "Other Office and Administrative Support Workers",
+        "initials": "OO",
+        "isActive": true,
+        "category": "Office and Administrative Support Occupations",
+        "description": "43-9000 · Office and Administrative Support Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-45-2000",
+        "socCode": "45-2000",
+        "majorGroupCode": "45-0000",
+        "majorGroupName": "Farming, Fishing, and Forestry Occupations",
+        "name": "Agricultural Workers",
+        "initials": "AW",
+        "isActive": true,
+        "category": "Farming, Fishing, and Forestry Occupations",
+        "description": "45-2000 · Farming, Fishing, and Forestry Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-45-3000",
+        "socCode": "45-3000",
+        "majorGroupCode": "45-0000",
+        "majorGroupName": "Farming, Fishing, and Forestry Occupations",
+        "name": "Fishing and Hunting Workers",
+        "initials": "FA",
+        "isActive": true,
+        "category": "Farming, Fishing, and Forestry Occupations",
+        "description": "45-3000 · Farming, Fishing, and Forestry Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-47-2000",
+        "socCode": "47-2000",
+        "majorGroupCode": "47-0000",
+        "majorGroupName": "Construction and Extraction Occupations",
+        "name": "Construction Trades Workers",
+        "initials": "CT",
+        "isActive": true,
+        "category": "Construction and Extraction Occupations",
+        "description": "47-2000 · Construction and Extraction Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-47-4000",
+        "socCode": "47-4000",
+        "majorGroupCode": "47-0000",
+        "majorGroupName": "Construction and Extraction Occupations",
+        "name": "Other Construction and Related Workers",
+        "initials": "OC",
+        "isActive": true,
+        "category": "Construction and Extraction Occupations",
+        "description": "47-4000 · Construction and Extraction Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-49-3000",
+        "socCode": "49-3000",
+        "majorGroupCode": "49-0000",
+        "majorGroupName": "Installation, Maintenance, and Repair Occupations",
+        "name": "Vehicle and Mobile Equipment Mechanics, Installers, and Repairers",
+        "initials": "VA",
+        "isActive": true,
+        "category": "Installation, Maintenance, and Repair Occupations",
+        "description": "49-3000 · Installation, Maintenance, and Repair Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-49-9000",
+        "socCode": "49-9000",
+        "majorGroupCode": "49-0000",
+        "majorGroupName": "Installation, Maintenance, and Repair Occupations",
+        "name": "Other Installation, Maintenance, and Repair Occupations",
+        "initials": "OI",
+        "isActive": true,
+        "category": "Installation, Maintenance, and Repair Occupations",
+        "description": "49-9000 · Installation, Maintenance, and Repair Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-51-4000",
+        "socCode": "51-4000",
+        "majorGroupCode": "51-0000",
+        "majorGroupName": "Production Occupations",
+        "name": "Metal Workers and Plastic Workers",
+        "initials": "MW",
+        "isActive": true,
+        "category": "Production Occupations",
+        "description": "51-4000 · Production Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-51-9000",
+        "socCode": "51-9000",
+        "majorGroupCode": "51-0000",
+        "majorGroupName": "Production Occupations",
+        "name": "Other Production Occupations",
+        "initials": "OP",
+        "isActive": true,
+        "category": "Production Occupations",
+        "description": "51-9000 · Production Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-53-3000",
+        "socCode": "53-3000",
+        "majorGroupCode": "53-0000",
+        "majorGroupName": "Transportation and Material Moving Occupations",
+        "name": "Motor Vehicle Operators",
+        "initials": "MV",
+        "isActive": true,
+        "category": "Transportation and Material Moving Occupations",
+        "description": "53-3000 · Transportation and Material Moving Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    },
+    {
+        "id": "soc-53-7000",
+        "socCode": "53-7000",
+        "majorGroupCode": "53-0000",
+        "majorGroupName": "Transportation and Material Moving Occupations",
+        "name": "Material Moving Workers",
+        "initials": "MM",
+        "isActive": true,
+        "category": "Transportation and Material Moving Occupations",
+        "description": "53-7000 · Transportation and Material Moving Occupations",
+        "skills": [
+            {
+                "name": "Domain Proficiency",
+                "lv1": "80 hrs",
+                "lv2": "160 hrs",
+                "lv3": "320 hrs"
+            },
+            {
+                "name": "Operational Excellence",
+                "lv1": "60 hrs",
+                "lv2": "120 hrs",
+                "lv3": "240 hrs"
+            },
+            {
+                "name": "Communication and Documentation",
+                "lv1": "40 hrs",
+                "lv2": "80 hrs",
+                "lv3": "160 hrs"
+            }
+        ],
+        "createdAt": "2026-05-20T23:43:34.156Z",
+        "updatedAt": "2026-05-21T02:07:15.902Z"
+    }
+]

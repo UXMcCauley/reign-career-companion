@@ -1,6 +1,7 @@
 import { IonContent, IonIcon, IonPage } from '@ionic/react';
 import { arrowBackOutline, arrowForwardOutline, statsChartOutline, timeOutline, trophyOutline } from 'ionicons/icons';
-import { useMemo, useRef, useState, type TouchEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type TouchEvent } from 'react';
+import { demoEmployeeTalentCards } from '../data/talentCards';
 import './KeycardsPage.css';
 
 type ShiftHistoryEntry = {
@@ -13,10 +14,9 @@ type ShiftHistoryEntry = {
 
 type KeycardItem = {
   id: string;
-  name: string;
   title: string;
-  shortDescription: string;
   details: string;
+  level: number;
   progress: number;
   industryImage: string;
   overallTime: string;
@@ -25,135 +25,129 @@ type KeycardItem = {
   shiftHistory: ShiftHistoryEntry[];
 };
 
-const keycards: KeycardItem[] = [
-  {
-    id: 'healthcare-ops',
-    name: 'Healthcare Ops',
-    title: 'Patient Flow Specialist',
-    shortDescription: 'Optimize intake, room turnover, and care-team handoff quality.',
-    details:
-      'Focused on moving patients through each shift safely and on-time while preserving chart quality and service experience.',
-    progress: 64,
-    industryImage:
-      'https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=1200&q=80',
-    overallTime: '218h total logged',
-    rating: 4.6,
-    milestones: [
-      { label: 'Triage speed consistency', progress: 81 },
-      { label: 'Documentation accuracy', progress: 73 },
-      { label: 'Handoff quality', progress: 62 }
-    ],
-    shiftHistory: [
-      { id: 'hc-1', label: 'Mon AM Shift', hours: '8h', rating: 4.7, progress: 68 },
-      { id: 'hc-2', label: 'Wed PM Shift', hours: '7.5h', rating: 4.4, progress: 64 },
-      { id: 'hc-3', label: 'Fri AM Shift', hours: '8h', rating: 4.8, progress: 71 }
-    ]
-  },
-  {
-    id: 'hospitality-floor',
-    name: 'Hospitality',
-    title: 'Guest Experience Lead',
-    shortDescription: 'Coordinate front-of-house pace, quality checks, and issue recovery.',
-    details:
-      'Builds a reliable guest journey by balancing service speed with attention to detail and proactive support.',
-    progress: 58,
-    industryImage:
-      'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=1200&q=80',
-    overallTime: '173h total logged',
-    rating: 4.3,
-    milestones: [
-      { label: 'Response time', progress: 69 },
-      { label: 'Guest feedback score', progress: 61 },
-      { label: 'Cross-team coordination', progress: 55 }
-    ],
-    shiftHistory: [
-      { id: 'ho-1', label: 'Tue Dinner Shift', hours: '6h', rating: 4.2, progress: 57 },
-      { id: 'ho-2', label: 'Thu Lunch Shift', hours: '5.5h', rating: 4.5, progress: 60 },
-      { id: 'ho-3', label: 'Sat Brunch Shift', hours: '7h', rating: 4.4, progress: 59 }
-    ]
-  },
-  {
-    id: 'logistics-yard',
-    name: 'Logistics',
-    title: 'Dispatch & Yard Controller',
-    shortDescription: 'Increase on-time dispatch while reducing staging and loading delays.',
-    details:
-      'Tracks throughput, queue timing, and team coordination to keep loads moving with fewer bottlenecks each week.',
-    progress: 72,
-    industryImage:
-      'https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?auto=format&fit=crop&w=1200&q=80',
-    overallTime: '246h total logged',
-    rating: 4.8,
-    milestones: [
-      { label: 'Dispatch reliability', progress: 88 },
-      { label: 'Load turnaround', progress: 71 },
-      { label: 'Safety compliance', progress: 79 }
-    ],
-    shiftHistory: [
-      { id: 'lg-1', label: 'Mon Night Shift', hours: '9h', rating: 4.8, progress: 73 },
-      { id: 'lg-2', label: 'Wed Night Shift', hours: '9h', rating: 4.7, progress: 72 },
-      { id: 'lg-3', label: 'Fri Night Shift', hours: '8.5h', rating: 4.9, progress: 75 }
-    ]
-  },
-  {
-    id: 'retail-floor',
-    name: 'Retail',
-    title: 'Floor Performance Captain',
-    shortDescription: 'Blend sales support, inventory accuracy, and customer flow execution.',
-    details:
-      'Improves conversion and checkout speed through floor readiness, rapid restock cycles, and stronger shift routines.',
-    progress: 49,
-    industryImage:
-      'https://images.unsplash.com/photo-1607082349250-3a3f7f2c3e66?auto=format&fit=crop&w=1200&q=80',
-    overallTime: '139h total logged',
-    rating: 4.1,
-    milestones: [
-      { label: 'Stock accuracy', progress: 54 },
-      { label: 'Checkout wait time', progress: 47 },
-      { label: 'Upsell consistency', progress: 46 }
-    ],
-    shiftHistory: [
-      { id: 'rt-1', label: 'Tue Opening Shift', hours: '6.5h', rating: 4.0, progress: 47 },
-      { id: 'rt-2', label: 'Thu Closing Shift', hours: '7h', rating: 4.2, progress: 49 },
-      { id: 'rt-3', label: 'Sun Mid Shift', hours: '6h', rating: 4.1, progress: 51 }
-    ]
-  }
+const industryImages = [
+  'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1555949963-aa79dcee981c?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1581091014534-8987c1d64718?auto=format&fit=crop&w=1200&q=80',
+  'https://images.unsplash.com/photo-1558655146-9f40138edfeb?auto=format&fit=crop&w=1200&q=80'
 ];
+
+const shiftLabels = ['Mon Shift', 'Wed Shift', 'Fri Shift'];
+
+const keycards: KeycardItem[] = demoEmployeeTalentCards.map((card, index) => {
+  const progressSeed = 52 + index * 8;
+  const ratingSeed = 4.1 + index * 0.15;
+
+  return {
+    id: card.id,
+    title: card.name,
+    details: `${card.name} follows a ${card.majorGroupName.toLowerCase()} path and tracks execution quality through core skills.`,
+    level: Math.floor(Math.random() * 5) + 1,
+    progress: Math.min(94, progressSeed),
+    industryImage: industryImages[index % industryImages.length],
+    overallTime: `${128 + index * 36}h total logged`,
+    rating: Math.min(4.9, Number(ratingSeed.toFixed(1))),
+    milestones: card.skills.map((skill, skillIndex) => ({
+      label: skill.name,
+      progress: Math.min(95, progressSeed - 8 + skillIndex * 10)
+    })),
+    shiftHistory: shiftLabels.map((label, shiftIndex) => ({
+      id: `${card.id}-shift-${shiftIndex}`,
+      label,
+      hours: `${7 + ((index + shiftIndex) % 3) * 0.5}h`,
+      rating: Math.min(4.9, Number((ratingSeed + shiftIndex * 0.1).toFixed(1))),
+      progress: Math.min(97, progressSeed - 4 + shiftIndex * 4)
+    }))
+  };
+});
 
 const SWIPE_NAV_THRESHOLD = 46;
 const SWIPE_DISMISS_THRESHOLD = 86;
+const DETAIL_SWIPE_ANIMATION_MS = 300;
+
+type SwipeTransitionState = {
+  fromIndex: number;
+  toIndex: number;
+  direction: 'next' | 'previous';
+};
+
+type ViewMode = 'grid' | 'list';
+type SortMode = 'alphabetical' | 'progress';
 
 const KeycardsPage: React.FC = () => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [swipeTransition, setSwipeTransition] = useState<SwipeTransitionState | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [sortMode, setSortMode] = useState<SortMode>('progress');
   const startPointRef = useRef<{ x: number; y: number } | null>(null);
   const draggingPanelRef = useRef(false);
+  const transitionTimerRef = useRef<number | null>(null);
+
+  const visibleKeycards = useMemo(() => {
+    const cards = [...keycards];
+    if (sortMode === 'alphabetical') {
+      cards.sort((a, b) => a.title.localeCompare(b.title));
+      return cards;
+    }
+    cards.sort((a, b) => {
+      if (b.level !== a.level) return b.level - a.level;
+      return b.progress - a.progress;
+    });
+    return cards;
+  }, [sortMode]);
 
   const selectedCard = useMemo(
-    () => (selectedIndex !== null ? keycards[selectedIndex] : null),
-    [selectedIndex]
+    () => (selectedIndex !== null ? visibleKeycards[selectedIndex] : null),
+    [selectedIndex, visibleKeycards]
   );
 
   const openDetails = (index: number) => {
     setSelectedIndex(index);
   };
 
+  useEffect(() => {
+    return () => {
+      if (transitionTimerRef.current) {
+        window.clearTimeout(transitionTimerRef.current);
+      }
+    };
+  }, []);
+
   const dismissDetails = () => {
     setSelectedIndex(null);
+    setSwipeTransition(null);
+    if (transitionTimerRef.current) {
+      window.clearTimeout(transitionTimerRef.current);
+      transitionTimerRef.current = null;
+    }
     startPointRef.current = null;
     draggingPanelRef.current = false;
   };
 
-  const showPrevious = () => {
+  const swipeToCard = (direction: 'next' | 'previous') => {
     setSelectedIndex(current => {
       if (current === null) return current;
-      return (current - 1 + keycards.length) % keycards.length;
-    });
-  };
+      if (swipeTransition) return current;
+      const toIndex =
+        direction === 'next'
+          ? (current + 1) % visibleKeycards.length
+          : (current - 1 + visibleKeycards.length) % visibleKeycards.length;
 
-  const showNext = () => {
-    setSelectedIndex(current => {
-      if (current === null) return current;
-      return (current + 1) % keycards.length;
+      setSwipeTransition({
+        fromIndex: current,
+        toIndex,
+        direction
+      });
+
+      if (transitionTimerRef.current) window.clearTimeout(transitionTimerRef.current);
+      transitionTimerRef.current = window.setTimeout(() => {
+        setSelectedIndex(toIndex);
+        setSwipeTransition(null);
+        transitionTimerRef.current = null;
+      }, DETAIL_SWIPE_ANIMATION_MS);
+
+      return current;
     });
   };
 
@@ -171,8 +165,8 @@ const KeycardsPage: React.FC = () => {
     const horizontalSwipe = Math.abs(dx) > Math.abs(dy);
 
     if (horizontalSwipe && Math.abs(dx) >= SWIPE_NAV_THRESHOLD) {
-      if (dx < 0) showNext();
-      else showPrevious();
+      if (dx < 0) swipeToCard('next');
+      else swipeToCard('previous');
     } else if (!horizontalSwipe && dy >= SWIPE_DISMISS_THRESHOLD) {
       dismissDetails();
     }
@@ -180,6 +174,67 @@ const KeycardsPage: React.FC = () => {
     startPointRef.current = null;
     draggingPanelRef.current = false;
   };
+
+  const renderDetailsContainer = (card: KeycardItem) => (
+    <article className="keycard-details-container">
+      <div className="keycards-sheet-head">
+        <div>
+          <h3>{card.title}</h3>
+        </div>
+      </div>
+
+      <div className="detail-metric-grid">
+        <div className="detail-metric-box">
+          <IonIcon icon={statsChartOutline} />
+          <span>Work Rating</span>
+          <strong>{card.rating.toFixed(1)} / 5</strong>
+        </div>
+        <div className="detail-metric-box">
+          <IonIcon icon={timeOutline} />
+          <span>Overall Time</span>
+          <strong>{card.overallTime}</strong>
+        </div>
+        <div className="detail-metric-box">
+          <IonIcon icon={trophyOutline} />
+          <span>Milestone Progress</span>
+          <strong>{card.progress}%</strong>
+        </div>
+      </div>
+
+      <div className="detail-section">
+        <h4>Progress milestones</h4>
+        {card.milestones.map(milestone => (
+          <div key={milestone.label} className="milestone-row">
+            <div className="milestone-top">
+              <span>{milestone.label}</span>
+              <strong>{milestone.progress}%</strong>
+            </div>
+            <div className="milestone-track">
+              <div className="milestone-fill" style={{ width: `${milestone.progress}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="detail-section">
+        <h4>Shift history</h4>
+        <div className="shift-history-list">
+          {card.shiftHistory.map(entry => (
+            <article key={entry.id} className="shift-history-item">
+              <div>
+                <h5>{entry.label}</h5>
+                <p>{entry.hours} logged</p>
+              </div>
+              <div className="shift-history-right">
+                <span>{entry.rating.toFixed(1)} rating</span>
+                <strong>{entry.progress}% progress</strong>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </article>
+  );
 
   return (
     <IonPage className="keycards-page">
@@ -190,25 +245,58 @@ const KeycardsPage: React.FC = () => {
             <p>Tap a card to open details. Swipe in details to browse.</p>
           </div>
 
-          <section className="keycards-grid" aria-label="Keycards list">
-            {keycards.map((card, index) => (
+          <div className="keycards-controls" aria-label="Keycard view and sort controls">
+            <div className="keycards-toggle">
+              <button
+                className={viewMode === 'grid' ? 'active' : ''}
+                onClick={() => setViewMode('grid')}
+                aria-pressed={viewMode === 'grid'}
+              >
+                Grid
+              </button>
+              <button
+                className={viewMode === 'list' ? 'active' : ''}
+                onClick={() => setViewMode('list')}
+                aria-pressed={viewMode === 'list'}
+              >
+                List
+              </button>
+            </div>
+            <div className="keycards-toggle">
+              <button
+                className={sortMode === 'alphabetical' ? 'active' : ''}
+                onClick={() => setSortMode('alphabetical')}
+                aria-pressed={sortMode === 'alphabetical'}
+              >
+                A-Z
+              </button>
+              <button
+                className={sortMode === 'progress' ? 'active' : ''}
+                onClick={() => setSortMode('progress')}
+                aria-pressed={sortMode === 'progress'}
+              >
+                Progress
+              </button>
+            </div>
+          </div>
+
+          <section className={`keycards-grid${viewMode === 'list' ? ' list-view' : ''}`} aria-label="Keycards list">
+            {visibleKeycards.map((card, index) => (
               <button
                 key={card.id}
-                className="keycard-tile"
+                className={`keycard-tile${viewMode === 'list' ? ' list-tile' : ''}`}
                 style={{ backgroundImage: `url(${card.industryImage})` }}
                 onClick={() => openDetails(index)}
-                aria-label={`Open ${card.name} keycard`}
+                aria-label={`Open ${card.title} keycard`}
               >
                 <div className="keycard-overlay">
-                  <span className="keycard-name">{card.name}</span>
                   <h2>{card.title}</h2>
-                  <p>{card.shortDescription}</p>
-                  <div className="keycard-progress-row">
-                    <span>Progress</span>
-                    <strong>{card.progress}%</strong>
-                  </div>
-                  <div className="keycard-progress-track">
-                    <div className="keycard-progress-fill" style={{ width: `${card.progress}%` }} />
+                  <p className="keycard-level">Level {card.level}</p>
+                  <div className="keycard-progress-inline">
+                    <div className="keycard-progress-track">
+                      <div className="keycard-progress-fill" style={{ width: `${card.progress}%` }} />
+                    </div>
+                    <span className="keycard-progress-value">{card.progress}%</span>
                   </div>
                 </div>
               </button>
@@ -217,75 +305,30 @@ const KeycardsPage: React.FC = () => {
         </div>
 
         {selectedCard ? (
-          <div className="keycards-detail-layer" role="dialog" aria-modal="true" aria-label={`${selectedCard.name} details`}>
+          <div className="keycards-detail-layer" role="dialog" aria-modal="true" aria-label={`${selectedCard.title} details`}>
             <button className="keycards-backdrop" onClick={dismissDetails} aria-label="Dismiss details" />
-            <div className="keycards-selected-title">{selectedCard.name}</div>
+            {/* <div className="keycards-selected-title">{selectedCard.title}</div> */}
             <section
               className="keycards-detail-sheet"
               onTouchStart={onPanelTouchStart}
               onTouchEnd={onPanelTouchEnd}
             >
               <div className="keycards-sheet-handle" />
-
-              <div className="keycards-sheet-head">
-                <div>
-                  <h3>{selectedCard.title}</h3>
-                  <p>{selectedCard.details}</p>
-                </div>
-                <button className="sheet-close-btn" onClick={dismissDetails} aria-label="Close details">
-                  Dismiss
-                </button>
-              </div>
-
-              <div className="detail-metric-grid">
-                <div className="detail-metric-box">
-                  <IonIcon icon={statsChartOutline} />
-                  <span>Work Rating</span>
-                  <strong>{selectedCard.rating.toFixed(1)} / 5</strong>
-                </div>
-                <div className="detail-metric-box">
-                  <IonIcon icon={timeOutline} />
-                  <span>Overall Time</span>
-                  <strong>{selectedCard.overallTime}</strong>
-                </div>
-                <div className="detail-metric-box">
-                  <IonIcon icon={trophyOutline} />
-                  <span>Milestone Progress</span>
-                  <strong>{selectedCard.progress}%</strong>
-                </div>
-              </div>
-
-              <div className="detail-section">
-                <h4>Progress milestones</h4>
-                {selectedCard.milestones.map(milestone => (
-                  <div key={milestone.label} className="milestone-row">
-                    <div className="milestone-top">
-                      <span>{milestone.label}</span>
-                      <strong>{milestone.progress}%</strong>
+              <div className="keycard-details-stage">
+                {swipeTransition ? (
+                  <>
+                    <div className={`keycard-details-pane ${swipeTransition.direction === 'next' ? 'pane-exit-left' : 'pane-exit-right'}`}>
+                      {renderDetailsContainer(visibleKeycards[swipeTransition.fromIndex])}
                     </div>
-                    <div className="milestone-track">
-                      <div className="milestone-fill" style={{ width: `${milestone.progress}%` }} />
+                    <div
+                      className={`keycard-details-pane ${swipeTransition.direction === 'next' ? 'pane-enter-from-right-lower' : 'pane-enter-from-left-lower'}`}
+                    >
+                      {renderDetailsContainer(visibleKeycards[swipeTransition.toIndex])}
                     </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="detail-section">
-                <h4>Shift history</h4>
-                <div className="shift-history-list">
-                  {selectedCard.shiftHistory.map(entry => (
-                    <article key={entry.id} className="shift-history-item">
-                      <div>
-                        <h5>{entry.label}</h5>
-                        <p>{entry.hours} logged</p>
-                      </div>
-                      <div className="shift-history-right">
-                        <span>{entry.rating.toFixed(1)} rating</span>
-                        <strong>{entry.progress}% progress</strong>
-                      </div>
-                    </article>
-                  ))}
-                </div>
+                  </>
+                ) : (
+                  <div className="keycard-details-pane pane-active">{renderDetailsContainer(selectedCard)}</div>
+                )}
               </div>
 
               <div className="sheet-swipe-hint">

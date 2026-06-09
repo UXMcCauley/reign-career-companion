@@ -32,6 +32,7 @@ import DashboardPage from './pages/DashboardPage';
 import KeycardsPage from './pages/KeycardsPage';
 import LoginPage from './pages/LoginPage';
 import PlaceholderPage from './pages/PlaceholderPage';
+import ProfilePage from './pages/ProfilePage';
 import SchedulePage from './pages/SchedulePage';
 import ShiftDetailPage from './pages/ShiftDetailPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -239,10 +240,7 @@ const AppTabs: React.FC = () => {
             />
           </Route>
           <Route exact path="/profile">
-            <PlaceholderPage
-              title="Profile"
-              subtitle="Personal details, goals, and account status."
-            />
+            <ProfilePage />
           </Route>
           <Route exact path="/real-time-resume">
             <PlaceholderPage
