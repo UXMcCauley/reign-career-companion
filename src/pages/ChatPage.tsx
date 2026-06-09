@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { IonContent, IonPage, IonIcon, isPlatform, useIonActionSheet } from '@ionic/react';
 import {
   addOutline, archiveOutline, attachOutline, cameraOutline,
-  chevronBackOutline, imagesOutline, personAddOutline, pinOutline, searchOutline,
+  chevronBackOutline, createOutline, imagesOutline, personAddOutline, pinOutline, searchOutline,
   sendOutline, volumeMuteOutline,
 } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
+import { DEMO_EMPLOYEES, initialsFromName } from '../data/employees';
 import './ChatPage.css';
 
 const isIOS = isPlatform('ios') || /iphone|ipad|ipod/i.test(
@@ -13,6 +14,7 @@ const isIOS = isPlatform('ios') || /iphone|ipad|ipod/i.test(
 );
 
 const STORAGE_KEY = 'reign_chat_v2';
+const CONTACT_COLORS = ['#7b3fff', '#2e85ff', '#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#e87d30'];
 
 interface Message {
   id: string;
@@ -35,12 +37,36 @@ interface Conversation {
   unread: number;
 }
 
+const employeeContacts = DEMO_EMPLOYEES.slice(0, 7);
+
 const CONTACTS: Omit<Conversation, 'pinned' | 'muted' | 'archived' | 'messages' | 'unread'>[] = [
-  { id: 'manager',  name: 'Sarah K.',       role: 'Store Manager',      initials: 'SK', color: '#7b3fff', type: 'dm'    },
+  {
+    id: 'manager',
+    name: employeeContacts[0]?.name ?? 'Store Manager',
+    role: employeeContacts[0]?.role ?? 'Store Manager',
+    initials: initialsFromName(employeeContacts[0]?.name ?? 'Store Manager'),
+    color: CONTACT_COLORS[0],
+    type: 'dm',
+  },
   { id: 'coach',    name: 'REIGN AI Coach', role: 'Career assistant',    initials: 'AI', color: '#c840e8', type: 'dm'    },
   { id: 'team',     name: 'Team Channel',   role: '12 members',          initials: 'TC', color: '#46c9ff', type: 'group' },
   { id: 'hr',       name: 'HR Support',     role: 'Benefits & policies', initials: 'HR', color: '#00c875', type: 'dm'    },
-  { id: 'prev-mgr', name: 'Jordan R.',      role: 'Previous Manager',    initials: 'JR', color: '#e87d30', type: 'dm'    },
+  {
+    id: 'prev-mgr',
+    name: employeeContacts[1]?.name ?? 'Previous Manager',
+    role: employeeContacts[1]?.role ?? 'Previous Manager',
+    initials: initialsFromName(employeeContacts[1]?.name ?? 'Previous Manager'),
+    color: CONTACT_COLORS[6],
+    type: 'dm',
+  },
+  ...employeeContacts.slice(2).map((employee, idx) => ({
+    id: employee.id,
+    name: employee.name,
+    role: employee.role,
+    initials: initialsFromName(employee.name),
+    color: CONTACT_COLORS[(idx + 1) % CONTACT_COLORS.length],
+    type: 'dm' as const,
+  })),
 ];
 
 const AUTO_REPLIES: Record<string, string[]> = {
@@ -144,13 +170,10 @@ const FILTER_TABS: { id: FilterTab; label: string }[] = [
   { id: 'group', label: 'Groups' },
 ];
 
-const EMPLOYEES = [
-  { name: 'Alex M.',   role: 'Team Lead'         },
-  { name: 'Jordan T.', role: 'Sales Associate'    },
-  { name: 'Casey R.',  role: 'Floor Manager'      },
-  { name: 'Sam P.',    role: 'Customer Service'   },
-  { name: 'River B.',  role: 'Shift Supervisor'   },
-];
+const EMPLOYEES = DEMO_EMPLOYEES.slice(0, 10).map(employee => ({
+  name: employee.name,
+  role: employee.role,
+}));
 
 const ChatPage: React.FC = () => {
   const history  = useHistory();
@@ -375,9 +398,27 @@ const ChatPage: React.FC = () => {
             <div className="chat-list-header">
               <div className="chat-list-title-row">
                 <h1 className="chat-list-title">
-                  Messages
+                  Chats
                   {totalUnread > 0 && <span className="chat-unread-chip">{totalUnread}</span>}
                 </h1>
+                <button className="new-chat-btn" onClick={() => history.push('/chat/new')}>
+                  <IonIcon icon={createOutline} />
+                  <span>New Chat</span>
+                </button>
+              </div>
+
+              {/* Search + Archived inline */}
+              <div className="chat-search-row">
+                <div className="chat-search-wrap">
+                  <IonIcon icon={searchOutline} className="chat-search-icon" />
+                  <input
+                    type="search"
+                    className="chat-search"
+                    placeholder="Search"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                  />
+                </div>
                 <button className="archive-access-btn" onClick={() => history.push('/chat/archived')}>
                   <IonIcon icon={archiveOutline} />
                   <span>Archived</span>
@@ -385,18 +426,6 @@ const ChatPage: React.FC = () => {
                     <span className="archive-count">{archivedCount}</span>
                   )}
                 </button>
-              </div>
-
-              {/* Search */}
-              <div className="chat-search-wrap">
-                <IonIcon icon={searchOutline} className="chat-search-icon" />
-                <input
-                  type="search"
-                  className="chat-search"
-                  placeholder="Search"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                />
               </div>
 
               {/* Filter tabs — matching login page auth-tabs */}

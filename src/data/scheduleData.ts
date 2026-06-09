@@ -1,3 +1,5 @@
+import { DEMO_EMPLOYEES } from './employees';
+
 export interface Break {
   startHour: number;
   durationMins: number;
@@ -29,6 +31,8 @@ export interface DaySchedule {
 export const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 export const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+const empName = (index: number) => DEMO_EMPLOYEES[index % DEMO_EMPLOYEES.length]?.name ?? 'Unassigned';
+
 export const MOCK_SHIFTS: Record<string, Shift> = {
   '1': {
     id: '1',
@@ -36,17 +40,17 @@ export const MOCK_SHIFTS: Record<string, Shift> = {
     endHour: 16.5,
     role: 'Floor Associate',
     location: 'Main Floor',
-    manager: 'Sarah K.',
+    manager: empName(0),
     breaks: [
       { startHour: 10.25, durationMins: 15, type: 'rest' },
       { startHour: 12.5,  durationMins: 30, type: 'meal' },
       { startHour: 15,    durationMins: 15, type: 'rest' },
     ],
     team: [
-      { name: 'Sarah K.',  role: 'Manager'          },
-      { name: 'James H.',  role: 'Floor Associate' },
-      { name: 'Priya S.',  role: 'Floor Associate' },
-      { name: 'Tom W.',    role: 'Cashier'          },
+      { name: empName(0), role: 'Manager'          },
+      { name: empName(1), role: 'Floor Associate' },
+      { name: empName(2), role: 'Floor Associate' },
+      { name: empName(3), role: 'Cashier'          },
     ],
   },
   '2': {
@@ -55,15 +59,15 @@ export const MOCK_SHIFTS: Record<string, Shift> = {
     endHour: 7,
     role: 'Overnight Stocker',
     location: 'Warehouse',
-    manager: 'Derek L.',
+    manager: empName(4),
     breaks: [
       { startHour: 2,   durationMins: 15, type: 'rest' },
       { startHour: 3.5, durationMins: 30, type: 'meal' },
     ],
     team: [
-      { name: 'Derek L.',  role: 'Manager'            },
-      { name: 'Miguel R.', role: 'Overnight Stocker'  },
-      { name: 'Lin Z.',    role: 'Freight Associate'  },
+      { name: empName(4), role: 'Manager'            },
+      { name: empName(5), role: 'Overnight Stocker'  },
+      { name: empName(6), role: 'Freight Associate'  },
     ],
     notes: 'Freight delivery arriving at 2:00 AM — prioritize dock clearance first.',
   },
@@ -73,17 +77,17 @@ export const MOCK_SHIFTS: Record<string, Shift> = {
     endHour: 22,
     role: 'Shift Lead',
     location: 'Zone B',
-    manager: 'Maria T.',
+    manager: empName(7),
     breaks: [
       { startHour: 16,    durationMins: 15, type: 'rest' },
       { startHour: 18,    durationMins: 30, type: 'meal' },
     ],
     team: [
-      { name: 'Maria T.', role: 'Manager'          },
-      { name: 'Dana K.',  role: 'Floor Associate' },
-      { name: 'Alex M.',  role: 'Floor Associate' },
-      { name: 'Sam T.',   role: 'Cashier'          },
-      { name: 'Ray P.',   role: 'Floor Associate' },
+      { name: empName(7), role: 'Manager'          },
+      { name: empName(8), role: 'Floor Associate' },
+      { name: empName(9), role: 'Floor Associate' },
+      { name: empName(10), role: 'Cashier'          },
+      { name: empName(11), role: 'Floor Associate' },
     ],
   },
   '4': {
@@ -92,17 +96,17 @@ export const MOCK_SHIFTS: Record<string, Shift> = {
     endHour: 15,
     role: 'Floor Associate',
     location: 'Main Floor',
-    manager: 'Sarah K.',
+    manager: empName(12),
     breaks: [
       { startHour: 9.5,  durationMins: 15, type: 'rest' },
       { startHour: 11.5, durationMins: 30, type: 'meal' },
       { startHour: 13.5, durationMins: 15, type: 'rest' },
     ],
     team: [
-      { name: 'Sarah K.', role: 'Manager'          },
-      { name: 'James H.', role: 'Floor Associate' },
-      { name: 'Priya S.', role: 'Cashier'          },
-      { name: 'Omar K.',  role: 'Floor Associate' },
+      { name: empName(12), role: 'Manager'          },
+      { name: empName(13), role: 'Floor Associate' },
+      { name: empName(14), role: 'Cashier'          },
+      { name: empName(15), role: 'Floor Associate' },
     ],
   },
   '5': {
@@ -111,16 +115,16 @@ export const MOCK_SHIFTS: Record<string, Shift> = {
     endHour: 20,
     role: 'Floor Associate',
     location: 'Customer Service',
-    manager: 'Carlos R.',
+    manager: empName(16),
     breaks: [
       { startHour: 14.5, durationMins: 15, type: 'rest' },
       { startHour: 16.5, durationMins: 30, type: 'meal' },
     ],
     team: [
-      { name: 'Carlos R.', role: 'Manager'           },
-      { name: 'Aisha B.',  role: 'Floor Associate'   },
-      { name: 'Kevin L.',  role: 'Customer Service'  },
-      { name: 'Nina C.',   role: 'Floor Associate'   },
+      { name: empName(16), role: 'Manager'           },
+      { name: empName(17), role: 'Floor Associate'   },
+      { name: empName(18), role: 'Customer Service'  },
+      { name: empName(19), role: 'Floor Associate'   },
     ],
     notes: 'Saturday returns volume is high — expect extended customer service queue.',
   },

@@ -26,6 +26,7 @@ import {
   sparklesOutline
 } from 'ionicons/icons';
 import ChatArchivedPage from './pages/ChatArchivedPage';
+import ChatNewPage from './pages/ChatNewPage';
 import ChatPage from './pages/ChatPage';
 import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
@@ -199,6 +200,9 @@ const AppTabs: React.FC = () => {
           </Route>
           <Route exact path="/chat/archived">
             <ChatArchivedPage />
+          </Route>
+          <Route exact path="/chat/new">
+            <ChatNewPage />
           </Route>
           <Route exact path="/schedule">
             <SchedulePage />
