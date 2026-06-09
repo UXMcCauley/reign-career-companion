@@ -1,15 +1,6 @@
-import { list, put } from '@vercel/blob';
 import { DEMO_EMPLOYEES, type DemoEmployee } from './employees';
 import { MOCK_SHIFTS, type Shift } from './scheduleData';
 import type { Conversation } from './chatTypes';
-
-const BLOB_TOKEN =
-  import.meta.env.VITE_BLOB_READ_WRITE_TOKEN ||
-  import.meta.env.VITE_VERCEL_BLOB_READ_WRITE_TOKEN ||
-  '';
-
-const BLOB_PREFIX = import.meta.env.VITE_BLOB_PREFIX || 'leadership-demo';
-const BLOB_BROWSER_WRITE_ENABLED = import.meta.env.VITE_ENABLE_BLOB_BROWSER_WRITE === 'true';
 
 const CHAT_LOCAL_KEY = 'reign_chat_v2';
 const EMPLOYEE_LOCAL_KEY = 'reign_employees_v1';
@@ -18,9 +9,7 @@ const SHIFT_RUNTIME_LOCAL_KEY = 'reign_shift_runtime_v1';
 const CHAT_BLOB_NAMES = ['chats', 'chat-data', 'chat'];
 let activeChatBlobName = CHAT_BLOB_NAMES[0];
 let blobReadDisabled = false;
-let blobWriteDisabled = !BLOB_BROWSER_WRITE_ENABLED;
-
-const pathFor = (name: string) => `${BLOB_PREFIX}/${name}.json`;
+let blobWriteDisabled = false;
 
 interface ShiftRuntimeState {
   isClockedIn: boolean;
@@ -145,13 +134,16 @@ function toExternalChats(conversations: Conversation[]): ExternalChatConversatio
 }
 
 async function readBlobJson<T>(name: string): Promise<T | null> {
-  if (!BLOB_TOKEN || blobReadDisabled) return null;
+  if (blobReadDisabled) return null;
   try {
-    const pathname = pathFor(name);
-    const { blobs } = await list({ token: BLOB_TOKEN, prefix: pathname, limit: 1 });
-    const blob = blobs.find(item => item.pathname === pathname) ?? blobs[0];
-    if (!blob) return null;
-    const response = await fetch(blob.url, { cache: 'no-store' });
+    const response = await fetch(`/api/blob?name=${encodeURIComponent(name)}`, {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+    });
+    if ([401, 403, 500, 503].includes(response.status)) {
+      blobReadDisabled = true;
+      return null;
+    }
     if (!response.ok) return null;
     return (await response.json()) as T;
   } catch {
@@ -162,17 +154,20 @@ async function readBlobJson<T>(name: string): Promise<T | null> {
 }
 
 async function writeBlobJson(name: string, data: unknown): Promise<boolean> {
-  if (!BLOB_TOKEN || blobWriteDisabled) return false;
+  if (blobWriteDisabled) return false;
   try {
-    await put(pathFor(name), JSON.stringify(data), {
-      token: BLOB_TOKEN,
-      access: 'public',
-      addRandomSuffix: false,
-      contentType: 'application/json',
+    const response = await fetch(`/api/blob?name=${encodeURIComponent(name)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
     });
-    return true;
+    if ([401, 403, 405, 500, 503].includes(response.status)) {
+      blobWriteDisabled = true;
+      return false;
+    }
+    if (!response.ok) return false;
+    return (await response.json()).ok === true;
   } catch {
-    // Browser write path often fails due CORS/preflight policy unless explicitly supported.
     blobWriteDisabled = true;
     return false;
   }
