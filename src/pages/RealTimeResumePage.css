@@ -34,7 +34,7 @@
 .resume-hero h1 {
   margin: 0;
   color: #f8fbff;
-  font-size: 1.14rem;
+  font-size: 1.2rem;
 }
 
 .resume-hero h2 {
@@ -60,108 +60,91 @@
   text-transform: uppercase;
 }
 
-.resume-stat-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.resume-stat-grid > div {
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  display: grid;
-  gap: 2px;
-}
-
-.resume-stat-grid ion-icon {
-  font-size: 1rem;
-  color: rgba(188, 214, 255, 0.9);
-}
-
-.resume-stat-grid span {
-  color: rgba(210, 220, 245, 0.72);
-  font-size: 0.66rem;
-}
-
-.resume-stat-grid strong {
-  color: #f8fbff;
-  font-size: 0.74rem;
-}
-
-.resume-signal-list {
-  display: grid;
-  gap: 8px;
-}
-
-.resume-signal-list article {
+.resume-badge-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.05);
-  padding: 8px 10px;
-}
-
-.resume-signal-list span {
-  color: #f3f7ff;
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-.resume-signal-list p {
-  margin: 4px 0 0;
-  color: rgba(209, 219, 245, 0.7);
-  font-size: 0.7rem;
-  line-height: 1.3;
-}
-
-.resume-signal-list strong {
-  color: #f8fbff;
-  font-size: 0.77rem;
-  white-space: nowrap;
-}
-
-.resume-chip-list {
-  display: flex;
-  flex-wrap: wrap;
   gap: 7px;
 }
 
-.resume-chip-list span {
+.resume-badge-btn {
+  width: 48px;
+  height: 48px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(236, 241, 255, 0.9);
-  padding: 4px 9px;
-  font-size: 0.72rem;
+  border: none;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.26);
 }
 
-.resume-milestone-list {
-  display: grid;
-  gap: 8px;
+.resume-badge-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.resume-milestone-list article {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.resume-milestone-list ion-icon {
-  margin-top: 2px;
-  color: rgba(190, 214, 255, 0.94);
-}
-
-.resume-milestone-list strong {
-  color: #f8fbff;
+.resume-bio {
+  margin: 0;
+  color: rgba(222, 232, 248, 0.8);
   font-size: 0.78rem;
+  line-height: 1.45;
 }
 
-.resume-milestone-list p {
-  margin: 2px 0 0;
-  color: rgba(208, 218, 242, 0.72);
-  font-size: 0.72rem;
+.resume-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.resume-stat-grid article {
+  text-align: center;
+}
+
+.resume-stat-grid span {
+  display: block;
+  color: rgba(206, 216, 242, 0.72);
+  font-size: 0.68rem;
+}
+
+.resume-stat-grid strong {
+  display: block;
+  margin-top: 2px;
+  color: #f8fbff;
+  font-size: 0.76rem;
+}
+
+.resume-gauges {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.badge-modal-content {
+  min-height: 100%;
+  background: linear-gradient(160deg, rgba(10, 12, 28, 0.98), rgba(22, 14, 39, 0.98));
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  position: relative;
+}
+
+.badge-modal-content img {
+  max-width: min(92vw, 640px);
+  max-height: min(80vh, 640px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.badge-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }

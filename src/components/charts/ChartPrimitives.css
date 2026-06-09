@@ -1,0 +1,133 @@
+.chart-card-title {
+  margin: 0 0 10px;
+  color: #f8fbff;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.career-overview-chart {
+  display: grid;
+  gap: 8px;
+}
+
+.career-overview-track {
+  width: 100%;
+  height: 28px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+}
+
+.career-overview-segment {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  transition: width 280ms ease;
+}
+
+.career-overview-label {
+  color: rgba(222, 232, 248, 0.85);
+  font-size: 0.76rem;
+  text-align: center;
+}
+
+.gauge-chart-wrap {
+  display: grid;
+  justify-items: center;
+}
+
+.gauge-svg {
+  width: 100%;
+  max-width: 170px;
+  overflow: visible;
+}
+
+.gauge-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+
+.gauge-progress {
+  fill: none;
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 360ms ease;
+}
+
+.gauge-needle {
+  fill: rgba(245, 248, 255, 0.94);
+}
+
+.gauge-center-dot {
+  fill: rgba(16, 14, 30, 0.92);
+  stroke: rgba(255, 255, 255, 0.4);
+  stroke-width: 2;
+}
+
+.gauge-value {
+  margin-top: -2px;
+  color: #f8fbff;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.gauge-end-labels {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  color: rgba(212, 223, 245, 0.72);
+  font-size: 0.66rem;
+}
+
+.success-chart {
+  display: grid;
+  gap: 8px;
+}
+
+.success-track {
+  width: 100%;
+  height: 28px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  display: flex;
+  position: relative;
+}
+
+.success-segment {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(241, 246, 255, 0.95);
+  font-size: 0.62rem;
+  font-weight: 600;
+}
+
+.success-marker {
+  position: absolute;
+  top: -3px;
+  width: 3px;
+  height: calc(100% + 6px);
+  border-radius: 2px;
+  background: rgba(20, 15, 37, 0.95);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.36);
+  transform: translateX(-50%);
+  transition: left 300ms ease;
+}
+
+.success-value-label {
+  color: #f7faff;
+  font-size: 0.75rem;
+  justify-self: end;
+}

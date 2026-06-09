@@ -91,5 +91,114 @@
         "image": "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1200&q=80"
       }
     ]
+  },
+  "resume": {
+    "stats": {
+      "attendancePercent": 99,
+      "hourlyRate": 24.32,
+      "timeWithCompanyYears": 1.6,
+      "ptoDays": 8.25,
+      "employerFlags": 2
+    },
+    "badges": [
+      {
+        "id": "badge-holiday-hero",
+        "key": "holiday_hero",
+        "label": "Holiday Hero"
+      },
+      {
+        "id": "badge-teamwork",
+        "key": "artboard_2_10",
+        "label": "Teamwork"
+      },
+      {
+        "id": "badge-safety",
+        "key": "artboard_2_13",
+        "label": "Safety"
+      },
+      {
+        "id": "badge-quality",
+        "key": "artboard_2_16",
+        "label": "Quality"
+      },
+      {
+        "id": "badge-speed",
+        "key": "artboard_2_19",
+        "label": "Speed"
+      }
+    ],
+    "careerOverview": [
+      {
+        "label": "Education",
+        "percent": 18,
+        "startColor": "#7A4DFF",
+        "endColor": "#8D42FF"
+      },
+      {
+        "label": "Experience",
+        "percent": 29,
+        "startColor": "#6546E8",
+        "endColor": "#7A4DFF"
+      },
+      {
+        "label": "Performance",
+        "percent": 53,
+        "startColor": "#A3188E",
+        "endColor": "#E02B74"
+      }
+    ],
+    "performanceRating": {
+      "title": "Performance Rating",
+      "value": 9.9,
+      "max": 10,
+      "startLabel": "0",
+      "endLabel": "10",
+      "gradient": [
+        "#7D2EFF",
+        "#EF2C7B"
+      ]
+    },
+    "kpiGauge": {
+      "title": "KPI Gauge",
+      "value": 2.9,
+      "max": 5,
+      "startLabel": "0",
+      "endLabel": "5",
+      "gradient": [
+        "#6D35FF",
+        "#D62187"
+      ]
+    },
+    "successProbability": {
+      "title": "Success Probability",
+      "value": 78,
+      "valueLabel": "78%",
+      "segments": [
+        {
+          "label": "Low",
+          "weight": 25,
+          "startColor": "#5666E8",
+          "endColor": "#6C4BE3"
+        },
+        {
+          "label": "Average",
+          "weight": 25,
+          "startColor": "#7A53E8",
+          "endColor": "#8A52EA"
+        },
+        {
+          "label": "Above Average",
+          "weight": 25,
+          "startColor": "#9A50EC",
+          "endColor": "#AB4BDF"
+        },
+        {
+          "label": "High",
+          "weight": 25,
+          "startColor": "#C64DC4",
+          "endColor": "#E763A9"
+        }
+      ]
+    }
   }
 }

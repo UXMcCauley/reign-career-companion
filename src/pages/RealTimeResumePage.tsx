@@ -1,20 +1,26 @@
-import { IonContent, IonIcon, IonPage } from '@ionic/react';
-import { analyticsOutline, briefcaseOutline, flashOutline, medalOutline, timeOutline } from 'ionicons/icons';
-import { useMemo } from 'react';
+import { IonContent, IonIcon, IonModal, IonPage } from '@ionic/react';
+import { closeOutline } from 'ionicons/icons';
+import { useMemo, useState } from 'react';
+import { CareerOverviewChart, GaugeChart, SuccessProbabilityChart } from '../components/charts';
 import { useAuth } from '../context/AuthContext';
 import { defaultLoggedInEmployee } from '../data/defaultLoggedInEmployee';
 import { readStoredProfile } from '../data/profileData';
-import { demoEmployeeTalentCards } from '../data/talentCards';
 import './RealTimeResumePage.css';
 
 const RealTimeResumePage: React.FC = () => {
   const { userName } = useAuth();
   const profile = useMemo(() => readStoredProfile(userName), [userName]);
+  const [activeBadgeId, setActiveBadgeId] = useState<string | null>(null);
 
   const displayName = useMemo(() => {
     const full = `${defaultLoggedInEmployee.firstName || ''} ${defaultLoggedInEmployee.lastName || ''}`.trim();
     return profile.displayName.trim() || full || defaultLoggedInEmployee.displayName;
   }, [profile.displayName]);
+
+  const activeBadge = useMemo(
+    () => defaultLoggedInEmployee.resume.badges.find(badge => badge.id === activeBadgeId) ?? null,
+    [activeBadgeId]
+  );
 
   return (
     <IonPage className="resume-page">
@@ -29,76 +35,100 @@ const RealTimeResumePage: React.FC = () => {
           </header>
 
           <section className="resume-card">
-            <h3>Live Snapshot</h3>
+            <h3>Bio</h3>
+            <p className="resume-bio">{profile.bio}</p>
+          </section>
+
+          <section className="resume-card">
+            <h3>Badges</h3>
+            <div className="resume-badge-row">
+              {defaultLoggedInEmployee.resume.badges.map(badge => (
+                <button
+                  key={badge.id}
+                  className="resume-badge-btn"
+                  onClick={() => setActiveBadgeId(badge.id)}
+                  aria-label={`Open ${badge.label} badge`}
+                >
+                  <img src={badge.thumbUrl} alt={badge.label} />
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="resume-card">
+            <CareerOverviewChart
+              title="Career Overview"
+              segments={defaultLoggedInEmployee.resume.careerOverview}
+            />
+          </section>
+
+          <section className="resume-card">
             <div className="resume-stat-grid">
-              <div>
-                <IonIcon icon={briefcaseOutline} />
-                <span>Talent Cards</span>
-                <strong>{demoEmployeeTalentCards.length}</strong>
-              </div>
-              <div>
-                <IonIcon icon={medalOutline} />
-                <span>Mastery Progress</span>
-                <strong>{defaultLoggedInEmployee.dashboard.mastery.fillPercent}%</strong>
-              </div>
-              <div>
-                <IonIcon icon={analyticsOutline} />
-                <span>Success Signal</span>
-                <strong>
-                  {defaultLoggedInEmployee.dashboard.metrics.find(metric => metric.label === 'Success')?.value ?? '--'}
-                </strong>
-              </div>
-            </div>
-          </section>
-
-          <section className="resume-card">
-            <h3>Current Performance Signals</h3>
-            <div className="resume-signal-list">
-              {defaultLoggedInEmployee.dashboard.metrics.map(metric => (
-                <article key={metric.label}>
-                  <div>
-                    <span>{metric.label}</span>
-                    <p>{metric.description}</p>
-                  </div>
-                  <strong>
-                    {metric.value}
-                    {metric.total ?? ''}
-                  </strong>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <section className="resume-card">
-            <h3>Core Talent Cards</h3>
-            <div className="resume-chip-list">
-              {demoEmployeeTalentCards.map(card => (
-                <span key={card.id}>{card.name}</span>
-              ))}
-            </div>
-          </section>
-
-          <section className="resume-card">
-            <h3>Recent Milestones</h3>
-            <div className="resume-milestone-list">
               <article>
-                <IonIcon icon={flashOutline} />
-                <div>
-                  <strong>Mastery heading to next level</strong>
-                  <p>{defaultLoggedInEmployee.dashboard.mastery.remainingLabel}</p>
-                </div>
+                <span>Attendance</span>
+                <strong>{defaultLoggedInEmployee.resume.stats.attendancePercent}%</strong>
               </article>
               <article>
-                <IonIcon icon={timeOutline} />
-                <div>
-                  <strong>On-time streak remains strong</strong>
-                  <p>{defaultLoggedInEmployee.dashboard.metrics.find(metric => metric.label === 'OTS')?.value} days in the rolling window</p>
-                </div>
+                <span>Hourly Rate</span>
+                <strong>${defaultLoggedInEmployee.resume.stats.hourlyRate.toFixed(2)}</strong>
+              </article>
+              <article>
+                <span>Time with Company</span>
+                <strong>{defaultLoggedInEmployee.resume.stats.timeWithCompanyYears.toFixed(1)}y</strong>
+              </article>
+              <article>
+                <span>PTO</span>
+                <strong>{defaultLoggedInEmployee.resume.stats.ptoDays.toFixed(2)}d</strong>
+              </article>
+              <article>
+                <span>Employer Flags</span>
+                <strong>{defaultLoggedInEmployee.resume.stats.employerFlags}</strong>
               </article>
             </div>
+          </section>
+
+          <section className="resume-card">
+            <div className="resume-gauges">
+              <GaugeChart
+                title={defaultLoggedInEmployee.resume.performanceRating.title}
+                value={defaultLoggedInEmployee.resume.performanceRating.value}
+                max={defaultLoggedInEmployee.resume.performanceRating.max}
+                startLabel={defaultLoggedInEmployee.resume.performanceRating.startLabel}
+                endLabel={defaultLoggedInEmployee.resume.performanceRating.endLabel}
+                gradient={defaultLoggedInEmployee.resume.performanceRating.gradient}
+              />
+              <GaugeChart
+                title={defaultLoggedInEmployee.resume.kpiGauge.title}
+                value={defaultLoggedInEmployee.resume.kpiGauge.value}
+                max={defaultLoggedInEmployee.resume.kpiGauge.max}
+                startLabel={defaultLoggedInEmployee.resume.kpiGauge.startLabel}
+                endLabel={defaultLoggedInEmployee.resume.kpiGauge.endLabel}
+                gradient={defaultLoggedInEmployee.resume.kpiGauge.gradient}
+              />
+            </div>
+          </section>
+
+          <section className="resume-card">
+            <SuccessProbabilityChart
+              title={defaultLoggedInEmployee.resume.successProbability.title}
+              value={defaultLoggedInEmployee.resume.successProbability.value}
+              valueLabel={defaultLoggedInEmployee.resume.successProbability.valueLabel}
+              segments={defaultLoggedInEmployee.resume.successProbability.segments}
+            />
           </section>
         </div>
       </IonContent>
+
+      <IonModal isOpen={Boolean(activeBadge)} onDidDismiss={() => setActiveBadgeId(null)}>
+        {activeBadge ? (
+          <div className="badge-modal-content">
+            <button className="badge-modal-close" onClick={() => setActiveBadgeId(null)} aria-label="Close badge preview">
+              <IonIcon icon={closeOutline} />
+            </button>
+            <img src={activeBadge.fullUrl} alt={activeBadge.label} />
+          </div>
+        ) : null}
+      </IonModal>
     </IonPage>
   );
 };
