@@ -7,7 +7,6 @@ import {
   chevronBackOutline,
   imagesOutline,
   peopleOutline,
-  personAddOutline,
   saveOutline,
   sendOutline,
   timeOutline,
@@ -27,11 +26,11 @@ const ChatNewPage: React.FC = () => {
   const photoRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [recipient, setRecipient] = useState('');
+  const [recipientQuery, setRecipientQuery] = useState('');
+  const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [message, setMessage] = useState('');
   const [status, setStatus] = useState('Add recipients and compose your message.');
   const [isGroupMessage, setIsGroupMessage] = useState(false);
-  const [includeEmployees, setIncludeEmployees] = useState(false);
   const [saveAsDraft, setSaveAsDraft] = useState(false);
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [scheduledAt, setScheduledAt] = useState('');
@@ -39,20 +38,38 @@ const ChatNewPage: React.FC = () => {
   const [recipientFocused, setRecipientFocused] = useState(false);
 
   const matchingEmployees = useMemo(() => {
-    const query = recipient.trim().toLowerCase();
+    const query = recipientQuery.trim().toLowerCase();
     if (!query) return [];
 
     return DEMO_EMPLOYEES
+      .filter(employee => !selectedRecipients.includes(employee.name))
       .filter(employee =>
         employee.firstName.toLowerCase().includes(query) ||
         employee.lastName.toLowerCase().includes(query)
       )
       .slice(0, 8);
-  }, [recipient]);
+  }, [recipientQuery, selectedRecipients]);
 
   const onRecipientChange = (nextValue: string) => {
-    setRecipient(nextValue);
+    setRecipientQuery(nextValue);
     setRecipientFocused(true);
+  };
+
+  const addRecipient = (name: string) => {
+    setSelectedRecipients(prev => (prev.includes(name) ? prev : [...prev, name]));
+    setRecipientQuery('');
+    setRecipientFocused(false);
+  };
+
+  const removeRecipient = (name: string) => {
+    setSelectedRecipients(prev => prev.filter(item => item !== name));
+  };
+
+  const chipColor = (name: string) => {
+    let hash = 0;
+    for (let i = 0; i < name.length; i += 1) hash = (hash << 5) - hash + name.charCodeAt(i);
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue} 75% 55%)`;
   };
 
   const runDemoAction = (label: string, callback?: () => void) => {
@@ -78,41 +95,37 @@ const ChatNewPage: React.FC = () => {
             </div>
 
             <div className="new-chat-compose-body">
-              <div className="new-chat-top-options">
-                <button
-                  className={`new-chat-action-btn${isGroupMessage ? ' active' : ''}`}
-                  onClick={() => {
-                    setIsGroupMessage(v => !v);
-                    runDemoAction('Group message');
-                  }}
-                >
-                  <IonIcon icon={peopleOutline} />
-                  <span>Add Message to a Group</span>
-                </button>
-                <button
-                  className={`new-chat-action-btn${includeEmployees ? ' active' : ''}`}
-                  onClick={() => {
-                    setIncludeEmployees(v => !v);
-                    runDemoAction('Employees added');
-                  }}
-                >
-                  <IonIcon icon={personAddOutline} />
-                  <span>Add Employees to Message</span>
-                </button>
-              </div>
-
               <div className="new-chat-field">
                 <label className="new-chat-label">Recipient</label>
-                <input
-                  ref={recipientInputRef}
-                  className="new-chat-input"
-                  placeholder="Type first few characters..."
-                  value={recipient}
-                  onChange={e => onRecipientChange(e.target.value)}
-                  onFocus={() => setRecipientFocused(true)}
-                  onBlur={() => setTimeout(() => setRecipientFocused(false), 120)}
-                  autoFocus
-                />
+                <div className="new-chat-recipient-input-wrap">
+                  {selectedRecipients.map(name => (
+                    <div key={name} className="new-chat-recipient-chip">
+                      <span
+                        className="new-chat-recipient-chip-dot"
+                        style={{ background: chipColor(name) }}
+                      />
+                      <span className="new-chat-recipient-chip-name">{name}</span>
+                      <button
+                        className="new-chat-recipient-chip-remove"
+                        onClick={() => removeRecipient(name)}
+                        aria-label={`Remove ${name}`}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+
+                  <input
+                    ref={recipientInputRef}
+                    className="new-chat-chip-input"
+                    placeholder={selectedRecipients.length ? 'Add another...' : 'Type first or last name...'}
+                    value={recipientQuery}
+                    onChange={e => onRecipientChange(e.target.value)}
+                    onFocus={() => setRecipientFocused(true)}
+                    onBlur={() => setTimeout(() => setRecipientFocused(false), 120)}
+                    autoFocus
+                  />
+                </div>
                 {recipientFocused && matchingEmployees.length > 0 && (
                   <div className="new-chat-recipient-dropdown">
                     {matchingEmployees.map(employee => (
@@ -121,8 +134,7 @@ const ChatNewPage: React.FC = () => {
                         className="new-chat-recipient-option"
                         onMouseDown={e => e.preventDefault()}
                         onClick={() => {
-                          setRecipient(employee.name);
-                          setRecipientFocused(false);
+                          addRecipient(employee.name);
                         }}
                       >
                         <span className="new-chat-recipient-name">{employee.name}</span>
@@ -152,7 +164,24 @@ const ChatNewPage: React.FC = () => {
                 >
                   <IonIcon icon={addOutline} />
                 </button>
-                <span className="new-chat-plus-label">Compose actions</span>
+                <button
+                  className={`new-chat-action-chip${isGroupMessage ? ' active' : ''}`}
+                  onClick={() => {
+                    setIsGroupMessage(v => !v);
+                    runDemoAction('Group message');
+                  }}
+                >
+                  <IonIcon icon={peopleOutline} />
+                  <span>+ Group</span>
+                </button>
+                <button
+                  className="new-chat-inline-send-btn"
+                  onClick={() => setStatus('Demo message ready to send.')}
+                  disabled={selectedRecipients.length === 0 || !message.trim()}
+                >
+                  <IonIcon icon={sendOutline} />
+                  <span>Send</span>
+                </button>
 
                 {menuOpen && (
                   <div className="new-chat-plus-menu">
@@ -225,15 +254,6 @@ const ChatNewPage: React.FC = () => {
               )}
 
               <div className="new-chat-status">{status}</div>
-
-              <button
-                className="new-chat-send-btn"
-                onClick={() => setStatus('Demo message ready to send.')}
-                disabled={!recipient.trim() || !message.trim()}
-              >
-                <IonIcon icon={sendOutline} />
-                <span>Send Message</span>
-              </button>
 
               <input ref={cameraRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} />
               <input ref={photoRef} type="file" accept="image/*,video/*" style={{ display: 'none' }} />
