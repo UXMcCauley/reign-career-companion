@@ -191,8 +191,8 @@
 }
 
 .clock-inline-btn {
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.08);
+  /* border: 1px solid rgba(255, 255, 255, 0.16); */
+  /* background: rgba(255, 255, 255, 0.08); */
   color: #edf2ff;
   border-radius: 10px;
   padding: 8px 6px;
@@ -204,12 +204,23 @@
   gap: 3px;
 }
 
-.clock-inline-btn.active {
-  background: rgba(95, 177, 255, 0.25);
+.clock-inline-btn--break {
+  /* border: 1px solid var(--app-brand-light-blue);  */
+  background: var(--app-brand-dark-blue);
 }
 
-.clock-inline-btn.danger {
-  background: rgba(255, 106, 131, 0.2);
+.clock-inline-btn--switch {
+  /* border: 1px solid var(--app-brand-green); */
+  background: var(--app-brand-dark-green);
+}
+
+.clock-inline-btn--clockout {
+  /* border: 1px solid var(--app-brand-light-pink);  */
+  background: var(--app-brand-dark-pink);}
+
+.clock-inline-btn.active {
+  background: rgba(6, 119, 240, 0.35);
+  /* border-color: rgba(6, 119, 240, 0.45); */
 }
 
 .clock-inline-btn ion-icon {
@@ -224,13 +235,13 @@
 }
 
 .clock-alert--warning {
-  border: 1px solid var(--app-warning-border);
+  /* border: 1px solid var(--app-warning-border); */
   background: var(--app-warning-bg);
 }
 
 .clock-alert--info {
-  border: 1px solid var(--app-info-border);
-  background: var(--app-info-bg);
+  /* border: 1px solid var(--app-info-border); */
+  background: rgba(6, 119, 240, 0.2);
 }
 
 .clock-note {
@@ -253,14 +264,14 @@
 .clock-note-label {
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-size: 0.63rem;
+  font-size: 0.73rem;
   font-weight: 700;
   margin-bottom: 2px;
 }
 
 .clock-note-value {
-  font-size: 0.86rem;
-  font-weight: 700;
+  font-size: 0.76rem;
+  /* font-weight: 700; */
 }
 
 .clock-note-meta {

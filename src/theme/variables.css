@@ -8,6 +8,17 @@ http://ionicframework.com/docs/theming/ */
   --app-aurora-4: rgba(120, 255, 183, 0.16);
   --app-night-base: #070814;
   --app-brand-dark-blue: #0f2f73;
+  --app-brand-light-blue: #0677f0;
+  --app-brand-light-blue-opacity-3: rgba(#0677f0, 0.3);
+  --app-brand-light-blue-opacity-5: rgba(#0677f0, 0.5);
+  --app-brand-light-blue-opacity-7: rgba(#0677f0, 0.7);
+  --app-brand-light-blue-opacity-9: rgba(#0677f0, 0.9);
+  
+  --app-brand-green: #06c50c; 
+  --app-brand-dark-green: #038908; 
+
+  --app-brand-dark-pink: #b70064;
+  --app-brand-light-pink: #ff00e6;
   --app-warning-bg: linear-gradient(140deg, rgba(255, 171, 58, 0.14), rgba(255, 98, 81, 0.14));
   --app-warning-border: rgba(255, 201, 107, 0.44);
   --app-warning-text: #ffe6bc;
@@ -16,7 +27,6 @@ http://ionicframework.com/docs/theming/ */
   --app-info-text: #d7ebff;
   --app-brand-accent-bg: linear-gradient(120deg, rgba(15, 47, 115, 0.9), rgba(33, 84, 181, 0.82));
   --app-brand-accent-border: rgba(126, 177, 255, 0.44);
-  --app-brand-light-blue: #1a3653;
   /* --ion-background-color: #ffffff;
 	--ion-background-color-rgb: 255,255,255;
 
@@ -207,7 +217,7 @@ ion-content {
   width: 10px; 
   height: 10px;
   border-radius: 50%;
-  background: #ff4f8d;
+  background: #ff4f8d; 
   box-shadow: 0 0 0 2px rgba(10, 8, 28, 0.98);
 }
 

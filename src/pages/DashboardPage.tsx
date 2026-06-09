@@ -310,15 +310,18 @@ const DashboardPage: React.FC = () => {
                 </IonButton>
               ) : (
                 <div className="clock-inline-actions">
-                  <button className={`clock-inline-btn${onBreak ? ' active' : ''}`} onClick={() => setOnBreak(v => !v)}>
+                  <button
+                    className={`clock-inline-btn clock-inline-btn--break${onBreak ? ' active' : ''}`}
+                    onClick={() => setOnBreak(v => !v)}
+                  >
                     <IonIcon icon={cafeOutline} />
                     {onBreak ? 'Resume' : 'Break'}
                   </button>
-                  <button className="clock-inline-btn" onClick={handleSwitchKeyCard}>
+                  <button className="clock-inline-btn clock-inline-btn--switch" onClick={handleSwitchKeyCard}>
                     <IonIcon icon={shuffleOutline} />
                     Switch Key Card
                   </button>
-                  <button className="clock-inline-btn danger" onClick={handleClockOut}>
+                  <button className="clock-inline-btn clock-inline-btn--clockout" onClick={handleClockOut}>
                     <IonIcon icon={logOutOutline} />
                     Clock Out
                   </button>
@@ -327,7 +330,7 @@ const DashboardPage: React.FC = () => {
               <div className={`clock-alert ${isClockedIn ? 'clock-alert--info' : 'clock-alert--warning'}`}>
                 {isClockedIn ? (
                   <p className="clock-note">
-                    <span className="clock-note-label">Current Key Card</span>
+                    <span className="clock-note-label">Current Keycard</span>
                     <span className="clock-note-value">{activeKeyCardName}</span>
                     {onBreak ? <span className="clock-note-meta">On break</span> : null}
                   </p>
