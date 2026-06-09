@@ -42,16 +42,16 @@
 }
 
 .dash-greeting-text {
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.55);
-  letter-spacing: 0.03em;
-  line-height: 1;
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.74);
+  letter-spacing: 0.01em;
+  line-height: 1.06;
 }
 
 .dash-greeting-name {
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 600;
+  color: rgba(255, 255, 255, 0.96);
+  font-weight: 800;
 }
 
 .dash-avatar-btn {
@@ -157,6 +157,11 @@
   margin-bottom: 4px;
 }
 
+.dash-clock-card {
+  padding: 14px;
+  border-radius: 18px;
+}
+
 .dash-time {
   font-size: 2.4rem;
   font-weight: 800;
@@ -164,7 +169,7 @@
   text-align: center;
   color: #f0f2fa;
   line-height: 1;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .dash-date {
@@ -172,11 +177,43 @@
   color: #a8aec3;
   font-size: 0.88rem;
   letter-spacing: 0.01em;
-  margin-bottom: 16px;
+  margin-bottom: 4px;
 }
 
 .dash-clock-btn {
   margin-bottom: 0;
+}
+
+.clock-inline-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.clock-inline-btn {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: #edf2ff;
+  border-radius: 10px;
+  padding: 8px 6px;
+  font-size: 0.67rem;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.clock-inline-btn.active {
+  background: rgba(95, 177, 255, 0.25);
+}
+
+.clock-inline-btn.danger {
+  background: rgba(255, 106, 131, 0.2);
+}
+
+.clock-inline-btn ion-icon {
+  font-size: 0.95rem;
 }
 
 .clock-alert {
@@ -385,6 +422,55 @@
 
 /* ──────────────── ANNOUNCEMENTS ──────────────── */
 
+.shift-rail {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 2px 0 4px;
+}
+
+.shift-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.shift-card {
+  margin: 0;
+  min-width: 66%;
+  scroll-snap-align: start;
+}
+
+.shift-card ion-card-header {
+  padding: 10px 12px;
+}
+
+.shift-card ion-card-title {
+  font-size: 0.83rem;
+}
+
+.shift-card ion-card-subtitle {
+  font-size: 0.69rem;
+}
+
+.shift-view-all {
+  min-width: 84px;
+  border-radius: 16px;
+  border: 1px dashed rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f1f5ff;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 0.66rem;
+  scroll-snap-align: start;
+}
+
+.shift-view-all ion-icon {
+  font-size: 1.05rem;
+}
+
 .announcement-rail {
   display: flex;
   gap: 12px;
@@ -399,15 +485,28 @@
 
 .announcement-card {
   margin: 0;
-  min-width: 78%;
+  min-width: 68%;
   scroll-snap-align: start;
   overflow: hidden;
 }
 
 .announcement-card img {
   width: 100%;
-  height: 140px;
+  height: 74px;
   object-fit: cover;
+}
+
+.announcement-card ion-card-header {
+  padding: 8px 10px;
+}
+
+.announcement-card ion-card-title {
+  font-size: 0.76rem;
+  line-height: 1.2;
+}
+
+.announcement-card ion-card-subtitle {
+  font-size: 0.64rem;
 }
 
 .announcement-card ion-card-subtitle ion-icon {

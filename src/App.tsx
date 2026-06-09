@@ -1,5 +1,6 @@
 import { Redirect, Route, useHistory, useLocation } from 'react-router-dom';
 import {
+  AnimationBuilder,
   IonApp,
   IonContent,
   IonHeader,
@@ -14,6 +15,7 @@ import {
   IonTabs,
   IonTitle,
   IonToolbar,
+  createAnimation,
   setupIonicReact
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
@@ -63,6 +65,40 @@ import '@ionic/react/css/palettes/dark.system.css';
 import './theme/variables.css';
 
 setupIonicReact();
+
+const EXIT_DURATION_MS = 170;
+const ENTER_DURATION_MS = 210;
+
+const buildSequentialPageTransition: AnimationBuilder = (_, opts) => {
+  const enteringEl = opts.enteringEl;
+  const leavingEl = opts.leavingEl;
+  const easing = 'cubic-bezier(0.22, 1, 0.36, 1)';
+
+  const rootAnimation = createAnimation().duration(EXIT_DURATION_MS + ENTER_DURATION_MS).easing(easing);
+
+  if (leavingEl) {
+    const leaveAnimation = createAnimation()
+      .addElement(leavingEl)
+      .duration(EXIT_DURATION_MS)
+      .fromTo('opacity', '1', '0')
+      .fromTo('transform', 'translate3d(0, 0, 0)', 'translate3d(-6%, 0, 0)');
+
+    rootAnimation.addAnimation(leaveAnimation);
+  }
+
+  if (enteringEl) {
+    const enterAnimation = createAnimation()
+      .addElement(enteringEl)
+      .delay(leavingEl ? EXIT_DURATION_MS : 0)
+      .duration(ENTER_DURATION_MS)
+      .fromTo('opacity', '0', '1')
+      .fromTo('transform', 'translate3d(6%, 0, 0)', 'translate3d(0, 0, 0)');
+
+    rootAnimation.addAnimation(enterAnimation);
+  }
+
+  return rootAnimation;
+};
 
 const tabDefs = [
   { id: 'dashboard', href: '/dashboard', icon: gridOutline },
@@ -116,6 +152,7 @@ const FloatingTabBar: React.FC<{
             aria-label={tab.id.replace(/-/g, ' ')}
           >
             <IonIcon icon={tab.icon} />
+            {tab.id === 'chat' ? <span className="tab-notification-dot" aria-hidden /> : null}
           </button>
         ))}
       </div>
@@ -186,7 +223,7 @@ const AppTabs: React.FC = () => {
       </IonMenu>
 
       <IonTabs>
-        <IonRouterOutlet id="main-content">
+        <IonRouterOutlet id="main-content" animation={buildSequentialPageTransition}>
           <Route exact path="/dashboard">
             <DashboardPage />
           </Route>

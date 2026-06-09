@@ -11,8 +11,11 @@ import {
   useIonAlert,
 } from '@ionic/react';
 import {
-  chatbubbleEllipsesOutline,
+  cafeOutline,
   checkmarkCircleOutline,
+  chevronForwardOutline,
+  logOutOutline,
+  shuffleOutline,
   helpCircleOutline,
   timeOutline,
 } from 'ionicons/icons';
@@ -21,6 +24,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { defaultLoggedInEmployee } from '../data/defaultLoggedInEmployee';
+import { demoEmployeeTalentCards } from '../data/talentCards';
 import './DashboardPage.css';
 
 const metrics = defaultLoggedInEmployee.dashboard.metrics;
@@ -40,6 +44,9 @@ const DashboardPage: React.FC = () => {
   const history = useHistory();
   const [presentAlert] = useIonAlert();
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isClockedIn, setIsClockedIn] = useState(false);
+  const [activeKeyCardId, setActiveKeyCardId] = useState<string | null>(null);
+  const [onBreak, setOnBreak] = useState(false);
   const { userName } = useAuth();
   const metricsRef = useRef<(HTMLElement | null)[]>([]);
 
@@ -85,10 +92,53 @@ const DashboardPage: React.FC = () => {
     history.push(`/announcements/${announcementId}`);
   };
 
+  const chooseKeyCard = (header: string, onPick: (keyCardId: string) => void) => {
+    presentAlert({
+      header,
+      inputs: demoEmployeeTalentCards.map((card, index) => ({
+        type: 'radio' as const,
+        name: 'keycard',
+        label: card.name,
+        value: card.id,
+        checked: activeKeyCardId ? activeKeyCardId === card.id : index === 0,
+      })),
+      buttons: [
+        'Cancel',
+        {
+          text: 'Confirm',
+          handler: (data: { keycard?: string }) => {
+            const selected = data?.keycard ?? demoEmployeeTalentCards[0]?.id;
+            if (selected) onPick(selected);
+          },
+        },
+      ],
+    });
+  };
+
+  const handleClockIn = () => {
+    chooseKeyCard('Clock in to key card', (selectedId) => {
+      setActiveKeyCardId(selectedId);
+      setIsClockedIn(true);
+      setOnBreak(false);
+    });
+  };
+
+  const handleSwitchKeyCard = () => {
+    chooseKeyCard('Switch key card', (selectedId) => {
+      setActiveKeyCardId(selectedId);
+    });
+  };
+
+  const handleClockOut = () => {
+    setIsClockedIn(false);
+    setOnBreak(false);
+    setActiveKeyCardId(null);
+  };
+
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       setCurrentTime(new Date());
-    }, 1000);
+    }, 30000);
     return () => window.clearInterval(intervalId);
   }, []);
 
@@ -97,9 +147,31 @@ const DashboardPage: React.FC = () => {
       currentTime.toLocaleTimeString([], {
         hour: 'numeric',
         minute: '2-digit',
-        second: '2-digit',
       }),
     [currentTime]
+  );
+
+  const upcomingShifts = useMemo(() => {
+    const now = new Date();
+    const day = now.getDay(); // 0 Sunday
+    const daysUntilSunday = (7 - day) % 7;
+    const shifts = [];
+    for (let i = 0; i <= daysUntilSunday; i += 1) {
+      const shiftDate = new Date(now);
+      shiftDate.setDate(now.getDate() + i);
+      const label = shiftDate.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+      shifts.push({
+        id: `shift-${i}`,
+        title: i === 0 ? 'Today Shift' : `${label} Shift`,
+        time: i % 2 === 0 ? '8:00 AM - 4:00 PM' : '9:00 AM - 5:00 PM',
+      });
+    }
+    return shifts;
+  }, [currentTime]);
+
+  const activeKeyCardName = useMemo(
+    () => demoEmployeeTalentCards.find(card => card.id === activeKeyCardId)?.name ?? 'No key card selected',
+    [activeKeyCardId]
   );
 
   const dateLabel = useMemo(
@@ -198,18 +270,58 @@ const DashboardPage: React.FC = () => {
             <div className="dash-panel-handle" />
 
             {/* Clock In module */}
-            <div className="dash-clock">
-              <div className="dash-time">{timeLabel}</div>
+            <div className="dash-clock dash-clock-card ios-surface">
               <div className="dash-date">{dateLabel}</div>
-              <IonButton expand="block" color="success" className="dash-clock-btn">
-                <IonIcon icon={checkmarkCircleOutline} slot="start" />
-                Clock In
-              </IonButton>
+              <div className="dash-time">{timeLabel}</div>
+              {!isClockedIn ? (
+                <IonButton expand="block" color="success" className="dash-clock-btn" onClick={handleClockIn}>
+                  <IonIcon icon={checkmarkCircleOutline} slot="start" />
+                  Clock In
+                </IonButton>
+              ) : (
+                <div className="clock-inline-actions">
+                  <button className={`clock-inline-btn${onBreak ? ' active' : ''}`} onClick={() => setOnBreak(v => !v)}>
+                    <IonIcon icon={cafeOutline} />
+                    {onBreak ? 'Resume' : 'Break'}
+                  </button>
+                  <button className="clock-inline-btn" onClick={handleSwitchKeyCard}>
+                    <IonIcon icon={shuffleOutline} />
+                    Switch Key Card
+                  </button>
+                  <button className="clock-inline-btn danger" onClick={handleClockOut}>
+                    <IonIcon icon={logOutOutline} />
+                    Clock Out
+                  </button>
+                </div>
+              )}
               <div className="clock-alert">
                 <p className="clock-note">
-                  {defaultLoggedInEmployee.dashboard.clockAlert}
+                  {isClockedIn
+                    ? `Clocked into: ${activeKeyCardName}${onBreak ? ' (On break)' : ''}`
+                    : defaultLoggedInEmployee.dashboard.clockAlert}
                 </p>
               </div>
+            </div>
+
+            {/* Shift cards */}
+            <div className="dash-section-header">
+              <span className="dash-section-label">Shifts This Week</span>
+            </div>
+            <div className="shift-rail">
+              {upcomingShifts.map((shift) => (
+                <IonCard key={shift.id} className="shift-card ios-surface">
+                  <IonCardHeader>
+                    <IonCardTitle>{shift.title}</IonCardTitle>
+                    <IonCardSubtitle>
+                      <IonIcon icon={timeOutline} /> {shift.time}
+                    </IonCardSubtitle>
+                  </IonCardHeader>
+                </IonCard>
+              ))}
+              <button className="shift-view-all">
+                <IonIcon icon={chevronForwardOutline} />
+                <span>View all</span>
+              </button>
             </div>
 
             {/* Announcements */}
@@ -233,17 +345,6 @@ const DashboardPage: React.FC = () => {
                   </IonCardHeader>
                 </IonCard>
               ))}
-            </div>
-
-            {/* Chat Notifications */}
-            <div className="dash-section-header">
-              <span className="dash-section-label">New Messages</span>
-            </div>
-            <div className="dash-chat-notifs">
-              <div className="dash-chat-empty">
-                <IonIcon icon={chatbubbleEllipsesOutline} />
-                <span>No new messages</span>
-              </div>
             </div>
 
           </div>
