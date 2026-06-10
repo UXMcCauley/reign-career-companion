@@ -33,7 +33,6 @@ import 'leaflet/dist/leaflet.css';
 import { Geolocation } from '@capacitor/geolocation';
 import './DashboardPage.css';
 import { Capacitor } from '@capacitor/core';
-import { ShiftCountdownIsland } from '../components/ShiftCountdownIsland';
 
 const MASTERY_DEMO = [
   { level: 4, fillPercent: 34 },
