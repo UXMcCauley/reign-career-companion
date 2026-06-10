@@ -65,6 +65,7 @@ import '@ionic/react/css/palettes/dark.system.css';
   
 /* Theme variables */
 import './theme/variables.css';
+import { ShiftCountdownIsland } from './components/ShiftCountdownIsland';
 
 setupIonicReact();
 
@@ -187,6 +188,10 @@ const AppTabs: React.FC = () => {
 
   return (
     <>
+    <IonToolbar>
+    <ShiftCountdownIsland />
+
+    </IonToolbar>
       <IonMenu
         side="end"
         type="overlay"

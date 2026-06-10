@@ -16,8 +16,7 @@ function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number)
 }
 
 function readSafeAreaTop(): number {
-  const raw = getComputedStyle(document.documentElement)
-    .getPropertyValue("--ion-safe-area-top");
+  const raw = getComputedStyle(document.documentElement).getPropertyValue("--ion-safe-area-top");
   const parsed = parseFloat(raw);
   return Number.isFinite(parsed) ? parsed : 0;
 }
