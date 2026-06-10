@@ -626,6 +626,7 @@ const DashboardPage: React.FC = () => {
 
   return (
     <IonPage className="dashboard-page">
+      <ShiftCountdownIsland />
       <IonContent fullscreen scrollEvents onIonScroll={onContentScroll}>
         <div className="dash-scene">
 
