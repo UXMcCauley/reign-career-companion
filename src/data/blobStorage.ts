@@ -6,6 +6,7 @@ const CHAT_LOCAL_KEY = 'reign_chat_v2';
 const EMPLOYEE_LOCAL_KEY = 'reign_employees_v1';
 const SCHEDULE_LOCAL_KEY = 'reign_schedule_v1';
 const SHIFT_RUNTIME_LOCAL_KEY = 'reign_shift_runtime_v1';
+const FORCE_SHIFT_SEED = import.meta.env.VITE_SHIFT_TEST === 'true';
 const EMPLOYEE_BLOB_NAMES = ['employees', 'Employees'];
 const CHAT_BLOB_NAMES = ['chats', 'chat-data', 'chat'];
 let activeChatBlobName = CHAT_BLOB_NAMES[0];
@@ -209,6 +210,12 @@ export async function loadEmployees(): Promise<DemoEmployee[]> {
 }
 
 export async function loadShifts(): Promise<Record<string, Shift>> {
+  if (FORCE_SHIFT_SEED) {
+    writeLocalJson(SCHEDULE_LOCAL_KEY, MOCK_SHIFTS);
+    await writeBlobJson('shifts', MOCK_SHIFTS);
+    return MOCK_SHIFTS;
+  }
+
   const blobData = await readBlobJson<Record<string, Shift>>('shifts');
   if (blobData && Object.keys(blobData).length > 0) {
     writeLocalJson(SCHEDULE_LOCAL_KEY, blobData);
