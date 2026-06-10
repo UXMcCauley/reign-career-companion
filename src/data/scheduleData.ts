@@ -92,15 +92,15 @@ export const MOCK_SHIFTS: Record<string, Shift> = {
   },
   '4': {
     id: '4',
-    startHour: 7,
-    endHour: 15,
+    startHour: 10.5,
+    endHour: 18.5,
     role: 'Floor Associate',
     location: 'Main Floor',
     manager: empName(12),
     breaks: [
-      { startHour: 9.5,  durationMins: 15, type: 'rest' },
-      { startHour: 11.5, durationMins: 30, type: 'meal' },
-      { startHour: 13.5, durationMins: 15, type: 'rest' },
+      { startHour: 13, durationMins: 15, type: 'rest' },
+      { startHour: 15, durationMins: 30, type: 'meal' },
+      { startHour: 17, durationMins: 15, type: 'rest' },
     ],
     team: [
       { name: empName(12), role: 'Manager'          },
