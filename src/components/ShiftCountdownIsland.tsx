@@ -108,11 +108,12 @@ export function ShiftCountdownIsland() {
   return (
     <div style={{
       position: "fixed",
-      top: "6px",
+      top: "calc(max(env(safe-area-inset-top, 0px), var(--ion-safe-area-top, 0px), 20px) + 6px)",
       left: "50%",
       transform: "translateX(-50%)",
       zIndex: 9999,
       userSelect: "none",
+      pointerEvents: "none",
       filter: `drop-shadow(0 0 14px ${colours.glow})`,
     }}>
       <div
@@ -128,6 +129,9 @@ export function ShiftCountdownIsland() {
           border: `1.5px solid ${colours.ring}55`,
           boxShadow: `0 0 0 1px ${colours.ring}22, inset 0 1px 0 rgba(255,255,255,0.06)`,
           cursor: "pointer",
+          pointerEvents: "auto",
+          touchAction: "manipulation",
+          WebkitTapHighlightColor: "transparent",
         }}
         onClick={() => setExpanded(x => !x)}
       >
