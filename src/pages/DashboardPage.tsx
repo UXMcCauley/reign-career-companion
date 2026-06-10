@@ -34,6 +34,14 @@ import { Geolocation } from '@capacitor/geolocation';
 import './DashboardPage.css';
 import { Capacitor } from '@capacitor/core';
 
+const MASTERY_DEMO = [
+  { level: 4, fillPercent: 34 },
+  { level: 3, fillPercent: 67 },
+  { level: 5, fillPercent: 22 },
+  { level: 2, fillPercent: 81 },
+  { level: 4, fillPercent: 45 },
+];
+
 const metrics = defaultLoggedInEmployee.dashboard.metrics;
 const announcements = defaultLoggedInEmployee.dashboard.announcements;
 const activeContests = [
@@ -259,6 +267,14 @@ const DashboardPage: React.FC = () => {
   const [mapTilesLoaded, setMapTilesLoaded] = useState(false);
   const [mapExpanded, setMapExpanded] = useState(false);
   const expandedMapRef = useRef<L.Map | null>(null);
+  const masteryRailRef = useRef<HTMLDivElement | null>(null);
+  const [masteryAnim, setMasteryAnim] = useState({
+    currentLevel: MASTERY_DEMO[0].level,
+    prevLevel: MASTERY_DEMO[0].level,
+    animKey: 0,
+    dir: 'right' as 'left' | 'right',
+  });
+  const prevMasteryIndexRef = useRef(0);
 
   const handleMapTilesLoaded = useCallback(() => setMapTilesLoaded(true), []);
   const handleZoomIn = useCallback(() => mapRef.current?.zoomIn(), []);
@@ -516,6 +532,33 @@ const DashboardPage: React.FC = () => {
       .catch(() => undefined);
   }, []);
 
+  /* Mastery rail scroll → active index + swipe direction */
+  useEffect(() => {
+    const rail = masteryRailRef.current;
+    if (!rail) return;
+    const handleScroll = () => {
+      const cardEl = rail.children[0] as HTMLElement | undefined;
+      if (!cardEl) return;
+      const cardWidth = cardEl.offsetWidth + 10;
+      const newIndex = Math.min(
+        Math.round(rail.scrollLeft / cardWidth),
+        demoEmployeeTalentCards.length - 1
+      );
+      if (newIndex !== prevMasteryIndexRef.current) {
+        const dir = newIndex > prevMasteryIndexRef.current ? 'right' : 'left';
+        setMasteryAnim(prev => ({
+          currentLevel: MASTERY_DEMO[newIndex]?.level ?? 4,
+          prevLevel: prev.currentLevel,
+          animKey: prev.animKey + 1,
+          dir,
+        }));
+        prevMasteryIndexRef.current = newIndex;
+      }
+    };
+    rail.addEventListener('scroll', handleScroll, { passive: true });
+    return () => rail.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const timeLabel = useMemo(
     () => currentTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
     [currentTime]
@@ -620,16 +663,39 @@ const DashboardPage: React.FC = () => {
               ))}
             </div>
 
-            <div className="dash-mastery-section-label">Trade Mastery</div>
-            <div className="dash-mastery-rail" ref={(el) => { metricsRef.current[6] = el as HTMLElement; }}>
-              {demoEmployeeTalentCards.map(card => (
+            <div className="dash-mastery-section-label">
+              <span className="dash-mastery-section-title">Trade Mastery</span>
+              <div className="dash-mastery-level-container">
+                {masteryAnim.animKey > 0 && (
+                  <span
+                    key={`exit-${masteryAnim.animKey}`}
+                    className={`dash-mastery-level-inline dash-mastery-level-inline--exit-${masteryAnim.dir === 'right' ? 'left' : 'right'}`}
+                  >
+                    Level {masteryAnim.prevLevel}
+                  </span>
+                )}
+                <span
+                  key={`enter-${masteryAnim.animKey}`}
+                  className={masteryAnim.animKey > 0 ? `dash-mastery-level-inline dash-mastery-level-inline--enter-${masteryAnim.dir}` : 'dash-mastery-level-inline'}
+                >
+                  Level {masteryAnim.currentLevel}
+                </span>
+              </div>
+            </div>
+            <div
+              className="dash-mastery-rail"
+              ref={(el) => {
+                metricsRef.current[6] = el as HTMLElement;
+                masteryRailRef.current = el;
+              }}
+            >
+              {demoEmployeeTalentCards.map((card, i) => (
                 <div key={card.id} className="dash-mastery dash-mastery--card">
                   <div className="dash-mastery-header">
                     <span className="dash-mastery-title">{card.name}</span>
-                    <span className="dash-mastery-level">{defaultLoggedInEmployee.dashboard.mastery.levelLabel}</span>
                   </div>
                   <div className="dash-mastery-track">
-                    <div className="dash-mastery-fill" style={{ width: `${defaultLoggedInEmployee.dashboard.mastery.fillPercent}%` }} />
+                    <div className="dash-mastery-fill" style={{ width: `${MASTERY_DEMO[i]?.fillPercent ?? 34}%` }} />
                   </div>
                   <div className="dash-mastery-footer">
                     <span className="dash-mastery-pts">{defaultLoggedInEmployee.dashboard.mastery.pointsLabel}</span>

@@ -1140,8 +1140,8 @@
 .dash-mastery-fill {
   height: 100%;
   border-radius: 3px;
-  background: linear-gradient(90deg, var(--app-brand-dark-green) 0%, var(--app-brand-light-green) 100%);
-  box-shadow: 0 0 10px rgba(6, 164, 102, 0.45);
+  background: linear-gradient(90deg, var(--app-brand-dark-blue) 0%, var(--app-brand-light-pink) 100%);
+  box-shadow: 0 0 10px rgba(255, 0, 230, 0.35);
   transition: width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s;
 }
 
@@ -1155,15 +1155,90 @@
 .dash-mastery-remaining { font-size: 0.65rem; font-weight: 800; letter-spacing: 0.05em; color: #fff; }
 
 .dash-mastery-section-label {
+  display: flex;
+  align-items: baseline;
+  width: 100%;
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+.dash-mastery-section-title {
+  flex: 1;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.96);
-  margin-top: 12px;
-  margin-bottom: 8px;
-  padding: 0 2px;
-  width: 100%;
+}
+
+/*
+  Cards in the rail are flex: 0 0 88%, so their right edge sits at 88% of the
+  rail width. This container has margin-right: 12% so its right edge lands at
+  the same 88% mark — perfectly flush with the card's right edge.
+*/
+.dash-mastery-level-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-right: 12%;
+  /* wide enough for the text without collapsing during key remounts */
+  min-width: 5em;
+}
+
+.dash-mastery-level-inline {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* Exit spans sit on top via absolute so layout is driven by the entering span */
+.dash-mastery-level-inline--exit-left,
+.dash-mastery-level-inline--exit-right {
+  position: absolute;
+  right: 0;
+  pointer-events: none;
+}
+
+/* ── Enter: invisible through the first half of 100 px travel ── */
+.dash-mastery-level-inline--enter-right {
+  animation: masteryLevelEnterRight 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.dash-mastery-level-inline--enter-left {
+  animation: masteryLevelEnterLeft 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes masteryLevelEnterRight {
+  0%   { opacity: 0; transform: translateX(100px); filter: blur(10px); }
+  50%  { opacity: 0; transform: translateX(50px);  filter: blur(6px);  }
+  100% { opacity: 1; transform: translateX(0);     filter: blur(0);    }
+}
+@keyframes masteryLevelEnterLeft {
+  0%   { opacity: 0; transform: translateX(-100px); filter: blur(10px); }
+  50%  { opacity: 0; transform: translateX(-50px);  filter: blur(6px);  }
+  100% { opacity: 1; transform: translateX(0);      filter: blur(0);    }
+}
+
+/* ── Exit: fully visible through first half of 100 px travel, then gone ── */
+.dash-mastery-level-inline--exit-right {
+  animation: masteryLevelExitRight 0.44s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.dash-mastery-level-inline--exit-left {
+  animation: masteryLevelExitLeft 0.44s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes masteryLevelExitRight {
+  0%   { opacity: 1; transform: translateX(0);     filter: blur(0);    }
+  50%  { opacity: 1; transform: translateX(50px);  filter: blur(5px);  }
+  100% { opacity: 0; transform: translateX(100px); filter: blur(10px); }
+}
+@keyframes masteryLevelExitLeft {
+  0%   { opacity: 1; transform: translateX(0);      filter: blur(0);    }
+  50%  { opacity: 1; transform: translateX(-50px);  filter: blur(5px);  }
+  100% { opacity: 0; transform: translateX(-100px); filter: blur(10px); }
 }
 
 .dash-mastery-rail {
