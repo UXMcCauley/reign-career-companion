@@ -624,19 +624,21 @@ const DashboardPage: React.FC = () => {
                   </div>
                 </div> */}
 
-                <div className={`clock-alert ${isClockedIn ? 'clock-alert--info' : 'clock-alert--warning'}`}>
+                <div className={`clock-alert ${isClockedIn ? 'clock-alert--info' : ''}`}>
                   {isClockedIn ? (
                     <p className="clock-note">
                       <span className="clock-note-label"><span className="clock-note-label-date">{dateLabel}</span> <span className="clock-note-label-time">{timeLabel}</span></span> <span className="clock-note-value-divider"></span>
-                      <span className="clock-note-value"><span className="clock-note-value-keycard">{activeKeyCardName}</span> {onBreak && <span className="clock-note-value-break">On break for {formatDuration(breakElapsedSeconds)}</span>}</span>
+                      <span className="clock-note-value"><span className="clock-note-value-keycard">{activeKeyCardName ? activeKeyCardName : 'No key card selected'}</span> {onBreak && <span className="clock-note-value-break">On break for {formatDuration(breakElapsedSeconds)}</span>}</span>
                     </p>
                   ) : (
-                    <p className="clock-note"><span className="clock-note-label">{defaultLoggedInEmployee.dashboard.clockAlert}</span></p>
+                    <div> </div>
+                    // <p className="clock-note"><span className="clock-note-label">{defaultLoggedInEmployee.dashboard.clockAlert}</span></p>
                   )}
                 </div>
               </div>
 
               {/* ── Floating action buttons — 20 px from each viewport edge ── */}
+              <div className="clock-float-btn-container">
               <button
                 type="button"
                 className="clock-float-btn clock-float-btn--left"
@@ -655,6 +657,8 @@ const DashboardPage: React.FC = () => {
                 <span>{rightActionLabel}</span>
                 {breakTimerLabel && <IonBadge color="light">{breakTimerLabel}</IonBadge>}
               </button>
+              </div>
+              
             </div>
 
             {/* ── Shifts ── */}

@@ -64,7 +64,7 @@
       "pointsLabel": "2,960 pts",
       "remainingLabel": "640 to Level 5"
     },
-    "clockAlert": "You are scheduled with Team Blue this week. Confirm your clock-ins at shift start.",
+    "clockAlert": "",
     "announcements": [
       {
         "id": "safety-briefing",

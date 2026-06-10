@@ -488,13 +488,12 @@
   margin-top: -55px;
   border-top-left-radius: 50% 55px;
   border-top-right-radius: 50% 55px;
-  padding: 84px 14px 116px;
+  padding: 81px 14px 6px;
   background: linear-gradient(175deg, rgba(9, 10, 22, 0.98) 0%, rgba(14, 13, 30, 0.96) 100%);
   border: 1px solid rgba(255, 255, 255, 0.10);
   border-bottom: none;
-  box-shadow:
-    0 -2px 32px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.055);
+  box-shadow: 0 -2px 32px rgba(0, 0, 0, 0.55),
+  inset 0 1px 0 rgba(255, 255, 255, 0.055);
 }
 
 /* Subtle glow at the button base */
@@ -617,10 +616,13 @@
 
 .clock-note {
   margin: 0;
-  font-size: 0.78rem;
   line-height: 1.25;
-  color: var(--app-warning-text);
-
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  flex-direction: column;
 }
 
 .clock-alert--info .clock-note { color: var(--app-info-text); }
@@ -632,9 +634,8 @@
 .clock-note-label {
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-size: 0.73rem;
+  font-size: 16px;
   font-weight: 700;
-  margin-bottom: 2px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -661,52 +662,58 @@
   color: rgba(198, 208, 233, 0.62);
 }
 
+
+
 /* ── Floating action buttons — 20 px from each viewport edge ── */
 
+.clock-float-btn-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
 .clock-float-btn {
-  position: absolute;
+  /* position: absolute; */
   bottom: 24px;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  background: transparent;
+  display: inline-flex;
   gap: 5px;
-  width: 118px;
+  min-width: 60px;
   min-height: 68px;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(10, 12, 24, 0.90);
-  backdrop-filter: blur(22px) saturate(150%);
-  -webkit-backdrop-filter: blur(22px) saturate(150%);
   color: #edf2ff;
-  font-size: 0.68rem;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.01em;
-  z-index: 20; /* same level as clock button, above map shell and bowl */
+  z-index: 20;
   -webkit-tap-highlight-color: transparent;
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.09);
   transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
+  align-content: center;
 }
 
 .clock-float-btn:active {
   transform: scale(0.94);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
-
+/* 
 .clock-float-btn--left  { left: 20px; }
-.clock-float-btn--right { right: 20px; }
+.clock-float-btn--right { right: 20px; } */
 
 .clock-float-btn ion-icon {
-  font-size: 1.3rem;
-  color: var(--app-brand-light-blue, #5daded);
+  font-size: 30px;
+  color: #ffffff;
 }
 
 .clock-float-btn ion-badge {
   margin-top: 1px;
-  font-size: 0.63rem;
+  font-size: 20px;
   letter-spacing: 0.04em;
+  color: #ffffff;
 }
 
 /* ──────────────── SECTION HEADERS ──────────────── */
