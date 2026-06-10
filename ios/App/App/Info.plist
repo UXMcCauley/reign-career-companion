@@ -10,6 +10,11 @@
 
     <key>NSPhotoLibraryAddUsageDescription</key>
     <string>Reign saves photos to your library when requested.</string>
+
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Reign uses your location to show your distance from the job site and verify clock-in.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Reign uses your location to show your distance from the job site and verify clock-in.</string>
 	<key>CAPACITOR_DEBUG</key>
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>

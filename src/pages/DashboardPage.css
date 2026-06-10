@@ -729,56 +729,160 @@
 
 
 
-/* ── Floating action buttons — 20 px from each viewport edge ── */
+/* ── Floating action buttons ── */
 
 .clock-float-btn-container {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
+  margin-top: 20px;
 }
 
 .clock-float-btn {
-  /* position: absolute; */
-  bottom: 24px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: transparent;
   display: inline-flex;
-  gap: 5px;
-  min-width: 60px;
-  min-height: 68px;
-  color: #edf2ff;
-  font-size: 11px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 11px 22px;
+  min-height: 44px;
+  border-radius: 999px;
+  background: linear-gradient(
+    135deg,
+    rgba(4, 40, 130, 0.52) 0%,
+    rgba(1, 18, 60, 0.56) 100%
+  );
+  border: 1px solid rgba(103, 208, 255, 0.22);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.78rem;
   font-weight: 600;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   z-index: 20;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
-  align-content: center;
+  transition:
+    transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .clock-float-btn:active {
-  transform: scale(0.94);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  background: linear-gradient(135deg, #67d0ff 0%, #1a7fdf 100%);
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow:
+    0 4px 18px rgba(31, 143, 255, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transform: scale(0.96);
+  color: #ffffff;
 }
-/* 
-.clock-float-btn--left  { left: 20px; }
-.clock-float-btn--right { right: 20px; } */
 
 .clock-float-btn ion-icon {
-  font-size: 30px;
+  font-size: 17px;
+  color: rgba(103, 208, 255, 0.9);
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.clock-float-btn:active ion-icon {
   color: #ffffff;
 }
 
-.clock-float-btn ion-badge {
-  margin-top: 1px;
-  font-size: 20px;
-  letter-spacing: 0.04em;
+/* ──────────────── EXPANDED MAP OVERLAY ──────────────── */
+
+.map-expanded-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-expanded-overlay .leaflet-container {
+  flex: 1;
+  height: 100%;
+  width: 100%;
+}
+
+.map-expanded-close-btn {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  left: 16px;
+  z-index: 10001;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   color: #ffffff;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.12s;
+}
+
+.map-expanded-close-btn:active {
+  transform: scale(0.9);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.map-expanded-zoom-controls {
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  right: 16px;
+}
+
+.map-expanded-locate-btn {
+  top: calc(env(safe-area-inset-top, 0px) + 96px);
+  right: 16px;
+}
+
+.map-expanded-directions-btn {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10001;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 15px 30px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #1f8fff 0%, #0053c8 100%);
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: none;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow:
+    0 8px 28px rgba(31, 143, 255, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
+}
+
+.map-expanded-directions-btn:active {
+  transform: translateX(-50%) scale(0.96) translateY(0);
+  box-shadow: 0 4px 16px rgba(31, 143, 255, 0.42);
+}
+
+.map-expanded-directions-btn ion-icon {
+  font-size: 1.15rem;
+  flex-shrink: 0;
 }
 
 /* ──────────────── SECTION HEADERS ──────────────── */

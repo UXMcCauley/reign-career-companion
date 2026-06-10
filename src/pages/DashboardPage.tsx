@@ -13,6 +13,8 @@ import {
   albumsOutline,
   cafeOutline,
   chevronForwardOutline,
+  closeOutline,
+  expandOutline,
   locateOutline,
   navigateOutline,
   timeOutline,
@@ -28,6 +30,7 @@ import { demoEmployeeTalentCards } from '../data/talentCards';
 import { MapContainer, TileLayer, Circle, CircleMarker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { Geolocation } from '@capacitor/geolocation';
 import './DashboardPage.css';
 
 const metrics = defaultLoggedInEmployee.dashboard.metrics;
@@ -139,7 +142,7 @@ function pickGreeting(): string {
 
 /* Bridges the map instance to an external ref, tracks tile loading, and controls the view. */
 const MapController: React.FC<{
-  mapRef: React.MutableRefObject<L.Map | null>;
+  mapRef: { current: L.Map | null };
   userPosition: { latitude: number; longitude: number } | null;
   onTilesLoaded: () => void;
 }> = ({ mapRef, userPosition, onTilesLoaded }) => {
@@ -181,6 +184,32 @@ const MapController: React.FC<{
   return null;
 };
 
+/* One-shot fit controller for the expanded map — fits bounds once then stays out of the way. */
+const ExpandedMapController: React.FC<{
+  mapRef: { current: L.Map | null };
+  userPosition: { latitude: number; longitude: number } | null;
+}> = ({ mapRef, userPosition }) => {
+  const map = useMap();
+  const hasFitted = useRef(false);
+
+  useEffect(() => {
+    mapRef.current = map;
+    return () => { mapRef.current = null; };
+  }, [map, mapRef]);
+
+  useEffect(() => {
+    if (hasFitted.current || !userPosition) return;
+    const bounds = L.latLngBounds(
+      [configuredJobSite.latitude, configuredJobSite.longitude],
+      [userPosition.latitude, userPosition.longitude]
+    );
+    map.fitBounds(bounds, { padding: [60, 60], maxZoom: 17 });
+    hasFitted.current = true;
+  }, [map, userPosition]);
+
+  return null;
+};
+
 const DashboardPage: React.FC = () => {
   const history = useHistory();
   const [presentAlert] = useIonAlert();
@@ -200,6 +229,8 @@ const DashboardPage: React.FC = () => {
   const totalBreakSecondsRef = useRef(0);
   const mapRef = useRef<L.Map | null>(null);
   const [mapTilesLoaded, setMapTilesLoaded] = useState(false);
+  const [mapExpanded, setMapExpanded] = useState(false);
+  const expandedMapRef = useRef<L.Map | null>(null);
 
   const handleMapTilesLoaded = useCallback(() => setMapTilesLoaded(true), []);
   const handleZoomIn  = useCallback(() => mapRef.current?.zoomIn(), []);
@@ -317,13 +348,25 @@ const DashboardPage: React.FC = () => {
 
   /* GPS watch */
   useEffect(() => {
-    if (!navigator.geolocation) return;
-    const id = navigator.geolocation.watchPosition(
-      pos => setUserPosition({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-      () => undefined,
-      { enableHighAccuracy: true, maximumAge: 15000, timeout: 15000 }
-    );
-    return () => navigator.geolocation.clearWatch(id);
+    let watchId: string | null = null;
+
+    Geolocation.requestPermissions().then(status => {
+      if (status.location !== 'granted' && status.coarseLocation !== 'granted') return;
+      Geolocation.watchPosition(
+        { enableHighAccuracy: true, maximumAge: 15000, timeout: 15000 },
+        pos => {
+          if (!pos) return;
+          const { latitude, longitude } = pos.coords;
+          if (!isNaN(latitude) && !isNaN(longitude)) {
+            setUserPosition({ latitude, longitude });
+          }
+        }
+      ).then(id => { watchId = id; });
+    });
+
+    return () => {
+      if (watchId !== null) Geolocation.clearWatch({ id: watchId });
+    };
   }, []);
 
   /* Break timer */
@@ -663,6 +706,15 @@ const DashboardPage: React.FC = () => {
 
               <button
                 type="button"
+                className="clock-float-btn"
+                onClick={() => setMapExpanded(true)}
+              >
+                <IonIcon icon={expandOutline} />
+                <span>Map</span>
+              </button>
+
+              <button
+                type="button"
                 className="clock-float-btn clock-float-btn--right"
                 onClick={handleRightAction}
               >
@@ -735,6 +787,80 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
       </IonContent>
+      {mapExpanded && (
+        <div className="map-expanded-overlay">
+          <MapContainer
+            center={[configuredJobSite.latitude, configuredJobSite.longitude]}
+            zoom={16}
+            zoomControl={false}
+            attributionControl={false}
+            style={{ height: '100%', width: '100%' }}
+          >
+            <TileLayer
+              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+              attribution="&copy; OpenStreetMap contributors &copy; CARTO"
+              subdomains="abcd"
+              updateWhenZooming={false}
+              keepBuffer={3}
+            />
+            <Circle
+              center={[configuredJobSite.latitude, configuredJobSite.longitude]}
+              radius={GEOFENCE_RADIUS_FEET / FEET_PER_METER}
+              pathOptions={{ color: '#ff4f8d', fillColor: '#ff4f8d', fillOpacity: 0.14, weight: 2, opacity: 0.58 }}
+            />
+            <CircleMarker
+              center={[configuredJobSite.latitude, configuredJobSite.longitude]}
+              radius={7}
+              pathOptions={{ color: '#ffffff', fillColor: '#ff4f8d', fillOpacity: 1, weight: 1.5 }}
+            />
+            {userPosition && (
+              <CircleMarker
+                center={[userPosition.latitude, userPosition.longitude]}
+                radius={9}
+                pathOptions={{ color: '#ffffff', fillColor: '#1f8fff', fillOpacity: 1, weight: 2.5 }}
+              />
+            )}
+            <ExpandedMapController mapRef={expandedMapRef} userPosition={userPosition} />
+          </MapContainer>
+
+          {/* Close */}
+          <button
+            className="map-expanded-close-btn"
+            onClick={() => setMapExpanded(false)}
+            aria-label="Close map"
+          >
+            <IonIcon icon={closeOutline} />
+          </button>
+
+          {/* Zoom controls */}
+          <div className="map-zoom-controls map-expanded-zoom-controls">
+            <button className="map-zoom-btn" onClick={() => expandedMapRef.current?.zoomIn()} aria-label="Zoom in">+</button>
+            <button className="map-zoom-btn" onClick={() => expandedMapRef.current?.zoomOut()} aria-label="Zoom out">−</button>
+          </div>
+
+          {/* Locate */}
+          <button
+            className={`map-locate-btn map-expanded-locate-btn${userPosition ? ' is-active' : ''}`}
+            onClick={() => {
+              if (userPosition && expandedMapRef.current) {
+                expandedMapRef.current.flyTo([userPosition.latitude, userPosition.longitude], 17, { duration: 0.7 });
+              }
+            }}
+            aria-label="Center on my location"
+          >
+            <IonIcon icon={locateOutline} />
+          </button>
+
+          {/* Directions to job site */}
+          <a
+            className="map-expanded-directions-btn"
+            href={`maps://maps.apple.com/?daddr=${configuredJobSite.latitude},${configuredJobSite.longitude}&dirflg=d`}
+          >
+            <IonIcon icon={navigateOutline} />
+            <span>Directions to {configuredJobSite.name}</span>
+          </a>
+        </div>
+      )}
     </IonPage>
   );
 };

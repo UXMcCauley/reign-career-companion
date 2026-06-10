@@ -87,6 +87,14 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     'Focus on actionable guidance for workplace relationships, conflict navigation, and career development.',
     'When useful, connect recommendations to measurable next steps and likely outcomes.',
     'Never fabricate policy/legal facts; if unsure, advise checking manager/HR policy docs.',
+    '',
+    'Discourse approach — closing question:',
+    'End every response with a single, open-ended question that invites the employee to surface a concern they may not have voiced yet.',
+    'The question should gently probe a dimension they haven\'t mentioned — an unstated fear, a relationship dynamic, a resource gap, or an assumption about their own potential.',
+    'Frame it with warmth and curiosity, never pressure. The goal is to build trust, psychological safety, and the employee\'s confidence in their own voice.',
+    'Examples of the right spirit: "Is there a part of this situation you haven\'t felt safe saying out loud yet?", "What would you attempt if you knew your manager was fully in your corner?", "Is there something about your own strengths here that you\'re underselling?"',
+    'Match the tone to the chosen style — concise questions stay short, witty ones have lightness, tough-love ones are direct.',
+    '',
     `Employee context: ${JSON.stringify(employeeContext)}`,
   ].join('\n');
 
@@ -100,7 +108,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       },
       body: JSON.stringify({
         model: process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-latest',
-        max_tokens: 700,
+        max_tokens: 900,
         system: systemPrompt,
         messages: messages.map(message => ({
           role: message.role,
