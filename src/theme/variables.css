@@ -13,9 +13,9 @@ http://ionicframework.com/docs/theming/ */
   --app-brand-light-blue-opacity-5: rgba(#0677f0, 0.5);
   --app-brand-light-blue-opacity-7: rgba(#0677f0, 0.7);
   --app-brand-light-blue-opacity-9: rgba(#0677f0, 0.9);
-  
-  --app-brand-light-green: #06c50c; 
-  --app-brand-dark-green: #038908; 
+
+  --app-brand-light-green: #06c50c;
+  --app-brand-dark-green: #038908;
 
   --app-brand-dark-pink: #b70064;
   --app-brand-light-pink: #ff00e6;
@@ -131,14 +131,23 @@ ion-content {
 
 .floating-tab-bar {
   position: fixed;
-  bottom: calc(16px + var(--ion-safe-area-bottom, 0px));
+  bottom: calc(-20px + var(--ion-safe-area-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 32px);
   max-width: 400px;
-  height: 62px;
+  height: 72px;
   z-index: 1000;
   pointer-events: none;
+}  
+
+    /* .plt-native.ios .floating-tab-bar {
+      bottom: calc(2px + max(var(--ion-safe-area-bottom, 0px), env(safe-area-inset-bottom, 0px)));
+    } */
+
+.plt-mobileweb .floating-tab-bar {
+  /* Mobile web needs env() support for browser UI overlap. */
+  bottom: calc(10px + max(var(--ion-safe-area-bottom, 0px), env(safe-area-inset-bottom, 0px)));
 }
 
 .floating-tab-bar-track {
@@ -146,12 +155,10 @@ ion-content {
   display: flex;
   align-items: center;
   height: 100%;
-  background: linear-gradient(
-    105deg,
-    rgba(30, 4, 42, 0.97) 0%,
-    rgba(10, 8, 28, 0.97) 45%,
-    rgba(4, 10, 46, 0.97) 100%
-  );
+  background: linear-gradient(105deg,
+      rgba(30, 4, 42, 0.97) 0%,
+      rgba(10, 8, 28, 0.97) 45%,
+      rgba(4, 10, 46, 0.97) 100%);
   border-radius: 100px;
   box-shadow:
     0 8px 40px rgba(0, 0, 0, 0.78),
@@ -214,10 +221,10 @@ ion-content {
   position: absolute;
   top: 16px;
   right: 16px;
-  width: 10px; 
+  width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #ff4f8d; 
+  background: #ff4f8d;
   box-shadow: 0 0 0 2px rgba(10, 8, 28, 0.98);
 }
 
@@ -243,10 +250,12 @@ ion-menu.profile-drawer::part(container) {
     transform: translate3d(-1.2%, -0.8%, 0) scale(1.06);
     filter: hue-rotate(0deg) saturate(102%);
   }
+
   50% {
     transform: translate3d(0.8%, 1.2%, 0) scale(1.09);
     filter: hue-rotate(6deg) saturate(108%);
   }
+
   100% {
     transform: translate3d(-0.6%, 0.5%, 0) scale(1.07);
     filter: hue-rotate(11deg) saturate(106%);
@@ -257,6 +266,7 @@ ion-menu.profile-drawer::part(container) {
   0% {
     transform: translate3d(0, 0, 0);
   }
+
   100% {
     transform: translate3d(-2.8%, -2.2%, 0);
   }
