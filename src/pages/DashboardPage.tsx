@@ -181,6 +181,23 @@ const MapController: React.FC<{
     }
   }, [map, userPosition]);
 
+  useEffect(() => {
+    const persistView = () => {
+      const center = map.getCenter();
+      localStorage.setItem('reign_map_view', JSON.stringify({
+        center: [center.lat, center.lng],
+        zoom: map.getZoom(),
+      }));
+    };
+
+    map.on('moveend', persistView);
+    map.on('zoomend', persistView);
+    return () => {
+      map.off('moveend', persistView);
+      map.off('zoomend', persistView);
+    };
+  }, [map]);
+
   return null;
 };
 
@@ -191,6 +208,11 @@ const ExpandedMapController: React.FC<{
 }> = ({ mapRef, userPosition }) => {
   const map = useMap();
   const hasFitted = useRef(false);
+useEffect(() => {
+  if (!userPosition || hasFitted.current) return;
+  hasFitted.current = true;
+  // ...fitBounds + save
+}, [map, userPosition]);
 
   useEffect(() => {
     mapRef.current = map;
@@ -206,6 +228,7 @@ const ExpandedMapController: React.FC<{
     map.fitBounds(bounds, { padding: [60, 60], maxZoom: 17 });
     hasFitted.current = true;
   }, [map, userPosition]);
+  
 
   return null;
 };
@@ -352,7 +375,15 @@ const DashboardPage: React.FC = () => {
 
     Geolocation.requestPermissions().then(status => {
       if (status.location !== 'granted' && status.coarseLocation !== 'granted') return;
-      Geolocation.watchPosition(
+  
+      // ── INSERT HERE (~line 355) ──
+      // why this matters: cached fix arrives ~50ms vs 2-8s for fresh GPS
+      Geolocation.getCurrentPosition({ maximumAge: 300000, enableHighAccuracy: false })
+        .then(pos => setUserPosition({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }))
+        .catch(() => undefined);
+      // ── END INSERT ──
+  
+      Geolocation.watchPosition(                            // existing code continues
         { enableHighAccuracy: true, maximumAge: 15000, timeout: 15000 },
         pos => {
           if (!pos) return;
@@ -363,6 +394,8 @@ const DashboardPage: React.FC = () => {
         }
       ).then(id => { watchId = id; });
     });
+
+    
 
     return () => {
       if (watchId !== null) Geolocation.clearWatch({ id: watchId });
@@ -454,6 +487,11 @@ const DashboardPage: React.FC = () => {
   const keyCardActionLabel = isClockedIn ? 'Switch Keycard' : 'Select Keycard';
   const rightActionLabel   = isClockedIn ? (onBreak ? 'End Break' : 'Start Break') : 'Shift Details';
 
+  const savedView = (() => {
+    try { return JSON.parse(localStorage.getItem('reign_map_view') ?? 'null'); }
+    catch { return null; }
+  })();
+
   const handleMainClockButton = () => {
     if (isClockedIn) { handleClockOut(); return; }
     if (canClockIn) handleClockIn();
@@ -528,9 +566,9 @@ const DashboardPage: React.FC = () => {
 
               {/* Map — CartoDB Voyager tiles, free, no key */}
               <div className="clock-map-shell">
-                <MapContainer
-                  center={[configuredJobSite.latitude, configuredJobSite.longitude]}
-                  zoom={16}
+              <MapContainer
+  center={savedView?.center ?? [configuredJobSite.latitude, configuredJobSite.longitude]}
+  zoom={savedView?.zoom ?? 16}
                   zoomControl={false}
                   attributionControl={false}
                   className="clock-map-canvas"
