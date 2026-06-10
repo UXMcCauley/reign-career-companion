@@ -1,5 +1,4 @@
 import {
-  IonBadge,
   IonCard,
   IonCardContent,
   IonCardHeader,
@@ -13,7 +12,6 @@ import {
 import {
   albumsOutline,
   cafeOutline,
-  checkmarkCircleOutline,
   chevronForwardOutline,
   locateOutline,
   navigateOutline,
@@ -266,8 +264,8 @@ const DashboardPage: React.FC = () => {
     });
   };
 
-  const handleSelectKeyCard = () => chooseKeyCard('Select key card', setActiveKeyCardId);
-  const handleSwitchKeyCard  = () => chooseKeyCard('Switch key card', setActiveKeyCardId);
+  const handleSelectKeyCard = () => chooseKeyCard('Select keycard', setActiveKeyCardId);
+  const handleSwitchKeyCard  = () => chooseKeyCard('Switch keycard', setActiveKeyCardId);
 
   const handleClockIn = () => {
     totalBreakSecondsRef.current = 0;
@@ -393,7 +391,7 @@ const DashboardPage: React.FC = () => {
   }, [currentTime, shiftMap]);
 
   const activeKeyCardName = useMemo(
-    () => demoEmployeeTalentCards.find(c => c.id === activeKeyCardId)?.name ?? 'No key card selected',
+    () => demoEmployeeTalentCards.find(c => c.id === activeKeyCardId)?.name ?? null,
     [activeKeyCardId]
   );
 
@@ -410,8 +408,7 @@ const DashboardPage: React.FC = () => {
     (distanceToJobSiteFeet !== null && distanceToJobSiteFeet <= GEOFENCE_RADIUS_FEET);
   const canClockIn      = Boolean(activeKeyCardId) && isWithinGeofence && !isClockedIn;
   const canUseMainButton = isClockedIn || canClockIn;
-  const breakTimerLabel  = onBreak ? formatDuration(breakElapsedSeconds) : null;
-  const keyCardActionLabel = isClockedIn ? 'Switch Key Card' : 'Select Key Card';
+  const keyCardActionLabel = isClockedIn ? 'Switch Keycard' : 'Select Keycard';
   const rightActionLabel   = isClockedIn ? (onBreak ? 'End Break' : 'Start Break') : 'Shift Details';
 
   const handleMainClockButton = () => {
@@ -565,9 +562,20 @@ const DashboardPage: React.FC = () => {
                 {distanceToJobSiteFeet !== null && (
                   <div className={`clock-distance-chip${isWithinGeofence ? ' in-range' : ''}`}>
                     <IonIcon icon={navigateOutline} />
-                    <span>
-                      {isWithinGeofence ? 'In geofence' : `${Math.round(distanceToJobSiteFeet)} ft away`}
-                    </span>
+                    {isWithinGeofence ? (
+                      <span>In geofence</span>
+                    ) : (
+                      <span className="clock-distance-chip__out">
+                        <span>{Math.round(Math.max(0, distanceToJobSiteFeet - GEOFENCE_RADIUS_FEET))} ft from geofence</span>
+                        <a
+                          className="clock-distance-chip__directions"
+                          href={`maps://maps.apple.com/?daddr=${configuredJobSite.latitude},${configuredJobSite.longitude}&dirflg=d`}
+                          onClick={e => e.stopPropagation()}
+                        >
+                          Directions
+                        </a>
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
@@ -580,7 +588,7 @@ const DashboardPage: React.FC = () => {
                 disabled={!canUseMainButton}
                 aria-disabled={!canUseMainButton}
               >
-                <IonIcon icon={checkmarkCircleOutline} />
+                <IonIcon icon={timeOutline} />
                 <span>{isClockedIn ? 'Clock Out' : 'Clock In'}</span>
               </button>
 
@@ -624,16 +632,21 @@ const DashboardPage: React.FC = () => {
                   </div>
                 </div> */}
 
-                <div className={`clock-alert ${isClockedIn ? 'clock-alert--info' : ''}`}>
-                  {isClockedIn ? (
-                    <p className="clock-note">
-                      <span className="clock-note-label"><span className="clock-note-label-date">{dateLabel}</span> <span className="clock-note-label-time">{timeLabel}</span></span> <span className="clock-note-value-divider"></span>
-                      <span className="clock-note-value"><span className="clock-note-value-keycard">{activeKeyCardName ? activeKeyCardName : 'No key card selected'}</span> {onBreak && <span className="clock-note-value-break">On break for {formatDuration(breakElapsedSeconds)}</span>}</span>
-                    </p>
-                  ) : (
-                    <div> </div>
-                    // <p className="clock-note"><span className="clock-note-label">{defaultLoggedInEmployee.dashboard.clockAlert}</span></p>
-                  )}
+                <div className={`clock-alert${isClockedIn ? ' clock-alert--info' : ''}`}>
+                  <div className="clock-note">
+                    {/* Row 1 — date and time, same style, justified */}
+                    <div className="clock-note-datetime">
+                      <span className="clock-note-label-date">{dateLabel}</span>
+                      <span className="clock-note-label-time">{timeLabel}</span>
+                    </div>
+                    {/* Row 2 — keycard name + shift status inline */}
+                    <div className="clock-note-value">
+                      <span className="clock-note-value-keycard">
+                        {activeKeyCardName ?? 'No keycard selected'}
+                      </span>
+                     
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -655,7 +668,6 @@ const DashboardPage: React.FC = () => {
               >
                 <IonIcon icon={isClockedIn ? cafeOutline : timeOutline} />
                 <span>{rightActionLabel}</span>
-                {breakTimerLabel && <IonBadge color="light">{breakTimerLabel}</IonBadge>}
               </button>
               </div>
               
