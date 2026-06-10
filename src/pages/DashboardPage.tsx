@@ -1,5 +1,5 @@
 import {
-  IonButton,
+  IonBadge,
   IonCard,
   IonCardContent,
   IonCardHeader,
@@ -11,16 +11,20 @@ import {
   useIonAlert,
 } from '@ionic/react';
 import {
+  albumsOutline,
   cafeOutline,
   checkmarkCircleOutline,
   chevronForwardOutline,
-  logOutOutline,
-  shuffleOutline,
+  locateOutline,
+  navigateOutline,
   timeOutline,
 } from 'ionicons/icons';
 import type { ScrollDetail } from '@ionic/core';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useHistory } from 'react-router-dom';
+import mapboxgl from 'mapbox-gl';
+import type { Feature, Polygon } from 'geojson';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { useAuth } from '../context/AuthContext';
 import { loadShifts } from '../data/blobStorage';
 import { defaultLoggedInEmployee } from '../data/defaultLoggedInEmployee';
@@ -61,6 +65,92 @@ const activeContests = [
   },
 ];
 
+const FEET_PER_METER = 3.28084;
+const GEOFENCE_RADIUS_FEET = 100;
+const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
+
+const configuredJobSite = (() => {
+  const lat = Number(import.meta.env.VITE_JOB_SITE_LAT);
+  const lng = Number(import.meta.env.VITE_JOB_SITE_LNG);
+  if (Number.isFinite(lat) && Number.isFinite(lng)) {
+    return {
+      name: (import.meta.env.VITE_JOB_SITE_NAME as string | undefined) ?? 'Configured Job Site',
+      latitude: lat,
+      longitude: lng,
+    };
+  }
+  return {
+    name: 'Downtown Job Site',
+    latitude: 43.052639,
+    longitude: -87.896407,
+  };
+})();
+
+function toRadians(degrees: number): number {
+  return (degrees * Math.PI) / 180;
+}
+
+function distanceInFeet(
+  from: { latitude: number; longitude: number },
+  to: { latitude: number; longitude: number }
+): number {
+  const earthRadiusMeters = 6371000;
+  const dLat = toRadians(to.latitude - from.latitude);
+  const dLng = toRadians(to.longitude - from.longitude);
+  const lat1 = toRadians(from.latitude);
+  const lat2 = toRadians(to.latitude);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distanceMeters = earthRadiusMeters * c;
+  return distanceMeters * FEET_PER_METER;
+}
+
+function buildGeofencePolygon(
+  center: { latitude: number; longitude: number },
+  radiusFeet: number,
+  points = 72
+): Feature<Polygon> {
+  const radiusMeters = radiusFeet / FEET_PER_METER;
+  const earthRadiusMeters = 6371000;
+  const centerLatRad = toRadians(center.latitude);
+  const centerLngRad = toRadians(center.longitude);
+  const angularDistance = radiusMeters / earthRadiusMeters;
+  const coordinates: [number, number][] = [];
+
+  for (let i = 0; i <= points; i += 1) {
+    const bearing = (2 * Math.PI * i) / points;
+    const sinLat = Math.sin(centerLatRad) * Math.cos(angularDistance) +
+      Math.cos(centerLatRad) * Math.sin(angularDistance) * Math.cos(bearing);
+    const lat = Math.asin(sinLat);
+    const y = Math.sin(bearing) * Math.sin(angularDistance) * Math.cos(centerLatRad);
+    const x = Math.cos(angularDistance) - Math.sin(centerLatRad) * Math.sin(lat);
+    const lng = centerLngRad + Math.atan2(y, x);
+    coordinates.push([(lng * 180) / Math.PI, (lat * 180) / Math.PI]);
+  }
+
+  return {
+    type: 'Feature',
+    properties: {},
+    geometry: {
+      type: 'Polygon',
+      coordinates: [coordinates],
+    },
+  };
+}
+
+function formatDuration(totalSeconds: number): string {
+  const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(safeSeconds / 3600);
+  const minutes = Math.floor((safeSeconds % 3600) / 60);
+  const seconds = safeSeconds % 60;
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
 function pickGreeting(): string {
   const h = new Date().getHours();
   const morning = ['Good morning', 'Rise and shine', 'Morning'];
@@ -78,9 +168,16 @@ const DashboardPage: React.FC = () => {
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [activeKeyCardId, setActiveKeyCardId] = useState<string | null>(null);
   const [onBreak, setOnBreak] = useState(false);
+  const [breakStartedAt, setBreakStartedAt] = useState<number | null>(null);
+  const [breakElapsedSeconds, setBreakElapsedSeconds] = useState(0);
+  const [userPosition, setUserPosition] = useState<{ latitude: number; longitude: number } | null>(null);
   const [shiftMap, setShiftMap] = useState<Record<string, Shift>>({});
   const { userName } = useAuth();
   const metricsRef = useRef<(HTMLElement | null)[]>([]);
+  const mapCanvasRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const userMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const hasFitBoundsRef = useRef(false);
 
   const onContentScroll = useCallback((e: CustomEvent<ScrollDetail>) => {
     const s = e.detail.scrollTop;
@@ -143,12 +240,17 @@ const DashboardPage: React.FC = () => {
     });
   };
 
-  const handleClockIn = () => {
-    chooseKeyCard('Clock in to key card', (selectedId) => {
+  const handleSelectKeyCard = () => {
+    chooseKeyCard('Select key card', (selectedId) => {
       setActiveKeyCardId(selectedId);
-      setIsClockedIn(true);
-      setOnBreak(false);
     });
+  };
+
+  const handleClockIn = () => {
+    setIsClockedIn(true);
+    setOnBreak(false);
+    setBreakStartedAt(null);
+    setBreakElapsedSeconds(0);
   };
 
   const handleSwitchKeyCard = () => {
@@ -160,7 +262,22 @@ const DashboardPage: React.FC = () => {
   const handleClockOut = () => {
     setIsClockedIn(false);
     setOnBreak(false);
+    setBreakStartedAt(null);
+    setBreakElapsedSeconds(0);
     setActiveKeyCardId(null);
+  };
+
+  const handleBreakToggle = () => {
+    if (!isClockedIn) return;
+    setOnBreak(current => {
+      if (current) {
+        setBreakStartedAt(null);
+        setBreakElapsedSeconds(0);
+        return false;
+      }
+      setBreakStartedAt(Date.now());
+      return true;
+    });
   };
 
   useEffect(() => {
@@ -180,6 +297,139 @@ const DashboardPage: React.FC = () => {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      return;
+    }
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        setUserPosition({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      },
+      () => undefined,
+      {
+        enableHighAccuracy: true,
+        maximumAge: 15000,
+        timeout: 15000,
+      }
+    );
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mapboxToken || !mapCanvasRef.current || mapRef.current) return;
+    mapboxgl.accessToken = mapboxToken;
+    const map = new mapboxgl.Map({
+      container: mapCanvasRef.current,
+      style: 'mapbox://styles/mapbox/navigation-night-v1',
+      center: [configuredJobSite.longitude, configuredJobSite.latitude],
+      zoom: 15.3,
+      attributionControl: false,
+    });
+    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+    map.on('load', () => {
+      map.addSource('geofence', {
+        type: 'geojson',
+        data: buildGeofencePolygon(configuredJobSite, GEOFENCE_RADIUS_FEET),
+      });
+      map.addLayer({
+        id: 'geofence-fill',
+        type: 'fill',
+        source: 'geofence',
+        paint: {
+          'fill-color': '#ff4f8d',
+          'fill-opacity': 0.14,
+        },
+      });
+      map.addLayer({
+        id: 'geofence-outline',
+        type: 'line',
+        source: 'geofence',
+        paint: {
+          'line-color': '#ff4f8d',
+          'line-width': 2,
+          'line-opacity': 0.58,
+        },
+      });
+      map.addSource('geofence-center', {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              properties: {},
+              geometry: {
+                type: 'Point',
+                coordinates: [configuredJobSite.longitude, configuredJobSite.latitude],
+              },
+            },
+          ],
+        },
+      });
+      map.addLayer({
+        id: 'geofence-center-dot',
+        type: 'circle',
+        source: 'geofence-center',
+        paint: {
+          'circle-color': '#ff4f8d',
+          'circle-radius': 7,
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-width': 1.5,
+        },
+      });
+    });
+
+    const markerEl = document.createElement('div');
+    markerEl.className = 'clock-user-dot';
+    userMarkerRef.current = new mapboxgl.Marker({
+      element: markerEl,
+      anchor: 'center',
+    }).setLngLat([configuredJobSite.longitude, configuredJobSite.latitude]).addTo(map);
+
+    mapRef.current = map;
+
+    return () => {
+      userMarkerRef.current?.remove();
+      userMarkerRef.current = null;
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!userPosition || !mapRef.current || !userMarkerRef.current) return;
+    const map = mapRef.current;
+    const userLngLat: [number, number] = [userPosition.longitude, userPosition.latitude];
+    userMarkerRef.current.setLngLat(userLngLat);
+    if (!hasFitBoundsRef.current) {
+      const bounds = new mapboxgl.LngLatBounds(
+        [configuredJobSite.longitude, configuredJobSite.latitude],
+        [configuredJobSite.longitude, configuredJobSite.latitude]
+      );
+      bounds.extend(userLngLat);
+      map.fitBounds(bounds, {
+        padding: { top: 55, right: 55, bottom: 95, left: 55 },
+        duration: 700,
+        maxZoom: 16.8,
+      });
+      hasFitBoundsRef.current = true;
+    }
+  }, [userPosition]);
+
+  useEffect(() => {
+    if (!onBreak || !breakStartedAt) return;
+    const timer = window.setInterval(() => {
+      setBreakElapsedSeconds(Math.floor((Date.now() - breakStartedAt) / 1000));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [onBreak, breakStartedAt]);
 
   const timeLabel = useMemo(
     () =>
@@ -214,6 +464,40 @@ const DashboardPage: React.FC = () => {
     () => demoEmployeeTalentCards.find(card => card.id === activeKeyCardId)?.name ?? 'No key card selected',
     [activeKeyCardId]
   );
+
+  const distanceToJobSiteFeet = useMemo(
+    () =>
+      userPosition
+        ? distanceInFeet(userPosition, {
+            latitude: configuredJobSite.latitude,
+            longitude: configuredJobSite.longitude,
+          })
+        : null,
+    [userPosition]
+  );
+
+  const isWithinGeofence = distanceToJobSiteFeet !== null && distanceToJobSiteFeet <= GEOFENCE_RADIUS_FEET;
+  const canClockIn = Boolean(activeKeyCardId) && isWithinGeofence && !isClockedIn;
+  const canUseMainButton = isClockedIn || canClockIn;
+  const breakTimerLabel = onBreak ? formatDuration(breakElapsedSeconds) : null;
+  const keyCardActionLabel = isClockedIn ? 'Switch Key Card' : 'Select Key Card';
+  const rightActionLabel = isClockedIn ? (onBreak ? 'End Break' : 'Start Break') : 'Shift Details';
+
+  const handleMainClockButton = () => {
+    if (isClockedIn) {
+      handleClockOut();
+      return;
+    }
+    if (canClockIn) handleClockIn();
+  };
+
+  const handleRightAction = () => {
+    if (isClockedIn) {
+      handleBreakToggle();
+      return;
+    }
+    history.push('/schedule');
+  };
 
   const dateLabel = useMemo(
     () =>
@@ -299,42 +583,71 @@ const DashboardPage: React.FC = () => {
 
             {/* Clock In module */}
             <div className="dash-clock dash-clock-card ios-surface">
-              <div className="dash-date">{dateLabel}</div>
-              <div className="dash-time">{timeLabel}</div>
-              {!isClockedIn ? (
-                <IonButton expand="block" color="success" className="dash-clock-btn" onClick={handleClockIn}>
-                  <IonIcon icon={checkmarkCircleOutline} slot="start" />
-                  Clock In
-                </IonButton>
-              ) : (
-                <div className="clock-inline-actions">
+              <div className="clock-map-shell">
+                {mapboxToken ? (
+                  <div ref={mapCanvasRef} className="clock-map-canvas" aria-label="Interactive geofence map" />
+                ) : (
+                  <div className="clock-map-fallback" />
+                )}
+              
+              </div>
+
+              <div className="clock-bowl">
+                <button
+                  type="button"
+                  className={`clock-main-btn${canClockIn ? ' is-ready' : ''}${isClockedIn ? ' is-clockout' : ''}`}
+                  onClick={handleMainClockButton}
+                  disabled={!canUseMainButton}
+                  aria-disabled={!canUseMainButton}
+                >
+                  <IonIcon icon={checkmarkCircleOutline} />
+                  <span>{isClockedIn ? 'Clock Out' : 'Clock In'}</span>
+                </button>
+
+                <div className="clock-bowl-actions">
                   <button
-                    className={`clock-inline-btn clock-inline-btn--break${onBreak ? ' active' : ''}`}
-                    onClick={() => setOnBreak(v => !v)}
+                    type="button"
+                    className="clock-bowl-action"
+                    onClick={isClockedIn ? handleSwitchKeyCard : handleSelectKeyCard}
                   >
-                    <IonIcon icon={cafeOutline} />
-                    {onBreak ? 'Resume' : 'Break'}
+                    <IonIcon icon={albumsOutline} />
+                    <span>{keyCardActionLabel}</span>
                   </button>
-                  <button className="clock-inline-btn clock-inline-btn--switch" onClick={handleSwitchKeyCard}>
-                    <IonIcon icon={shuffleOutline} />
-                    Switch Key Card
-                  </button>
-                  <button className="clock-inline-btn clock-inline-btn--clockout" onClick={handleClockOut}>
-                    <IonIcon icon={logOutOutline} />
-                    Clock Out
+                  <button type="button" className="clock-bowl-action" onClick={handleRightAction}>
+                    <IonIcon icon={isClockedIn ? cafeOutline : timeOutline} />
+                    <span>{rightActionLabel}</span>
+                    {breakTimerLabel ? <IonBadge color="light">{breakTimerLabel}</IonBadge> : null}
                   </button>
                 </div>
-              )}
+              </div>
+
+              <div className="clock-readiness-list">
+                <div className={`clock-readiness-item${activeKeyCardId ? ' is-ready' : ''}`}>
+                  <IonIcon icon={albumsOutline} />
+                  <span>Key card selected</span>
+                  <strong>{activeKeyCardId ? activeKeyCardName : 'Required'}</strong>
+                </div>
+                <div className={`clock-readiness-item${isWithinGeofence ? ' is-ready' : ''}`}>
+                  <IonIcon icon={locateOutline} />
+                  <span>Within 100ft geofence</span>
+                  <strong>{isWithinGeofence ? 'Ready' : 'Required'}</strong>
+                </div>
+              </div>
+
               <div className={`clock-alert ${isClockedIn ? 'clock-alert--info' : 'clock-alert--warning'}`}>
                 {isClockedIn ? (
                   <p className="clock-note">
                     <span className="clock-note-label">Current Keycard</span>
                     <span className="clock-note-value">{activeKeyCardName}</span>
-                    {onBreak ? <span className="clock-note-meta">On break</span> : null}
+                    {onBreak ? <span className="clock-note-meta">On break for {formatDuration(breakElapsedSeconds)}</span> : null}
                   </p>
                 ) : (
                   <p className="clock-note">{defaultLoggedInEmployee.dashboard.clockAlert}</p>
                 )}
+              </div>
+              <div className="clock-meta-row">
+                <span>{dateLabel}</span>
+                <span>{timeLabel}</span>
               </div>
             </div>
 
