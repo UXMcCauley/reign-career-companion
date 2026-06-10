@@ -108,7 +108,7 @@ export function ShiftCountdownIsland() {
   return (
     <div style={{
       position: "fixed",
-      top: "calc(var(--ion-safe-area-top, 44px) + 6px)",
+      top: "6px",
       left: "50%",
       transform: "translateX(-50%)",
       zIndex: 9999,
