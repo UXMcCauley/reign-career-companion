@@ -33,6 +33,7 @@ const ISLAND_TOP_PX = 11;
 const ISLAND_HEIGHT_PX = 37;
 const ISLAND_HW_WIDTH_PX = 125;
 const ISLAND_INSET_THRESHOLD = 59; // island devices report safe-area-top >= 59
+const INTERACTIVE_TOP_GAP_PX = 6;
 
 // --- Test overrides (env vars) -------------------------------------------
 
@@ -123,6 +124,7 @@ export function ShiftCountdownIsland() {
   // collapsed on an island device; expanded state grows downward from the
   // same anchor and the hardware only occludes the top strip.
   const seated = hasIsland && !expanded;
+  const islandTop = hasIsland ? ISLAND_TOP_PX : insetTop + INTERACTIVE_TOP_GAP_PX;
 
   const row: React.CSSProperties = { display: "flex", alignItems: "center" };
   const col: React.CSSProperties = { display: "flex", flexDirection: "column" };
@@ -134,10 +136,8 @@ export function ShiftCountdownIsland() {
   return (
     <div style={{
       position: "fixed",
-      // why this matters: island devices → anchor AT the hardware (y=11) so the
-      // pill fuses with it; notch/no-cutout devices → sit below the safe area
-      // (faking an island where there isn't one reads as a rendering bug)
-      top: hasIsland ? ISLAND_TOP_PX : `calc(${insetTop}px + 6px)`,
+      // Keep visual alignment with hardware island on supported devices.
+      top: islandTop,
       left: "50%",
       transform: "translateX(-50%)",
       zIndex: 10000, // above the expanded map overlay (9999)
@@ -272,6 +272,28 @@ export function ShiftCountdownIsland() {
           </div>
         )}
       </div>
+      {hasIsland && !expanded && (
+        <button
+          type="button"
+          aria-label="Open shift countdown details"
+          onClick={() => setExpanded(true)}
+          style={{
+            position: "absolute",
+            left: "50%",
+            transform: "translateX(-50%)",
+            // Place interaction area below the OS status bar hit-region.
+            top: insetTop - islandTop + INTERACTIVE_TOP_GAP_PX,
+            width: 180,
+            height: 28,
+            border: "none",
+            borderRadius: 9999,
+            background: "transparent",
+            padding: 0,
+            margin: 0,
+            cursor: "pointer",
+          }}
+        />
+      )}
     </div>
   );
 }
