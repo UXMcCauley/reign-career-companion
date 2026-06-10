@@ -684,7 +684,10 @@ const DashboardPage: React.FC = () => {
                     </div>
                     {/* Row 2 — keycard name + shift status inline */}
                     <div className="clock-note-value">
-                      <span className="clock-note-value-keycard">
+                      <span
+                        key={activeKeyCardId ?? 'none'}
+                        className="clock-note-value-keycard"
+                      >
                         {activeKeyCardName ?? 'No keycard selected'}
                       </span>
                      
@@ -695,32 +698,32 @@ const DashboardPage: React.FC = () => {
 
               {/* ── Floating action buttons — 20 px from each viewport edge ── */}
               <div className="clock-float-btn-container">
-              <button
-                type="button"
-                className="clock-float-btn clock-float-btn--left"
-                onClick={isClockedIn ? handleSwitchKeyCard : handleSelectKeyCard}
-              >
-                <IonIcon icon={albumsOutline} />
-                <span>{keyCardActionLabel}</span>
-              </button>
+                <button
+                  type="button"
+                  className="clock-float-btn clock-float-btn--keycard"
+                  onClick={isClockedIn ? handleSwitchKeyCard : handleSelectKeyCard}
+                >
+                  <IonIcon icon={albumsOutline} />
+                  <span>{keyCardActionLabel}</span>
+                </button>
 
-              <button
-                type="button"
-                className="clock-float-btn"
-                onClick={() => setMapExpanded(true)}
-              >
-                <IonIcon icon={expandOutline} />
-                <span>Map</span>
-              </button>
+                <button
+                  type="button"
+                  className="clock-float-btn clock-float-btn--map"
+                  onClick={() => setMapExpanded(true)}
+                >
+                  <IonIcon icon={expandOutline} />
+                  <span>Map</span>
+                </button>
 
-              <button
-                type="button"
-                className="clock-float-btn clock-float-btn--right"
-                onClick={handleRightAction}
-              >
-                <IonIcon icon={isClockedIn ? cafeOutline : timeOutline} />
-                <span>{rightActionLabel}</span>
-              </button>
+                <button
+                  type="button"
+                  className="clock-float-btn clock-float-btn--action"
+                  onClick={handleRightAction}
+                >
+                  <IonIcon icon={isClockedIn ? cafeOutline : timeOutline} />
+                  <span>{rightActionLabel}</span>
+                </button>
               </div>
               
             </div>
@@ -857,7 +860,7 @@ const DashboardPage: React.FC = () => {
             href={`maps://maps.apple.com/?daddr=${configuredJobSite.latitude},${configuredJobSite.longitude}&dirflg=d`}
           >
             <IonIcon icon={navigateOutline} />
-            <span>Directions to {configuredJobSite.name}</span>
+            <span>Directions</span>
           </a>
         </div>
       )}
