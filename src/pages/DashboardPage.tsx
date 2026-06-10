@@ -310,8 +310,8 @@ const DashboardPage: React.FC = () => {
         'Cancel',
         {
           text: 'Confirm',
-          handler: (data: { keycard?: string }) => {
-            const selected = data?.keycard ?? demoEmployeeTalentCards[0]?.id;
+          handler: (data: string | { keycard?: string }) => {
+            const selected = (typeof data === 'string' ? data : data?.keycard) ?? demoEmployeeTalentCards[0]?.id;
             if (selected) onPick(selected);
           },
         },
