@@ -18,6 +18,15 @@ function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number)
 const METERS_TO_FEET = 3.28084;
 const WALK_FPS = 4.4;
 
+// --- Hardware island geometry (iPhone 14 Pro+) ---------------------------
+// why this matters: the sensor housing physically occludes ~125px in the
+// center of the pill — content there is invisible. Collapsed layout must
+// split into two "ears" around a dead zone, exactly like iOS Live Activities.
+const ISLAND_TOP_PX = 11;
+const ISLAND_HEIGHT_PX = 37;
+const ISLAND_HW_WIDTH_PX = 125;
+const ISLAND_INSET_THRESHOLD = 59; // island devices report safe-area-top >= 59
+
 // --- Test overrides (env vars) -------------------------------------------
 
 const TEST_FORCE_SHOW  = import.meta.env.VITE_SHIFT_TEST === "true";
@@ -31,9 +40,15 @@ const TEST_DIST_FT     = Number.isFinite(TEST_DIST_RAW) ? TEST_DIST_RAW : null;
 const PROJECT_SITE = { name: "Forstner Building", lat: 37.7749, lng: -122.4194, edgeRadiusFt: 150 };
 const MOCK_POSITION = { lat: 37.77714, lng: -122.4194 };
 const SHIFT_EMPLOYEE = "Connor McManus";
-let SHIFT_START_MS = 0;
 
 // --- Utils ---------------------------------------------------------------
+
+function readSafeAreaTop(): number {
+  const raw = getComputedStyle(document.documentElement)
+    .getPropertyValue("--ion-safe-area-top");
+  const parsed = parseFloat(raw);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
 
 function fmtCountdown(ms: number): string {
   if (ms <= 0) return "NOW";
@@ -51,7 +66,11 @@ function fmtWalk(secs: number): string {
 // --- Component -----------------------------------------------------------
 
 export function ShiftCountdownIsland() {
-  if (!SHIFT_START_MS) SHIFT_START_MS = Date.now() + TEST_MINUTES * 60 * 1000;
+  // why this matters: lazy initializer instead of module-level mutation —
+  // render stays pure, StrictMode double-render can't skew the target time
+  const [shiftStartMs] = useState(() => Date.now() + TEST_MINUTES * 60 * 1000);
+  const [insetTop] = useState(readSafeAreaTop);
+  const hasIsland = insetTop >= ISLAND_INSET_THRESHOLD;
 
   const [now, setNow] = useState(Date.now);
   const [position, setPosition] = useState<{ lat: number; lng: number }>(MOCK_POSITION);
@@ -74,7 +93,7 @@ export function ShiftCountdownIsland() {
     return () => { if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current); };
   }, []);
 
-  const msUntilShift = SHIFT_START_MS - now;
+  const msUntilShift = shiftStartMs - now;
   const minutesUntil = msUntilShift / 60_000;
   const inWindow = minutesUntil <= 10 && msUntilShift > -60_000;
   if (!TEST_FORCE_SHOW && !inWindow) return null;
@@ -96,7 +115,12 @@ export function ShiftCountdownIsland() {
     teal:  { glow: "rgba(45,212,191,0.35)", ring: "#2dd4bf", text: "#99f6e4", bg: "rgba(15,52,52,0.35)"  },
   }[urgency];
 
-  const startStr = new Date(SHIFT_START_MS).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const startStr = new Date(shiftStartMs).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+  // seated = visually fused with the hardware island. Only meaningful when
+  // collapsed on an island device; expanded state grows downward from the
+  // same anchor and the hardware only occludes the top strip.
+  const seated = hasIsland && !expanded;
 
   const row: React.CSSProperties = { display: "flex", alignItems: "center" };
   const col: React.CSSProperties = { display: "flex", flexDirection: "column" };
@@ -108,25 +132,33 @@ export function ShiftCountdownIsland() {
   return (
     <div style={{
       position: "fixed",
-      top: "calc(var(--ion-safe-area-top, 44px) + 6px)",
+      // why this matters: island devices → anchor AT the hardware (y=11) so the
+      // pill fuses with it; notch/no-cutout devices → sit below the safe area
+      // (faking an island where there isn't one reads as a rendering bug)
+      top: hasIsland ? ISLAND_TOP_PX : `calc(${insetTop}px + 6px)`,
       left: "50%",
       transform: "translateX(-50%)",
-      zIndex: 9999,
+      zIndex: 10000, // above the expanded map overlay (9999)
       userSelect: "none",
-      filter: `drop-shadow(0 0 14px ${colours.glow})`,
+      // why this matters: any glow while seated outlines the hardware cutout
+      // and kills the "one black object" illusion
+      filter: seated ? "none" : `drop-shadow(0 0 14px ${colours.glow})`,
+      transition: "filter 0.3s ease",
     }}>
       <div
         style={{
           overflow: "hidden",
-          transition: "border-radius 0.5s ease-in-out, width 0.5s ease-in-out, min-width 0.5s ease-in-out",
+          transition: "border-radius 0.5s ease-in-out, width 0.5s ease-in-out, min-width 0.5s ease-in-out, background 0.3s ease, border-color 0.3s ease",
           borderRadius: expanded ? 18 : 9999,
-          width: expanded ? 340 : "auto",
-          minWidth: expanded ? 340 : 0,
-          background: "rgba(8, 8, 12, 0.92)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          border: `1.5px solid ${colours.ring}55`,
-          boxShadow: `0 0 0 1px ${colours.ring}22, inset 0 1px 0 rgba(255,255,255,0.06)`,
+          width: expanded ? "min(340px, calc(100vw - 24px))" : "auto",
+          minWidth: expanded ? "min(340px, calc(100vw - 24px))" : 0,
+          // why this matters: seated must be PURE #000 with no blur — the
+          // hardware is true black, and translucency exposes the seam
+          background: seated ? "#000" : "rgba(8, 8, 12, 0.92)",
+          backdropFilter: seated ? "none" : "blur(20px)",
+          WebkitBackdropFilter: seated ? "none" : "blur(20px)",
+          border: seated ? "1.5px solid #000" : `1.5px solid ${colours.ring}55`,
+          boxShadow: seated ? "none" : `0 0 0 1px ${colours.ring}22, inset 0 1px 0 rgba(255,255,255,0.06)`,
           cursor: "pointer",
         }}
         onClick={() => setExpanded(x => !x)}
@@ -134,10 +166,10 @@ export function ShiftCountdownIsland() {
         {/* ── Pill ── */}
         <div style={{
           ...row, gap: 10, padding: "0 16px",
-          height: expanded ? 52 : 44,
+          height: expanded ? 52 : seated ? ISLAND_HEIGHT_PX : 44,
           transition: "height 0.4s ease",
         }}>
-          {/* Pulsing dot */}
+          {/* Left ear: pulsing dot + countdown */}
           <span style={{ position: "relative", ...row, height: 10, width: 10, flexShrink: 0 }}>
             <span className="sci-ping" style={{
               position: "absolute", display: "inline-flex",
@@ -150,21 +182,26 @@ export function ShiftCountdownIsland() {
             }} />
           </span>
 
-          {/* Countdown */}
           <span style={{ fontSize: 13, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", fontWeight: 700, color: colours.text }}>
             {fmtCountdown(msUntilShift)}
           </span>
 
-          <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 11 }}>|</span>
+          {/* Hardware dead zone: the camera housing occludes these pixels.
+              Spacer pushes content into the visible "ears" on either side. */}
+          {seated ? (
+            <span aria-hidden style={{ width: ISLAND_HW_WIDTH_PX, flexShrink: 0 }} />
+          ) : (
+            <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 11 }}>|</span>
+          )}
 
-          {/* Distance */}
+          {/* Right ear: distance */}
           <span style={{ ...row, gap: 4, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.7)", whiteSpace: "nowrap" }}>
             <MapPin size={12} style={{ color: colours.ring }} />
             {feetFromEdge.toLocaleString()} ft
           </span>
 
-          {/* Walk time — pill only */}
-          {!expanded && (
+          {/* Walk time — only when there's room (not seated, not expanded) */}
+          {!expanded && !seated && (
             <span style={{ ...row, gap: 4, fontSize: 11, color: "rgba(255,255,255,0.5)", whiteSpace: "nowrap" }}>
               <Footprints size={11} style={{ opacity: 0.6 }} />
               {fmtWalk(walkSecs)}

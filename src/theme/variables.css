@@ -212,3 +212,28 @@ ion-menu.profile-drawer::part(container) {
     transform: translate3d(-2.8%, -2.2%, 0);
   }
 }
+
+.dynamic-island {
+  position: fixed;
+  top: 11px;                      /* island devices; hardware sits at y≈11 */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;                 /* above the map overlay (9999) */
+  min-width: 129px;               /* hardware width + 2px bleed each side */
+  height: 37px;
+  border-radius: 20px;
+  background: #000;               /* pure black — this IS the layering trick */
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: min-width 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+              height 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dynamic-island.expanded {
+  min-width: min(86vw, 360px);
+  height: 76px;
+  border-radius: 32px;
+}
