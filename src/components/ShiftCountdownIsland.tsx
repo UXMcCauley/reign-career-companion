@@ -15,6 +15,13 @@ function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number)
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+function readSafeAreaTop(): number {
+  const raw = getComputedStyle(document.documentElement)
+    .getPropertyValue("--ion-safe-area-top");
+  const parsed = parseFloat(raw);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 const METERS_TO_FEET = 3.28084;
 const WALK_FPS = 4.4;
 
@@ -43,12 +50,7 @@ const SHIFT_EMPLOYEE = "Connor McManus";
 
 // --- Utils ---------------------------------------------------------------
 
-function readSafeAreaTop(): number {
-  const raw = getComputedStyle(document.documentElement)
-    .getPropertyValue("--ion-safe-area-top");
-  const parsed = parseFloat(raw);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
+
 
 function fmtCountdown(ms: number): string {
   if (ms <= 0) return "NOW";
