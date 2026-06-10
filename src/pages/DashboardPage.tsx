@@ -252,6 +252,9 @@ const DashboardPage: React.FC = () => {
   const metricsRef = useRef<(HTMLElement | null)[]>([]);
   const totalBreakSecondsRef = useRef(0);
   const mapShellRef = useRef<HTMLDivElement | null>(null);
+  const clockBtnRef = useRef<HTMLButtonElement | null>(null);
+  const clockBtnIsPinned = useRef(false);
+  const clockBtnNaturalPageY = useRef<number | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const [mapTilesLoaded, setMapTilesLoaded] = useState(false);
   const [mapExpanded, setMapExpanded] = useState(false);
@@ -268,6 +271,8 @@ const DashboardPage: React.FC = () => {
 
   const onContentScroll = useCallback((e: CustomEvent<ScrollDetail>) => {
     const s = e.detail.scrollTop;
+
+    // Metrics fade-out as the hero scrolls up
     metricsRef.current.forEach((el, i) => {
       if (!el) return;
       const start = i < 3 ? 35 : 0;
@@ -282,15 +287,71 @@ const DashboardPage: React.FC = () => {
       el.style.opacity = L2(1, 0.25);
     });
 
+    // Map: complete fade-out as it scrolls off the top
     if (mapShellRef.current) {
-      const rect = mapShellRef.current.getBoundingClientRect();
-      const scrolledOff = Math.max(0, -rect.top);
-      const fadeStart = rect.height * 0.3;
-      const fadeEnd = rect.height * 0.78;
-      const opacity = scrolledOff <= fadeStart
+      const mapRect = mapShellRef.current.getBoundingClientRect();
+      const scrolledOff = Math.max(0, -mapRect.top);
+      const fadeStart = mapRect.height * 0.3;
+      const fadeEnd = mapRect.height * 0.62;
+      const mapOpacity = scrolledOff <= fadeStart
         ? 1
         : Math.max(0, 1 - (scrolledOff - fadeStart) / (fadeEnd - fadeStart));
-      mapShellRef.current.style.opacity = opacity === 1 ? '' : opacity.toFixed(3);
+      mapShellRef.current.style.opacity = mapOpacity === 1 ? '' : mapOpacity.toFixed(3);
+    }
+
+    // Clock button: scale to 50% and pin near top as content scrolls up
+    if (clockBtnRef.current) {
+      const btn = clockBtnRef.current;
+      // PIN_Y = center of button when pinned: 20px top margin + half of 50%-scaled button (110 * 0.5 / 2 = 27.5)
+      const PIN_Y = 47.5;
+      const SCALE_RANGE = 90; // px over which scaling occurs before/after pin
+
+      if (!clockBtnIsPinned.current) {
+        const btnRect = btn.getBoundingClientRect();
+        const centerY = btnRect.top + btnRect.height / 2;
+
+        if (centerY <= PIN_Y) {
+          // Snap to pinned — store natural page-Y so we can compute it when scrolling back
+          clockBtnIsPinned.current = true;
+          clockBtnNaturalPageY.current = PIN_Y + s;
+          btn.style.position = 'fixed';
+          btn.style.top = `${PIN_Y}px`;
+          btn.style.left = '50%';
+          btn.style.transform = 'translate(-50%, -50%) scale(0.5)';
+          btn.style.zIndex = '9999';
+        } else {
+          const distToPin = centerY - PIN_Y;
+          if (distToPin < SCALE_RANGE) {
+            const progress = 1 - distToPin / SCALE_RANGE;
+            btn.style.transform = `translate(-50%, -50%) scale(${(1 - progress * 0.5).toFixed(3)})`;
+          } else if (btn.style.transform) {
+            btn.style.transform = '';
+          }
+        }
+      } else {
+        // Pinned — check natural viewport Y to decide when to unpin
+        const naturalCenterY = (clockBtnNaturalPageY.current ?? 0) - s;
+
+        if (naturalCenterY >= PIN_Y + SCALE_RANGE) {
+          // Fully back — reset all inline overrides
+          clockBtnIsPinned.current = false;
+          btn.style.position = '';
+          btn.style.top = '';
+          btn.style.left = '';
+          btn.style.transform = '';
+          btn.style.zIndex = '';
+        } else if (naturalCenterY > PIN_Y) {
+          // Transitioning back — unpin and apply progressive scale
+          clockBtnIsPinned.current = false;
+          btn.style.position = '';
+          btn.style.top = '';
+          btn.style.left = '';
+          btn.style.zIndex = '';
+          const progress = 1 - (naturalCenterY - PIN_Y) / SCALE_RANGE;
+          btn.style.transform = `translate(-50%, -50%) scale(${(1 - progress * 0.5).toFixed(3)})`;
+        }
+        // else: still fully pinned, no change needed
+      }
     }
   }, []);
 
@@ -559,18 +620,23 @@ const DashboardPage: React.FC = () => {
               ))}
             </div>
 
-            <div className="dash-mastery" ref={(el) => { metricsRef.current[6] = el as HTMLElement; }}>
-              <div className="dash-mastery-header">
-                <span className="dash-mastery-title">{defaultLoggedInEmployee.dashboard.mastery.title}</span>
-                <span className="dash-mastery-level">{defaultLoggedInEmployee.dashboard.mastery.levelLabel}</span>
-              </div>
-              <div className="dash-mastery-track">
-                <div className="dash-mastery-fill" style={{ width: `${defaultLoggedInEmployee.dashboard.mastery.fillPercent}%` }} />
-              </div>
-              <div className="dash-mastery-footer">
-                <span className="dash-mastery-pts">{defaultLoggedInEmployee.dashboard.mastery.pointsLabel}</span>
-                <span className="dash-mastery-remaining">{defaultLoggedInEmployee.dashboard.mastery.remainingLabel}</span>
-              </div>
+            <div className="dash-mastery-section-label">Trade Mastery</div>
+            <div className="dash-mastery-rail" ref={(el) => { metricsRef.current[6] = el as HTMLElement; }}>
+              {demoEmployeeTalentCards.map(card => (
+                <div key={card.id} className="dash-mastery dash-mastery--card">
+                  <div className="dash-mastery-header">
+                    <span className="dash-mastery-title">{card.name}</span>
+                    <span className="dash-mastery-level">{defaultLoggedInEmployee.dashboard.mastery.levelLabel}</span>
+                  </div>
+                  <div className="dash-mastery-track">
+                    <div className="dash-mastery-fill" style={{ width: `${defaultLoggedInEmployee.dashboard.mastery.fillPercent}%` }} />
+                  </div>
+                  <div className="dash-mastery-footer">
+                    <span className="dash-mastery-pts">{defaultLoggedInEmployee.dashboard.mastery.pointsLabel}</span>
+                    <span className="dash-mastery-remaining">{defaultLoggedInEmployee.dashboard.mastery.remainingLabel}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -681,6 +747,7 @@ const DashboardPage: React.FC = () => {
 
               {/* ── Big clock button — sits at arch peak between map and bowl ── */}
               <button
+                ref={clockBtnRef}
                 type="button"
                 className={`clock-main-btn${canClockIn ? ' is-ready' : ''}${isClockedIn ? ' is-clockout' : ''}`}
                 onClick={handleMainClockButton}

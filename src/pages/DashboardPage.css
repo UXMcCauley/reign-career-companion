@@ -446,7 +446,9 @@
     /* 0 14px 30px rgba(7, 110, 211, 0.42), */
     /* 0 0 0 6px rgba(4, 92, 187, 0.18), */
     /* inset 0 1px 0 rgba(255, 255, 255, 0.34); */
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+  transition: box-shadow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -1090,6 +1092,7 @@
 
 .dash-mastery {
   width: 100%;
+  box-sizing: border-box;
   margin-top: 12px;
   padding: 12px 14px;
   border-radius: 16px;
@@ -1150,6 +1153,49 @@
 
 .dash-mastery-pts      { font-size: 0.65rem; font-weight: 700; color: rgba(255, 255, 255, 0.95); }
 .dash-mastery-remaining { font-size: 0.65rem; font-weight: 800; letter-spacing: 0.05em; color: #fff; }
+
+.dash-mastery-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.96);
+  margin-top: 12px;
+  margin-bottom: 8px;
+  padding: 0 2px;
+  width: 100%;
+}
+
+.dash-mastery-rail {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 2px 0 4px;
+  width: 100%;
+  will-change: opacity, filter;
+}
+
+.dash-mastery-rail::-webkit-scrollbar { display: none; }
+
+/* Each card in the rail matches the compact profile of the original standalone bar */
+.dash-mastery--card {
+  flex: 0 0 88% !important;
+  width: 88% !important;
+  scroll-snap-align: start;
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Clamp the title to one line so it never blows up the card height */
+.dash-mastery--card .dash-mastery-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 60px);
+}
 
 /* ──────────────── SHIFT STATUS CARD ──────────────── */
 
