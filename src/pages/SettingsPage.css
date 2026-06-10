@@ -1,0 +1,48 @@
+.settings-page {
+  --background: linear-gradient(180deg, #120a22 0%, #080711 45%, #07060f 100%);
+}
+
+.settings-card {
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(19, 16, 30, 0.78);
+  backdrop-filter: blur(16px);
+}
+
+.settings-help-copy {
+  margin: 0 0 12px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.settings-time-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.settings-time-input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  font: inherit;
+}
+
+.settings-time-input:focus {
+  outline: 2px solid rgba(170, 132, 255, 0.85);
+  outline-offset: 1px;
+}
+
+.settings-current-value {
+  margin: 0 0 12px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.settings-empty-state {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+}

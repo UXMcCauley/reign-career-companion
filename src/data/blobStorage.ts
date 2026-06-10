@@ -6,6 +6,7 @@ const CHAT_LOCAL_KEY = 'reign_chat_v2';
 const EMPLOYEE_LOCAL_KEY = 'reign_employees_v1';
 const SCHEDULE_LOCAL_KEY = 'reign_schedule_v1';
 const SHIFT_RUNTIME_LOCAL_KEY = 'reign_shift_runtime_v1';
+const SHIFT_START_OVERRIDES_LOCAL_KEY = 'reign_shift_start_overrides_v1';
 const FORCE_SHIFT_SEED = import.meta.env.VITE_SHIFT_TEST === 'true';
 const EMPLOYEE_BLOB_NAMES = ['employees', 'Employees'];
 const CHAT_BLOB_NAMES = ['chats', 'chat-data', 'chat'];
@@ -192,6 +193,35 @@ function writeLocalJson(key: string, data: unknown) {
   }
 }
 
+function cloneShiftMap(shifts: Record<string, Shift>): Record<string, Shift> {
+  return Object.fromEntries(
+    Object.entries(shifts).map(([id, shift]) => [
+      id,
+      {
+        ...shift,
+        breaks: shift.breaks.map(brk => ({ ...brk })),
+        team: shift.team.map(member => ({ ...member })),
+      },
+    ])
+  );
+}
+
+function applyStartOverrides(
+  shifts: Record<string, Shift>,
+  overrides: Record<string, number>
+): Record<string, Shift> {
+  const next = cloneShiftMap(shifts);
+  Object.entries(overrides).forEach(([shiftId, startHour]) => {
+    const shift = next[shiftId];
+    if (!shift || !Number.isFinite(startHour)) return;
+    const delta = startHour - shift.startHour;
+    shift.startHour = startHour;
+    shift.endHour += delta;
+    shift.breaks = shift.breaks.map(brk => ({ ...brk, startHour: brk.startHour + delta }));
+  });
+  return next;
+}
+
 export async function loadEmployees(): Promise<DemoEmployee[]> {
   for (const employeeBlobName of EMPLOYEE_BLOB_NAMES) {
     const blobData = await readBlobJson<DemoEmployee[]>(employeeBlobName);
@@ -210,24 +240,42 @@ export async function loadEmployees(): Promise<DemoEmployee[]> {
 }
 
 export async function loadShifts(): Promise<Record<string, Shift>> {
+  const overrides = readLocalJson<Record<string, number>>(SHIFT_START_OVERRIDES_LOCAL_KEY) ?? {};
   if (FORCE_SHIFT_SEED) {
-    writeLocalJson(SCHEDULE_LOCAL_KEY, MOCK_SHIFTS);
-    await writeBlobJson('shifts', MOCK_SHIFTS);
-    return MOCK_SHIFTS;
+    const seededShifts = applyStartOverrides(MOCK_SHIFTS, overrides);
+    writeLocalJson(SCHEDULE_LOCAL_KEY, seededShifts);
+    await writeBlobJson('shifts', seededShifts);
+    return seededShifts;
   }
 
   const blobData = await readBlobJson<Record<string, Shift>>('shifts');
   if (blobData && Object.keys(blobData).length > 0) {
-    writeLocalJson(SCHEDULE_LOCAL_KEY, blobData);
-    return blobData;
+    const resolved = applyStartOverrides(blobData, overrides);
+    writeLocalJson(SCHEDULE_LOCAL_KEY, resolved);
+    return resolved;
   }
 
   const localData = readLocalJson<Record<string, Shift>>(SCHEDULE_LOCAL_KEY);
-  if (localData && Object.keys(localData).length > 0) return localData;
+  if (localData && Object.keys(localData).length > 0) {
+    return applyStartOverrides(localData, overrides);
+  }
 
-  writeLocalJson(SCHEDULE_LOCAL_KEY, MOCK_SHIFTS);
-  await writeBlobJson('shifts', MOCK_SHIFTS);
-  return MOCK_SHIFTS;
+  const seededShifts = applyStartOverrides(MOCK_SHIFTS, overrides);
+  writeLocalJson(SCHEDULE_LOCAL_KEY, seededShifts);
+  await writeBlobJson('shifts', seededShifts);
+  return seededShifts;
+}
+
+export async function saveShiftStartOverride(shiftId: string, startHour: number): Promise<void> {
+  if (!Number.isFinite(startHour)) return;
+  const nextOverrides = {
+    ...(readLocalJson<Record<string, number>>(SHIFT_START_OVERRIDES_LOCAL_KEY) ?? {}),
+    [shiftId]: startHour,
+  };
+  writeLocalJson(SHIFT_START_OVERRIDES_LOCAL_KEY, nextOverrides);
+  const shifts = await loadShifts();
+  writeLocalJson(SCHEDULE_LOCAL_KEY, shifts);
+  await writeBlobJson('shifts', shifts);
 }
 
 export async function loadChats(seedFactory: () => Conversation[]): Promise<Conversation[]> {

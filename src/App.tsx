@@ -39,6 +39,7 @@ import ProfilePage from './pages/ProfilePage';
 import PublicProfilePage from './pages/PublicProfilePage';
 import RealTimeResumePage from './pages/RealTimeResumePage';
 import SchedulePage from './pages/SchedulePage';
+import SettingsPage from './pages/SettingsPage';
 import ShiftDetailPage from './pages/ShiftDetailPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -277,10 +278,7 @@ const AppTabs: React.FC = () => {
             />
           </Route>
           <Route exact path="/settings">
-            <PlaceholderPage
-              title="Settings"
-              subtitle="Account and app preferences."
-            />
+            <SettingsPage />
           </Route>
           <Route exact path="/profile">
             <ProfilePage />
