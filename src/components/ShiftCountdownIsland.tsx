@@ -161,6 +161,9 @@ export function ShiftCountdownIsland() {
           border: seated ? "1.5px solid #000" : `1.5px solid ${colours.ring}55`,
           boxShadow: seated ? "none" : `0 0 0 1px ${colours.ring}22, inset 0 1px 0 rgba(255,255,255,0.06)`,
           cursor: "pointer",
+          pointerEvents: "auto",
+          touchAction: "manipulation",
+          WebkitTapHighlightColor: "transparent",
         }}
         onClick={() => setExpanded(x => !x)}
       >

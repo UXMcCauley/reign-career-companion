@@ -8,7 +8,7 @@ import {
   IonIcon,
   IonPage,
   useIonAlert,
-} from '@ionic/react';
+} from '@ionic/react'; 
 import {
   albumsOutline,
   cafeOutline,
@@ -32,6 +32,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Geolocation } from '@capacitor/geolocation';
 import './DashboardPage.css';
+import { Capacitor } from '@capacitor/core';
 
 const MASTERY_DEMO = [
   { level: 4, fillPercent: 34 },

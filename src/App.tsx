@@ -42,6 +42,7 @@ import SchedulePage from './pages/SchedulePage';
 import SettingsPage from './pages/SettingsPage';
 import ShiftDetailPage from './pages/ShiftDetailPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ShiftCountdownIsland } from './components/ShiftCountdownIsland';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -305,6 +306,7 @@ const AppTabs: React.FC = () => {
       </IonTabs>
 
       <FloatingTabBar currentTab={currentTab} />
+      <ShiftCountdownIsland />
     </>
   );
 };
