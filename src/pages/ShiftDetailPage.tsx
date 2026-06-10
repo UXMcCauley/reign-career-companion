@@ -378,7 +378,7 @@ const ShiftDetailPage: React.FC = () => {
   const noActiveBreak = activeBreakIndex === null;
 
   return (
-    <IonPage>
+    <IonPage className="shift-detail-page">
       <IonHeader translucent className="shift-detail-header">
         <IonToolbar className="shift-detail-toolbar">
           <IonButtons slot="start">

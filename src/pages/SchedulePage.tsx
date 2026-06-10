@@ -298,7 +298,7 @@ const SchedulePage: React.FC = () => {
   };
 
   return (
-    <IonPage>
+    <IonPage className="schedule-page">
       <IonContent fullscreen className="schedule-content">
         <div className="schedule-controls-row">
           <div className="schedule-range-inline">{rangeLabel}</div>

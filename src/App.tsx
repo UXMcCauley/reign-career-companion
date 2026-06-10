@@ -252,6 +252,12 @@ const AppTabs: React.FC = () => {
           <Route exact path="/projects">
             <Redirect to="/keycards" />
           </Route>
+          <Route exact path="/contests/:contestId">
+            <PlaceholderPage
+              title="Contest Details"
+              subtitle="Contest rules, leaderboard, and progress."
+            />
+          </Route>
           <Route exact path="/announcements">
             <PlaceholderPage
               title="Announcements"

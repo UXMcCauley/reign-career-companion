@@ -1,11 +1,9 @@
+.schedule-page {
+  --background: transparent;
+}
+
 .schedule-content {
-  --background: linear-gradient(
-    140deg,
-    rgba(17, 20, 40, 0.38) 0%,
-    rgba(28, 17, 56, 0.26) 34%,
-    rgba(15, 33, 62, 0.2) 68%,
-    rgba(10, 16, 34, 0.3) 100%
-  );
+  --background: transparent;
 }
 
 .schedule-week-label {

@@ -11,10 +11,7 @@
   padding: max(var(--ion-safe-area-top, 24px), 34px) 16px calc(var(--ion-safe-area-bottom, 0px) + 98px);
   display: grid;
   gap: 12px;
-  background:
-    radial-gradient(circle at 14% 9%, rgba(92, 162, 255, 0.2), transparent 40%),
-    radial-gradient(circle at 84% 8%, rgba(146, 99, 255, 0.2), transparent 42%),
-    linear-gradient(150deg, rgba(7, 12, 27, 0.94), rgba(17, 9, 34, 0.92));
+  background: transparent;
 }
 
 .resume-hero {

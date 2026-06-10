@@ -251,6 +251,7 @@ const DashboardPage: React.FC = () => {
   const { userName } = useAuth();
   const metricsRef = useRef<(HTMLElement | null)[]>([]);
   const totalBreakSecondsRef = useRef(0);
+  const mapShellRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const [mapTilesLoaded, setMapTilesLoaded] = useState(false);
   const [mapExpanded, setMapExpanded] = useState(false);
@@ -279,8 +280,18 @@ const DashboardPage: React.FC = () => {
       }
       const L2 = (a: number, b: number) => (a + (b - a) * p).toFixed(3);
       el.style.opacity = L2(1, 0.25);
-      // el.style.filter = `blur(${(p * 6).toFixed(2)}px)`;
     });
+
+    if (mapShellRef.current) {
+      const rect = mapShellRef.current.getBoundingClientRect();
+      const scrolledOff = Math.max(0, -rect.top);
+      const fadeStart = rect.height * 0.3;
+      const fadeEnd = rect.height * 0.78;
+      const opacity = scrolledOff <= fadeStart
+        ? 1
+        : Math.max(0, 1 - (scrolledOff - fadeStart) / (fadeEnd - fadeStart));
+      mapShellRef.current.style.opacity = opacity === 1 ? '' : opacity.toFixed(3);
+    }
   }, []);
 
   const firstName = userName
@@ -465,6 +476,7 @@ const DashboardPage: React.FC = () => {
       const shift = ordered[i];
       return {
         id: `shift-${i}`,
+        shiftId: shift.id,
         title: i === 0 ? 'Today Shift' : `${label} Shift`,
         time: `${formatHour(shift.startHour)} - ${formatHour(shift.endHour)}`,
       };
@@ -570,7 +582,7 @@ const DashboardPage: React.FC = () => {
             <div className="dash-clock dash-clock-card">
 
               {/* Map — CartoDB Voyager tiles, free, no key */}
-              <div className="clock-map-shell">
+              <div className="clock-map-shell" ref={mapShellRef}>
                 <MapContainer
                   preferCanvas={true}
                   center={savedView?.center ?? [configuredJobSite.latitude, configuredJobSite.longitude]}
@@ -778,7 +790,12 @@ const DashboardPage: React.FC = () => {
             </div>
             <div className="shift-rail">
               {upcomingShifts.map(shift => (
-                <IonCard key={shift.id} className="shift-card ios-surface">
+                <IonCard
+                  key={shift.id}
+                  button
+                  className="shift-card ios-surface"
+                  onClick={() => history.push(`/schedule/${shift.shiftId}`)}
+                >
                   <IonCardHeader>
                     <IonCardTitle>{shift.title}</IonCardTitle>
                     <IonCardSubtitle><IonIcon icon={timeOutline} /> {shift.time}</IonCardSubtitle>
@@ -793,18 +810,23 @@ const DashboardPage: React.FC = () => {
 
             {/* ── Contests ── */}
             <div className="dash-section-header">
-              <span className="dash-section-label dash-section-label--contests">Contests &amp; Gamecations</span>
+              <span className="dash-section-label dash-section-label--contests">Contests &amp; Skill Building</span>
             </div>
             <div className="contest-rail">
               {activeContests.map(contest => (
-                <IonCard key={contest.id} className="contest-card ios-surface">
+                <IonCard
+                  key={contest.id}
+                  button
+                  className="contest-card ios-surface"
+                  onClick={() => history.push(`/contests/${contest.id}`)}
+                >
                   <IonCardHeader>
                     <IonCardSubtitle>{contest.subtitle}</IonCardSubtitle>
                     <IonCardTitle>{contest.title}</IonCardTitle>
                   </IonCardHeader>
                   <IonCardContent>
                     <p>{contest.details}</p>
-                    <button className="contest-enter-btn" type="button">{contest.cta}</button>
+                    <button className="contest-enter-btn" type="button" onClick={e => e.stopPropagation()}>{contest.cta}</button>
                   </IonCardContent>
                 </IonCard>
               ))}
