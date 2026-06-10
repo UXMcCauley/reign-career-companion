@@ -1,4 +1,6 @@
-type CoachStyle = 'concise' | 'witty' | 'mean' | 'flirty';
+type CoachPersonality = 'professional' | 'witty' | 'straight-shooter' | 'detailed' | 'playful' | 'laid-back' | 'friendly';
+type ResponseType = 'brief' | 'simple' | 'data-driven' | 'in-depth';
+type ResponseStyle = 'plan-strategy' | 'conversational';
 
 type AIMessage = {
   role: 'user' | 'assistant';
@@ -7,7 +9,9 @@ type AIMessage = {
 
 type AIRequest = {
   coachName?: string;
-  style?: CoachStyle;
+  personalities?: CoachPersonality[];
+  responseType?: ResponseType;
+  responseStyle?: ResponseStyle;
   categoryName?: string;
   employeeContext?: unknown;
   messages?: AIMessage[];
@@ -33,11 +37,26 @@ type AnthropicPayload = {
   error?: { message?: string };
 };
 
-const STYLE_INSTRUCTIONS: Record<CoachStyle, string> = {
-  concise: 'Keep responses clear, practical, and brief (3-6 short bullets or short paragraphs).',
-  witty: 'Use light humor while staying professional and useful. Do not be silly at the expense of clarity.',
-  mean: 'Use tough-love coaching: direct, blunt, high-accountability language without insults, abuse, or harassment.',
-  flirty: 'Use warm, playful encouragement while remaining workplace-safe, non-explicit, and respectful.',
+const PERSONALITY_INSTRUCTIONS: Record<CoachPersonality, string> = {
+  'professional': 'maintain a polished, business-appropriate tone',
+  'witty': 'weave in light, intelligent humor without sacrificing clarity',
+  'straight-shooter': 'be direct and cut to the core — no padding, no softening',
+  'detailed': 'cover nuance and context thoroughly; don\'t skip important background',
+  'playful': 'keep the energy upbeat and encourage a growth mindset',
+  'laid-back': 'stay relaxed and conversational — ditch the corporate jargon',
+  'friendly': 'lead with genuine warmth, empathy, and encouragement',
+};
+
+const RESPONSE_TYPE_INSTRUCTIONS: Record<ResponseType, string> = {
+  'brief': 'Keep responses tight: 2–4 bullets or short sentences only. No padding.',
+  'simple': 'Use plain, everyday language; avoid jargon and keep structure minimal.',
+  'data-driven': 'Ground advice in the employee\'s metrics and tie suggestions to measurable outcomes.',
+  'in-depth': 'Provide comprehensive coverage — background, nuance, alternatives, and tradeoffs.',
+};
+
+const RESPONSE_STYLE_INSTRUCTIONS: Record<ResponseStyle, string> = {
+  'plan-strategy': 'Frame responses as actionable plans: numbered steps, priorities, or a clear roadmap.',
+  'conversational': 'Write as a natural, warm dialogue — avoid heavy lists and headers; speak like a trusted colleague.',
 };
 
 function sanitizeMessages(messages: AIMessage[] = []): AIMessage[] {
@@ -73,16 +92,34 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return;
   }
 
-  const style = body.style && STYLE_INSTRUCTIONS[body.style] ? body.style : 'concise';
   const coachName = (body.coachName || 'AI Coach').trim().slice(0, 48);
   const categoryName = (body.categoryName || 'General Coaching').trim().slice(0, 80);
   const employeeContext = body.employeeContext ?? {};
+
+  const personalities = (body.personalities ?? ['professional']).filter(
+    (p): p is CoachPersonality => p in PERSONALITY_INSTRUCTIONS
+  );
+  const personalityLine = personalities.length
+    ? `Personality blend: ${personalities.map(p => PERSONALITY_INSTRUCTIONS[p]).join('; ')}.`
+    : 'Maintain a clear, professional tone.';
+
+  const responseType: ResponseType =
+    body.responseType && body.responseType in RESPONSE_TYPE_INSTRUCTIONS
+      ? body.responseType
+      : 'brief';
+
+  const responseStyle: ResponseStyle =
+    body.responseStyle && body.responseStyle in RESPONSE_STYLE_INSTRUCTIONS
+      ? body.responseStyle
+      : 'conversational';
 
   const systemPrompt = [
     `You are ${coachName}, an AI workplace and career coach.`,
     'Your user is an employee in a workforce app.',
     `Current chat category: ${categoryName}.`,
-    STYLE_INSTRUCTIONS[style],
+    personalityLine,
+    RESPONSE_TYPE_INSTRUCTIONS[responseType],
+    RESPONSE_STYLE_INSTRUCTIONS[responseStyle],
     'Use the employee metrics and profile context below as grounding for advice.',
     'Focus on actionable guidance for workplace relationships, conflict navigation, and career development.',
     'When useful, connect recommendations to measurable next steps and likely outcomes.',
@@ -93,7 +130,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     'The question should gently probe a dimension they haven\'t mentioned — an unstated fear, a relationship dynamic, a resource gap, or an assumption about their own potential.',
     'Frame it with warmth and curiosity, never pressure. The goal is to build trust, psychological safety, and the employee\'s confidence in their own voice.',
     'Examples of the right spirit: "Is there a part of this situation you haven\'t felt safe saying out loud yet?", "What would you attempt if you knew your manager was fully in your corner?", "Is there something about your own strengths here that you\'re underselling?"',
-    'Match the tone to the chosen style — concise questions stay short, witty ones have lightness, tough-love ones are direct.',
+    'Match the question\'s tone to the personality blend — keep it consistent with how the advice was delivered.',
     '',
     `Employee context: ${JSON.stringify(employeeContext)}`,
   ].join('\n');

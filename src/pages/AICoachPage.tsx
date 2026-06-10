@@ -5,6 +5,7 @@ import {
   chevronBackOutline,
   createOutline,
   funnelOutline,
+  imageOutline,
   saveOutline,
   searchOutline,
   sendOutline,
@@ -16,7 +17,9 @@ import { defaultLoggedInEmployee } from '../data/defaultLoggedInEmployee';
 import './ChatPage.css';
 import './AICoachPage.css';
 
-type CoachStyle = 'concise' | 'witty' | 'mean';
+type CoachPersonality = 'professional' | 'witty' | 'straight-shooter' | 'detailed' | 'playful' | 'laid-back' | 'friendly';
+type ResponseType = 'brief' | 'simple' | 'data-driven' | 'in-depth';
+type ResponseStyle = 'plan-strategy' | 'conversational';
 type AppView = 'chats' | 'settings';
 
 type CoachCategory = { id: string; name: string };
@@ -33,7 +36,11 @@ type CoachConversation = {
 };
 type CoachState = {
   coachName: string;
-  style: CoachStyle;
+  personalities: CoachPersonality[];
+  responseType: ResponseType;
+  responseStyle: ResponseStyle;
+  avatarPrompt: string;
+  avatarUrl: string;
   categories: CoachCategory[];
   conversations: CoachConversation[];
   activeConversationId: string | null;
@@ -41,7 +48,24 @@ type CoachState = {
 
 const STORAGE_KEY = 'reign_ai_coach_v1';
 const ARCHIVED_FILTER_ID = '__archived__';
-const STYLE_LABELS: Record<CoachStyle, string> = { concise: 'Concise', witty: 'Witty', mean: 'Mean' };
+
+const PERSONALITY_OPTIONS: { value: CoachPersonality; label: string }[] = [
+  { value: 'professional', label: 'Professional' },
+  { value: 'witty', label: 'Witty' },
+  { value: 'straight-shooter', label: 'Straight Shooter' },
+  { value: 'detailed', label: 'Detailed' },
+  { value: 'playful', label: 'Playful' },
+  { value: 'laid-back', label: 'Laid Back' },
+  { value: 'friendly', label: 'Friendly' },
+];
+
+const RESPONSE_TYPE_OPTIONS: { value: ResponseType; label: string }[] = [
+  { value: 'brief', label: 'Brief' },
+  { value: 'simple', label: 'Simple' },
+  { value: 'data-driven', label: 'Data Driven' },
+  { value: 'in-depth', label: 'In-depth' },
+];
+
 const SUGGESTION_PROMPTS = [
   'How can I handle conflict with a teammate without escalating things?',
   'Help me build a 30-day plan to improve my leadership visibility.',
@@ -51,7 +75,9 @@ const SUGGESTION_PROMPTS = [
 
 type CoachApiPayload = {
   coachName: string;
-  style: CoachStyle;
+  personalities: CoachPersonality[];
+  responseType: ResponseType;
+  responseStyle: ResponseStyle;
   categoryName: string;
   employeeContext: Record<string, unknown>;
   messages: Array<{ role: 'user' | 'assistant'; content: string }>;
@@ -66,12 +92,22 @@ function colorForConversation(id: string): string {
   return palette[Math.abs(hash) % palette.length];
 }
 
+function simpleHash(str: string): number {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
 function buildInitialState(): CoachState {
   const defaultCategoryId = 'cat-general';
   const now = Date.now();
   return {
     coachName: 'Nova',
-    style: 'concise',
+    personalities: ['professional', 'friendly'],
+    responseType: 'brief',
+    responseStyle: 'conversational',
+    avatarPrompt: '',
+    avatarUrl: '',
     categories: [
       { id: defaultCategoryId, name: 'General Coaching' },
       { id: 'cat-workplace', name: 'Workplace Relationships' },
@@ -101,7 +137,11 @@ const AICoachPage: React.FC = () => {
   const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
   const [draft, setDraft] = useState('');
   const [draftCoachName, setDraftCoachName] = useState('');
-  const [draftStyle, setDraftStyle] = useState<CoachStyle>('concise');
+  const [draftPersonalities, setDraftPersonalities] = useState<CoachPersonality[]>([]);
+  const [draftResponseType, setDraftResponseType] = useState<ResponseType>('brief');
+  const [draftResponseStyle, setDraftResponseStyle] = useState<ResponseStyle>('conversational');
+  const [draftAvatarPrompt, setDraftAvatarPrompt] = useState('');
+  const [draftAvatarUrl, setDraftAvatarUrl] = useState('');
   const [draftCategories, setDraftCategories] = useState<CoachCategory[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -120,8 +160,15 @@ const AICoachPage: React.FC = () => {
       if (!raw) return;
       const parsed = JSON.parse(raw) as CoachState;
       if (parsed?.conversations?.length) {
+        const defaults = buildInitialState();
         setState({
+          ...defaults,
           ...parsed,
+          personalities: parsed.personalities ?? defaults.personalities,
+          responseType: parsed.responseType ?? defaults.responseType,
+          responseStyle: parsed.responseStyle ?? defaults.responseStyle,
+          avatarPrompt: parsed.avatarPrompt ?? '',
+          avatarUrl: parsed.avatarUrl ?? '',
           activeConversationId: null,
         });
       }
@@ -168,9 +215,6 @@ const AICoachPage: React.FC = () => {
     [state.activeConversationId, state.conversations]
   );
 
-  const activeCategoryName =
-    state.categories.find(category => category.id === activeConversation?.categoryId)?.name ?? 'General Coaching';
-
   const filteredConversations = useMemo(() => {
     const query = search.trim().toLowerCase();
     return state.conversations.filter(conversation => {
@@ -186,7 +230,11 @@ const AICoachPage: React.FC = () => {
 
   const openSettingsView = () => {
     setDraftCoachName(state.coachName);
-    setDraftStyle(state.style);
+    setDraftPersonalities(state.personalities);
+    setDraftResponseType(state.responseType);
+    setDraftResponseStyle(state.responseStyle);
+    setDraftAvatarPrompt(state.avatarPrompt);
+    setDraftAvatarUrl(state.avatarUrl);
     setDraftCategories(state.categories);
     setNewCategoryName('');
     setView('settings');
@@ -197,7 +245,11 @@ const AICoachPage: React.FC = () => {
     setState(prev => ({
       ...prev,
       coachName: draftCoachName.trim() || 'Nova',
-      style: draftStyle,
+      personalities: draftPersonalities.length ? draftPersonalities : ['professional'],
+      responseType: draftResponseType,
+      responseStyle: draftResponseStyle,
+      avatarPrompt: draftAvatarPrompt.trim(),
+      avatarUrl: draftAvatarUrl,
       categories: draftCategories,
       conversations: prev.conversations.map(conversation => ({
         ...conversation,
@@ -208,6 +260,22 @@ const AICoachPage: React.FC = () => {
     }));
     setFilterCategoryId(fallbackCategoryId);
     setView('chats');
+  };
+
+  const togglePersonality = (p: CoachPersonality) => {
+    setDraftPersonalities(prev =>
+      prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]
+    );
+  };
+
+  const generateAvatar = () => {
+    const desc = draftAvatarPrompt.trim();
+    if (!desc) return;
+    const enhanced = `flat vector avatar, minimalist digital illustration, clean smooth shapes, soft pastel palette, AI assistant coach character, ${desc}, no text, no background clutter`;
+    const seed = simpleHash(desc);
+    setDraftAvatarUrl(
+      `https://image.pollinations.ai/prompt/${encodeURIComponent(enhanced)}?width=256&height=256&nologo=true&seed=${seed}`
+    );
   };
 
   const createConversation = () => {
@@ -336,7 +404,6 @@ const AICoachPage: React.FC = () => {
   const sendMessage = async () => {
     const text = draft.trim();
     if (!text || !activeConversation || isSending) return;
-
     setDraft('');
     await sendPromptToConversation(activeConversation, text);
   };
@@ -364,7 +431,9 @@ const AICoachPage: React.FC = () => {
     try {
       const payload: CoachApiPayload = {
         coachName: state.coachName,
-        style: state.style,
+        personalities: state.personalities,
+        responseType: state.responseType,
+        responseStyle: state.responseStyle,
         categoryName: conversationCategoryName,
         employeeContext,
         messages: [...(conversation.messages ?? []), userMessage].map(message => ({ role: message.role, content: message.content })),
@@ -442,16 +511,85 @@ const AICoachPage: React.FC = () => {
               </div>
             </div>
             <section className="ai-settings-sheet ai-settings-sheet--full">
+
+              <div className="ai-settings-section-label">Coach Identity</div>
               <label className="ai-coach-field">
                 Coach Name
                 <input value={draftCoachName} onChange={event => setDraftCoachName(event.target.value.slice(0, 32))} placeholder="Name your coach" />
               </label>
-              <label className="ai-coach-field">
-                Communication Style
-                <select value={draftStyle} onChange={event => setDraftStyle(event.target.value as CoachStyle)}>
-                  {Object.entries(STYLE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                </select>
-              </label>
+              <div className="ai-coach-field">
+                Avatar — describe your coach
+                <div className="ai-avatar-row">
+                  <input
+                    value={draftAvatarPrompt}
+                    onChange={event => setDraftAvatarPrompt(event.target.value)}
+                    placeholder="e.g. friendly robot with glasses, neon blue"
+                  />
+                  <button
+                    type="button"
+                    className="ai-avatar-generate-btn"
+                    onClick={generateAvatar}
+                    disabled={!draftAvatarPrompt.trim()}
+                  >
+                    <IonIcon icon={imageOutline} />
+                    Generate
+                  </button>
+                </div>
+                {draftAvatarUrl ? (
+                  <div className="ai-avatar-preview-wrap">
+                    <img src={draftAvatarUrl} className="ai-avatar-preview" alt="Avatar preview" />
+                    <span className="ai-avatar-preview-hint">Generating may take a few seconds — save to apply.</span>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="ai-settings-section-label">Personality</div>
+              <div className="ai-personality-grid">
+                {PERSONALITY_OPTIONS.map(p => (
+                  <button
+                    key={p.value}
+                    type="button"
+                    className={`ai-personality-chip${draftPersonalities.includes(p.value) ? ' selected' : ''}`}
+                    onClick={() => togglePersonality(p.value)}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="ai-settings-section-label">Response Type</div>
+              <div className="ai-response-pills">
+                {RESPONSE_TYPE_OPTIONS.map(rt => (
+                  <button
+                    key={rt.value}
+                    type="button"
+                    className={`ai-response-pill${draftResponseType === rt.value ? ' selected' : ''}`}
+                    onClick={() => setDraftResponseType(rt.value)}
+                  >
+                    {rt.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="ai-settings-section-label">Response Style</div>
+              <div className="ai-style-toggle">
+                <button
+                  type="button"
+                  className={`ai-style-toggle-btn${draftResponseStyle === 'plan-strategy' ? ' selected' : ''}`}
+                  onClick={() => setDraftResponseStyle('plan-strategy')}
+                >
+                  Plan &amp; Strategy
+                </button>
+                <button
+                  type="button"
+                  className={`ai-style-toggle-btn${draftResponseStyle === 'conversational' ? ' selected' : ''}`}
+                  onClick={() => setDraftResponseStyle('conversational')}
+                >
+                  Conversational
+                </button>
+              </div>
+
+              <div className="ai-settings-section-label">Categories</div>
               <div className="ai-category-create">
                 <input value={newCategoryName} onChange={event => setNewCategoryName(event.target.value)} placeholder="Create category" />
                 <button type="button" onClick={createCategory}><IonIcon icon={addOutline} /></button>
@@ -459,6 +597,7 @@ const AICoachPage: React.FC = () => {
               <div className="ai-category-list">
                 {draftCategories.map(category => <span key={category.id} className="ai-category-chip">{category.name}</span>)}
               </div>
+
             </section>
           </div>
         ) : (
@@ -538,9 +677,17 @@ const AICoachPage: React.FC = () => {
                         onMouseDown={onMouseDown}
                         onMouseUp={event => onMouseUp(conversation.id, event)}
                       >
-                        <div className="chat-avatar" style={{ background: colorForConversation(conversation.id) }}>
-                          {(state.coachName || 'AI').slice(0, 2).toUpperCase()}
-                        </div>
+                        {state.avatarUrl ? (
+                          <img
+                            src={state.avatarUrl}
+                            className="chat-avatar ai-avatar-img"
+                            alt={state.coachName || 'AI Coach'}
+                          />
+                        ) : (
+                          <div className="chat-avatar" style={{ background: colorForConversation(conversation.id) }}>
+                            {(state.coachName || 'AI').slice(0, 2).toUpperCase()}
+                          </div>
+                        )}
                         <div className="conv-body">
                           <div className="conv-top">
                             <span className="conv-name">{conversation.title}</span>
