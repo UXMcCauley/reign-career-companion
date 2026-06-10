@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { MapPin, Clock, Navigation2, Footprints } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
+import { StatusBar, Animation } from "@capacitor/status-bar";
 import "./ShiftCountdownIsland.css";
+import { IonLabel, IonSegment, IonSegmentButton } from "@ionic/react";
+
 
 // --- Geo helpers ---------------------------------------------------------
 
@@ -36,11 +40,11 @@ const INTERACTIVE_TOP_GAP_PX = 16;
 
 // --- Test overrides (env vars) -------------------------------------------
 
-const TEST_FORCE_SHOW  = import.meta.env.VITE_SHIFT_TEST === "true";
+const TEST_FORCE_SHOW = import.meta.env.VITE_SHIFT_TEST === "true";
 const TEST_MINUTES_RAW = parseFloat(import.meta.env.VITE_SHIFT_TEST_MINUTES ?? "");
-const TEST_MINUTES     = Number.isFinite(TEST_MINUTES_RAW) ? TEST_MINUTES_RAW : 8;
-const TEST_DIST_RAW    = parseFloat(import.meta.env.VITE_SHIFT_TEST_DISTANCE_FT ?? "");
-const TEST_DIST_FT     = Number.isFinite(TEST_DIST_RAW) ? TEST_DIST_RAW : null;
+const TEST_MINUTES = Number.isFinite(TEST_MINUTES_RAW) ? TEST_MINUTES_RAW : 8;
+const TEST_DIST_RAW = parseFloat(import.meta.env.VITE_SHIFT_TEST_DISTANCE_FT ?? "");
+const TEST_DIST_FT = Number.isFinite(TEST_DIST_RAW) ? TEST_DIST_RAW : null;
 
 // --- Mock data -----------------------------------------------------------
 
@@ -98,23 +102,36 @@ export function ShiftCountdownIsland() {
   const msUntilShift = shiftStartMs - now;
   const minutesUntil = msUntilShift / 60_000;
   const inWindow = minutesUntil <= 10 && msUntilShift > -60_000;
-  if (!TEST_FORCE_SHOW && !inWindow) return null;
+  const showing = TEST_FORCE_SHOW || inWindow;
+
+  // why this matters: the native iOS status bar is a system overlay that owns
+  // every touch inside the top safe-area strip — the island lives there, so it
+  // can't receive taps while that bar is shown. Hide it ONLY while the island
+  // is on screen (the hardware notch keeps the safe-area inset, so layout holds)
+  // and restore it the moment the island leaves the window or unmounts.
+  useEffect(() => {
+    if (Capacitor.getPlatform() !== "ios" || !showing) return;
+    StatusBar.hide({ animation: Animation.Fade }).catch(() => undefined);
+    return () => { StatusBar.show({ animation: Animation.Fade }).catch(() => undefined); };
+  }, [showing]);
+
+  if (!showing) return null;
 
   const feetFromEdge = TEST_DIST_FT !== null
     ? Math.max(0, Math.round(TEST_DIST_FT))
     : Math.max(0, Math.round(
-        haversineMeters(position.lat, position.lng, PROJECT_SITE.lat, PROJECT_SITE.lng)
-          * METERS_TO_FEET - PROJECT_SITE.edgeRadiusFt
-      ));
+      haversineMeters(position.lat, position.lng, PROJECT_SITE.lat, PROJECT_SITE.lng)
+      * METERS_TO_FEET - PROJECT_SITE.edgeRadiusFt
+    ));
   const walkSecs = feetFromEdge / WALK_FPS;
   const walkMins = walkSecs / 60;
   const willMakeIt = walkMins < minutesUntil;
 
   const urgency = minutesUntil <= 2 ? "red" : minutesUntil <= 5 ? "amber" : "teal";
   const colours = {
-    red:   { glow: "rgba(239,68,68,0.55)",  ring: "#ef4444", text: "#fca5a5", bg: "rgba(127,29,29,0.35)" },
+    red: { glow: "rgba(239,68,68,0.55)", ring: "#ef4444", text: "#fca5a5", bg: "rgba(127,29,29,0.35)" },
     amber: { glow: "rgba(251,191,36,0.45)", ring: "#fbbf24", text: "#fde68a", bg: "rgba(120,53,15,0.35)" },
-    teal:  { glow: "rgba(45,212,191,0.35)", ring: "#2dd4bf", text: "#99f6e4", bg: "rgba(15,52,52,0.35)"  },
+    teal: { glow: "rgba(45,212,191,0.35)", ring: "#2dd4bf", text: "#99f6e4", bg: "rgba(15,52,52,0.35)" },
   }[urgency];
 
   const startStr = new Date(shiftStartMs).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
@@ -128,13 +145,15 @@ export function ShiftCountdownIsland() {
   const row: React.CSSProperties = { display: "flex", alignItems: "center" };
   const col: React.CSSProperties = { display: "flex", flexDirection: "column" };
   const chip: React.CSSProperties = {
-    ...row, gap: 8, padding: "10px 12px", borderRadius: 10,
-    background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)",
+    ...row, gap: 8, padding: "10px 20px", borderRadius: 10,
+    background: "rgb(0, 0, 0)", border: "1px solid rgb(0, 0, 0)",
   };
 
   return (
     <div style={{
       position: "fixed",
+      borderRadius: 20,
+      background: "#000",
       // Keep visual alignment with hardware island on supported devices.
       top: islandTop,
       left: "50%",
@@ -146,27 +165,38 @@ export function ShiftCountdownIsland() {
       filter: seated ? "none" : `drop-shadow(0 0 14px ${colours.glow})`,
       transition: "filter 0.3s ease",
     }}>
+
+
       <div
         style={{
           overflow: "hidden",
-          transition: "border-radius 0.5s ease-in-out, width 0.5s ease-in-out, min-width 0.5s ease-in-out, background 0.3s ease, border-color 0.3s ease",
-          borderRadius: expanded ? 18 : 9999,
+          transition: "border-radius 0.5s ease-in-out, width 0.5s ease-in-out, min-width 0.5s ease-in-out, height 0.5s ease-in-out",
           width: expanded ? "min(340px, calc(100vw - 24px))" : "auto",
           minWidth: expanded ? "min(340px, calc(100vw - 24px))" : 0,
           // why this matters: seated must be PURE #000 with no blur — the
           // hardware is true black, and translucency exposes the seam
-          background: seated ? "#000" : "rgba(8, 8, 12, 0.92)",
+          background: seated ? "#000" : "rgb(0, 0, 0)",
           backdropFilter: seated ? "none" : "blur(20px)",
-          WebkitBackdropFilter: seated ? "none" : "blur(20px)",
+          // WebkitBackdropFilter: seated ? "none" : "blur(20px)",
           border: seated ? "1.5px solid #000" : `1.5px solid ${colours.ring}55`,
           boxShadow: seated ? "none" : `0 0 0 1px ${colours.ring}22, inset 0 1px 0 rgba(255,255,255,0.06)`,
           cursor: "pointer",
           pointerEvents: "all",
-          touchAction: " pinch-zoom pan-x pan-y pinch-zoom-pan-x pinch-zoom-pan-y",
+          touchAction: "manipulation",
           WebkitTapHighlightColor: "transparent",
         }}
         onClick={() => setExpanded(x => !x)}
       >
+        <IonSegment value="default">
+          <IonSegmentButton value="default">
+            <IonLabel>Default</IonLabel>
+          </IonSegmentButton>
+          <IonSegmentButton value="segment">
+            <IonLabel>Segment</IonLabel>
+          </IonSegmentButton>
+        </IonSegment>
+
+
         {/* ── Pill ── */}
         <div style={{
           ...row, gap: 10, padding: "0 16px",
@@ -283,16 +313,24 @@ export function ShiftCountdownIsland() {
             position: "absolute",
             left: "50%",
             transform: "translateX(-50%)",
-            // Place interaction area below the OS status bar hit-region.
-            top: insetTop - islandTop + INTERACTIVE_TOP_GAP_PX,
-            width: 180,
-            height: 28,
+            // why this matters: iOS swallows every touch that lands inside the
+            // top safe-area strip (the native status bar). The seated pill lives
+            // entirely inside that dead zone, so it can never receive a tap.
+            // Anchor the real hit target just past the inset boundary so it
+            // overlaps the island's lower edge and extends down into the region
+            // where touches actually reach the WebView.
+            top: insetTop - islandTop + 2,
+            width: "min(260px, calc(100vw - 24px))",
+            height: 72,
             border: "none",
             borderRadius: 9999,
             background: "transparent",
             padding: 0,
             margin: 0,
             cursor: "pointer",
+            pointerEvents: "all",
+            WebkitTapHighlightColor: "transparent",
+            touchAction: "manipulation",
           }}
         />
       )}

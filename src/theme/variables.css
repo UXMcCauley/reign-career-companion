@@ -27,21 +27,26 @@ http://ionicframework.com/docs/theming/ */
   --app-info-text: #d7ebff;
   --app-brand-accent-bg: linear-gradient(120deg, rgba(15, 47, 115, 0.9), rgba(33, 84, 181, 0.82));
   --app-brand-accent-border: rgba(126, 177, 255, 0.44);
-  /* --ion-safe-area-top: 0; 
-  --ion-safe-area-bottom: 0;
-  --ion-safe-area-left: 0;
-  --ion-safe-area-right: 0; */
+  --ion-font-family: 'Inter', sans-serif;
+  /* --ion-statusbar-padding: 10px; */
+  --ion-safe-area-top: 15px;
+  --ion-safe-area-right: 10px;
+  --ion-safe-area-bottom: 10px;
+  --ion-safe-area-left: 10px;
+  --ion-margin: 0px; /* Remove margin from the app */
+  --ion-padding: 0px; /* Remove padding from the app */
+  --ion-placeholder-opacity: 0;
+
+}
+
+html {
+  background: var(--app-night-base);
 }
 
 html,
 body,
 ion-app {
-  background: var(--app-night-base);
-
-  /* padding-top: var(--ion-safe-area-top); */
-  /* padding-bottom: var(--ion-safe-area-bottom); */
-  /* padding-left: var(--ion-safe-area-left); */
-  /* padding-right: var(--ion-safe-area-right); */
+  background: transparent
 }
 
 body {
@@ -51,6 +56,7 @@ body {
 ion-app {
   position: relative;
   isolation: isolate;
+  padding-top: var(--ion-safe-area-top);
 }
 
 ion-app::before,

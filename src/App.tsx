@@ -16,7 +16,7 @@ import {
   IonTitle,
   IonToolbar,
   createAnimation,
-  setupIonicReact
+  setupIonicReact,
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import {
@@ -42,7 +42,6 @@ import SchedulePage from './pages/SchedulePage';
 import SettingsPage from './pages/SettingsPage';
 import ShiftDetailPage from './pages/ShiftDetailPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
-
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
 
@@ -67,6 +66,9 @@ import '@ionic/react/css/palettes/dark.system.css';
 import './theme/variables.css';
 import { ShiftCountdownIsland } from './components/ShiftCountdownIsland';
 import { Capacitor } from '@capacitor/core';
+import {  } from '@ionic/pwa-elements';
+
+import Example from './pages/Example';
 
 setupIonicReact();
 
@@ -110,6 +112,7 @@ const tabDefs = [
   { id: 'schedule', href: '/schedule', icon: calendarOutline },
   { id: 'keycards', href: '/keycards', icon: albumsOutline },
   { id: 'ai-coach', href: '/ai-coach', icon: sparklesOutline },
+  // { id: 'example', href: '/example', icon: sparklesOutline },
 ] as const;
 
 const tabPathPrefixes: Record<string, string> = {
@@ -118,6 +121,7 @@ const tabPathPrefixes: Record<string, string> = {
   '/schedule': 'schedule',
   '/keycards': 'keycards',
   '/ai-coach': 'ai-coach',
+  // '/example': 'example',
 };
 
 function resolveTab(pathname: string): string {
@@ -189,7 +193,7 @@ const AppTabs: React.FC = () => {
 
   return (
     <>
-      
+    
       <IonMenu
         side="end"
         type="overlay"
@@ -250,6 +254,9 @@ const AppTabs: React.FC = () => {
           <Route exact path="/ai-coach">
             <AICoachPage />
           </Route>
+          {/* <Route exact path="/example">
+            <Example />
+          </Route> */}
           <Route exact path="/keycards">
             <KeycardsPage />
           </Route>
@@ -320,13 +327,13 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => (
   <AuthProvider>
-    <IonHeader>
+    {/* <IonHeader>
     {
         Capacitor.getPlatform() === 'ios' && (
           <ShiftCountdownIsland />
         ) 
       }
-    </IonHeader>
+    </IonHeader> */}
     
     <IonApp>
     
