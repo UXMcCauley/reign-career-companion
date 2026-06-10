@@ -28,11 +28,11 @@ const WALK_FPS = 4.4;
 // why this matters: the sensor housing physically occludes ~125px in the
 // center of the pill — content there is invisible. Collapsed layout must
 // split into two "ears" around a dead zone, exactly like iOS Live Activities.
-const ISLAND_TOP_PX = 11;
-const ISLAND_HEIGHT_PX = 37;
-const ISLAND_HW_WIDTH_PX = 125;
-const ISLAND_INSET_THRESHOLD = 59; // island devices report safe-area-top >= 59
-const INTERACTIVE_TOP_GAP_PX = 6;
+const ISLAND_TOP_PX = 15;
+const ISLAND_HEIGHT_PX = 50;
+const ISLAND_HW_WIDTH_PX = 95;
+const ISLAND_INSET_THRESHOLD = 30; // island devices report safe-area-top >= 59
+const INTERACTIVE_TOP_GAP_PX = 16;
 
 // --- Test overrides (env vars) -------------------------------------------
 
@@ -161,8 +161,8 @@ export function ShiftCountdownIsland() {
           border: seated ? "1.5px solid #000" : `1.5px solid ${colours.ring}55`,
           boxShadow: seated ? "none" : `0 0 0 1px ${colours.ring}22, inset 0 1px 0 rgba(255,255,255,0.06)`,
           cursor: "pointer",
-          pointerEvents: "auto",
-          touchAction: "manipulation",
+          pointerEvents: "all",
+          touchAction: " pinch-zoom pan-x pan-y pinch-zoom-pan-x pinch-zoom-pan-y",
           WebkitTapHighlightColor: "transparent",
         }}
         onClick={() => setExpanded(x => !x)}

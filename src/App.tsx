@@ -66,6 +66,7 @@ import '@ionic/react/css/palettes/dark.system.css';
 /* Theme variables */
 import './theme/variables.css';
 import { ShiftCountdownIsland } from './components/ShiftCountdownIsland';
+import { Capacitor } from '@capacitor/core';
 
 setupIonicReact();
 
@@ -188,10 +189,7 @@ const AppTabs: React.FC = () => {
 
   return (
     <>
-    <IonToolbar>
-    <ShiftCountdownIsland />
-
-    </IonToolbar>
+      
       <IonMenu
         side="end"
         type="overlay"
@@ -305,7 +303,6 @@ const AppTabs: React.FC = () => {
       </IonTabs>
 
       <FloatingTabBar currentTab={currentTab} />
-      <ShiftCountdownIsland />
     </>
   );
 };
@@ -323,7 +320,16 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => (
   <AuthProvider>
+    <IonHeader>
+    {
+        Capacitor.getPlatform() === 'ios' && (
+          <ShiftCountdownIsland />
+        ) 
+      }
+    </IonHeader>
+    
     <IonApp>
+    
       <IonReactRouter>
         <AppContent />
       </IonReactRouter>
