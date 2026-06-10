@@ -142,6 +142,7 @@ const AICoachPage: React.FC = () => {
   const [draftResponseStyle, setDraftResponseStyle] = useState<ResponseStyle>('conversational');
   const [draftAvatarPrompt, setDraftAvatarPrompt] = useState('');
   const [draftAvatarUrl, setDraftAvatarUrl] = useState('');
+  const [avatarStatus, setAvatarStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [draftCategories, setDraftCategories] = useState<CoachCategory[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -235,6 +236,7 @@ const AICoachPage: React.FC = () => {
     setDraftResponseStyle(state.responseStyle);
     setDraftAvatarPrompt(state.avatarPrompt);
     setDraftAvatarUrl(state.avatarUrl);
+    setAvatarStatus(state.avatarUrl ? 'ready' : 'idle');
     setDraftCategories(state.categories);
     setNewCategoryName('');
     setView('settings');
@@ -271,11 +273,24 @@ const AICoachPage: React.FC = () => {
   const generateAvatar = () => {
     const desc = draftAvatarPrompt.trim();
     if (!desc) return;
-    const enhanced = `flat vector avatar, minimalist digital illustration, clean smooth shapes, soft pastel palette, AI assistant coach character, ${desc}, no text, no background clutter`;
-    const seed = simpleHash(desc);
-    setDraftAvatarUrl(
-      `https://image.pollinations.ai/prompt/${encodeURIComponent(enhanced)}?width=256&height=256&nologo=true&seed=${seed}`
-    );
+    // DiceBear: free, no API key, instant vector avatars. Style is picked from description keywords.
+    const STYLES: Array<[RegExp, string]> = [
+      [/robot|bot|android|tech|cyber|ai|machine/i, 'bottts-neutral'],
+      [/cute|fun|emoji|playful|silly/i, 'fun-emoji'],
+      [/sketch|line|draw|notion|minimal/i, 'notionists'],
+      [/face|person|human|character|coach|professional/i, 'lorelei'],
+      [/pixel|retro|game/i, 'pixel-art'],
+    ];
+    const fallbackStyles = ['bottts-neutral', 'micah', 'lorelei', 'notionists', 'fun-emoji'];
+    const matched = STYLES.find(([re]) => re.test(desc));
+    const style = matched ? matched[1] : fallbackStyles[simpleHash(desc) % fallbackStyles.length];
+    const url = `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(desc)}&size=256`;
+    setDraftAvatarUrl(url);
+    setAvatarStatus('loading');
+    const preloader = new window.Image();
+    preloader.onload = () => setAvatarStatus('ready');
+    preloader.onerror = () => setAvatarStatus('error');
+    preloader.src = url;
   };
 
   const createConversation = () => {
@@ -535,10 +550,20 @@ const AICoachPage: React.FC = () => {
                     Generate
                   </button>
                 </div>
-                {draftAvatarUrl ? (
+                {avatarStatus !== 'idle' ? (
                   <div className="ai-avatar-preview-wrap">
-                    <img src={draftAvatarUrl} className="ai-avatar-preview" alt="Avatar preview" />
-                    <span className="ai-avatar-preview-hint">Generating may take a few seconds — save to apply.</span>
+                    {avatarStatus === 'loading' ? (
+                      <div className="ai-avatar-preview ai-avatar-preview--loading" aria-label="Generating avatar" />
+                    ) : avatarStatus === 'error' ? (
+                      <div className="ai-avatar-preview ai-avatar-preview--error" aria-label="Avatar failed" />
+                    ) : (
+                      <img src={draftAvatarUrl} className="ai-avatar-preview" alt="Avatar preview" />
+                    )}
+                    <span className="ai-avatar-preview-hint">
+                      {avatarStatus === 'loading' && 'Generating...'}
+                      {avatarStatus === 'error' && 'Failed to load. Try a different description.'}
+                      {avatarStatus === 'ready' && 'Save to apply this avatar.'}
+                    </span>
                   </div>
                 ) : null}
               </div>

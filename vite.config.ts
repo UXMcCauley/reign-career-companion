@@ -86,22 +86,40 @@ function blobGatewayPlugin(mode: string): Plugin {
 
 interface CoachApiRequest {
   coachName?: string
-  style?: 'concise' | 'witty' | 'mean'
+  personalities?: string[]
+  responseType?: string
+  responseStyle?: string
   categoryName?: string
   employeeContext?: unknown
   messages?: Array<{ role?: string; content?: string }>
+}
+
+const PERSONALITY_INSTRUCTIONS_DEV: Record<string, string> = {
+  'professional': 'maintain a polished, business-appropriate tone',
+  'witty': 'weave in light, intelligent humor without sacrificing clarity',
+  'straight-shooter': 'be direct and cut to the core — no padding, no softening',
+  'detailed': 'cover nuance and context thoroughly; don\'t skip important background',
+  'playful': 'keep the energy upbeat and encourage a growth mindset',
+  'laid-back': 'stay relaxed and conversational — ditch the corporate jargon',
+  'friendly': 'lead with genuine warmth, empathy, and encouragement',
+}
+
+const RESPONSE_TYPE_INSTRUCTIONS_DEV: Record<string, string> = {
+  'brief': 'Keep responses tight: 2–4 bullets or short sentences only. No padding.',
+  'simple': 'Use plain, everyday language; avoid jargon and keep structure minimal.',
+  'data-driven': 'Ground advice in the employee\'s metrics and tie suggestions to measurable outcomes.',
+  'in-depth': 'Provide comprehensive coverage — background, nuance, alternatives, and tradeoffs.',
+}
+
+const RESPONSE_STYLE_INSTRUCTIONS_DEV: Record<string, string> = {
+  'plan-strategy': 'Frame responses as actionable plans: numbered steps, priorities, or a clear roadmap.',
+  'conversational': 'Write as a natural, warm dialogue — speak like a trusted colleague.',
 }
 
 function aiCoachGatewayPlugin(mode: string): Plugin {
   const env = loadEnv(mode, process.cwd(), '')
   const apiKey = env.ANTHROPIC_API_KEY || env.VITE_ANTHROPIC_API_KEY || ''
   const model = env.ANTHROPIC_MODEL || env.VITE_ANTHROPIC_MODEL || 'claude-sonnet-4-6'
-
-  const styleGuidance: Record<'concise' | 'witty' | 'mean', string> = {
-    concise: 'Keep responses practical and concise.',
-    witty: 'Use light humor while staying professional and actionable.',
-    mean: 'Use direct tough-love coaching without abusive language.',
-  }
 
   return {
     name: 'local-ai-coach-gateway',
@@ -123,7 +141,6 @@ function aiCoachGatewayPlugin(mode: string): Plugin {
               return
             }
 
-            const style = (body.style && styleGuidance[body.style]) ? body.style : 'concise'
             const coachName = (body.coachName || 'AI Coach').trim().slice(0, 48)
             const category = (body.categoryName || 'General Coaching').trim().slice(0, 80)
             const messages = (body.messages ?? [])
@@ -134,13 +151,36 @@ function aiCoachGatewayPlugin(mode: string): Plugin {
                 content: (message.content || '').trim(),
               }))
 
+            const personalities = (body.personalities ?? ['professional']).filter(
+              p => p in PERSONALITY_INSTRUCTIONS_DEV
+            )
+            const personalityLine = personalities.length
+              ? `Personality blend: ${personalities.map(p => PERSONALITY_INSTRUCTIONS_DEV[p]).join('; ')}.`
+              : 'Maintain a clear, professional tone.'
+
+            const responseType = body.responseType && body.responseType in RESPONSE_TYPE_INSTRUCTIONS_DEV
+              ? body.responseType
+              : 'brief'
+
+            const responseStyle = body.responseStyle && body.responseStyle in RESPONSE_STYLE_INSTRUCTIONS_DEV
+              ? body.responseStyle
+              : 'conversational'
+
             const systemPrompt = [
               `You are ${coachName}, an AI workplace and career coach.`,
-              `Current category: ${category}.`,
-              styleGuidance[style],
+              'Your user is an employee in a workforce app.',
+              `Current chat category: ${category}.`,
+              personalityLine,
+              RESPONSE_TYPE_INSTRUCTIONS_DEV[responseType],
+              RESPONSE_STYLE_INSTRUCTIONS_DEV[responseStyle],
               'Use employee context and metrics when giving recommendations.',
               'Output plain text only. Do not use markdown syntax (no headings with #, no **bold**, no bullet markers like - or *).',
               'For readability, use short lines, emojis, and standard punctuation/labels (for example: "Goal:", "Next step:", "Tip:").',
+              '',
+              'Discourse approach — closing question:',
+              'End every response with a single, open-ended question that invites the employee to surface a concern they may not have voiced yet.',
+              'Frame it with warmth and curiosity, never pressure.',
+              '',
               `Employee context: ${JSON.stringify(body.employeeContext ?? {})}`,
             ].join('\n')
 
@@ -153,7 +193,7 @@ function aiCoachGatewayPlugin(mode: string): Plugin {
               },
               body: JSON.stringify({
                 model,
-                max_tokens: 700,
+                max_tokens: 900,
                 system: systemPrompt,
                 messages,
               }),
