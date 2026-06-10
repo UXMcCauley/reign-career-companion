@@ -1064,7 +1064,6 @@ const DashboardPage: React.FC = () => {
           </a>
         </div>
       )}
-      <ShiftCountdownIsland />
     </IonPage>
   );
 };
