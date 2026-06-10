@@ -32,6 +32,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Geolocation } from '@capacitor/geolocation';
 import './DashboardPage.css';
+import { Capacitor } from '@capacitor/core';
 
 const metrics = defaultLoggedInEmployee.dashboard.metrics;
 const announcements = defaultLoggedInEmployee.dashboard.announcements;
@@ -208,11 +209,11 @@ const ExpandedMapController: React.FC<{
 }> = ({ mapRef, userPosition }) => {
   const map = useMap();
   const hasFitted = useRef(false);
-useEffect(() => {
-  if (!userPosition || hasFitted.current) return;
-  hasFitted.current = true;
-  // ...fitBounds + save
-}, [map, userPosition]);
+  useEffect(() => {
+    if (!userPosition || hasFitted.current) return;
+    hasFitted.current = true;
+    // ...fitBounds + save
+  }, [map, userPosition]);
 
   useEffect(() => {
     mapRef.current = map;
@@ -228,7 +229,7 @@ useEffect(() => {
     map.fitBounds(bounds, { padding: [60, 60], maxZoom: 17 });
     hasFitted.current = true;
   }, [map, userPosition]);
-  
+
 
   return null;
 };
@@ -256,9 +257,9 @@ const DashboardPage: React.FC = () => {
   const expandedMapRef = useRef<L.Map | null>(null);
 
   const handleMapTilesLoaded = useCallback(() => setMapTilesLoaded(true), []);
-  const handleZoomIn  = useCallback(() => mapRef.current?.zoomIn(), []);
+  const handleZoomIn = useCallback(() => mapRef.current?.zoomIn(), []);
   const handleZoomOut = useCallback(() => mapRef.current?.zoomOut(), []);
-  const handleLocate  = useCallback(() => {
+  const handleLocate = useCallback(() => {
     if (userPosition && mapRef.current) {
       mapRef.current.flyTo([userPosition.latitude, userPosition.longitude], 17, { duration: 0.7 });
     }
@@ -278,7 +279,7 @@ const DashboardPage: React.FC = () => {
       }
       const L2 = (a: number, b: number) => (a + (b - a) * p).toFixed(3);
       el.style.opacity = L2(1, 0.25);
-      el.style.filter  = `blur(${(p * 6).toFixed(2)}px)`;
+      // el.style.filter = `blur(${(p * 6).toFixed(2)}px)`;
     });
   }, []);
 
@@ -319,7 +320,7 @@ const DashboardPage: React.FC = () => {
   };
 
   const handleSelectKeyCard = () => chooseKeyCard('Select keycard', setActiveKeyCardId);
-  const handleSwitchKeyCard  = () => chooseKeyCard('Switch keycard', setActiveKeyCardId);
+  const handleSwitchKeyCard = () => chooseKeyCard('Switch keycard', setActiveKeyCardId);
 
   const handleClockIn = () => {
     totalBreakSecondsRef.current = 0;
@@ -372,36 +373,40 @@ const DashboardPage: React.FC = () => {
   /* GPS watch */
   useEffect(() => {
     let watchId: string | null = null;
+    let cancelled = false;
 
-    Geolocation.requestPermissions().then(status => {
-      if (status.location !== 'granted' && status.coarseLocation !== 'granted') return;
+    const startGeolocation = async () => {
+      // why this matters: requestPermissions throws "Not implemented" on web —
+      // browsers prompt on the first real position request instead
+      // if (Capacitor.isNativePlatform()) {
+      //   const status = await Geolocation.requestPermissions().catch(() => null);
+      //   if (!status || (status.location !== 'granted' && status.coarseLocation !== 'granted')) return;
+      // }
   
-      // ── INSERT HERE (~line 355) ──
-      // why this matters: cached fix arrives ~50ms vs 2-8s for fresh GPS
+      // fast cached fix (~50ms) while the fresh GPS lock spins up
       Geolocation.getCurrentPosition({ maximumAge: 300000, enableHighAccuracy: false })
-        .then(pos => setUserPosition({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }))
+        .then(pos => {
+          if (!cancelled) setUserPosition({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+        })
         .catch(() => undefined);
-      // ── END INSERT ──
   
-      Geolocation.watchPosition(                            // existing code continues
+      watchId = await Geolocation.watchPosition(
         { enableHighAccuracy: true, maximumAge: 15000, timeout: 15000 },
         pos => {
-          if (!pos) return;
+          if (!pos || cancelled) return;
           const { latitude, longitude } = pos.coords;
-          if (!isNaN(latitude) && !isNaN(longitude)) {
-            setUserPosition({ latitude, longitude });
-          }
+          if (!isNaN(latitude) && !isNaN(longitude)) setUserPosition({ latitude, longitude });
         }
-      ).then(id => { watchId = id; });
-    });
-
-    
-
+      );
+    };
+  
+    void startGeolocation();
+  
     return () => {
+      cancelled = true;
       if (watchId !== null) Geolocation.clearWatch({ id: watchId });
     };
   }, []);
-
   /* Break timer */
   useEffect(() => {
     if (!onBreak || !breakStartedAt) return;
@@ -482,10 +487,10 @@ const DashboardPage: React.FC = () => {
   const isWithinGeofence =
     import.meta.env.VITE_BYPASS_GEOFENCE === 'true' ||
     (distanceToJobSiteFeet !== null && distanceToJobSiteFeet <= GEOFENCE_RADIUS_FEET);
-  const canClockIn      = Boolean(activeKeyCardId) && isWithinGeofence && !isClockedIn;
+  const canClockIn = Boolean(activeKeyCardId) && isWithinGeofence && !isClockedIn;
   const canUseMainButton = isClockedIn || canClockIn;
   const keyCardActionLabel = isClockedIn ? 'Switch Keycard' : 'Select Keycard';
-  const rightActionLabel   = isClockedIn ? (onBreak ? 'End Break' : 'Start Break') : 'Shift Details';
+  const rightActionLabel = isClockedIn ? (onBreak ? 'End Break' : 'Start Break') : 'Shift Details';
 
   const savedView = (() => {
     try { return JSON.parse(localStorage.getItem('reign_map_view') ?? 'null'); }
@@ -566,9 +571,10 @@ const DashboardPage: React.FC = () => {
 
               {/* Map — CartoDB Voyager tiles, free, no key */}
               <div className="clock-map-shell">
-              <MapContainer
-  center={savedView?.center ?? [configuredJobSite.latitude, configuredJobSite.longitude]}
-  zoom={savedView?.zoom ?? 16}
+                <MapContainer
+                  preferCanvas={true}
+                  center={savedView?.center ?? [configuredJobSite.latitude, configuredJobSite.longitude]}
+                  zoom={savedView?.zoom ?? 16}
                   zoomControl={false}
                   attributionControl={false}
                   className="clock-map-canvas"
@@ -728,7 +734,7 @@ const DashboardPage: React.FC = () => {
                       >
                         {activeKeyCardName ?? 'No keycard selected'}
                       </span>
-                     
+
                     </div>
                   </div>
                 </div>
@@ -763,7 +769,7 @@ const DashboardPage: React.FC = () => {
                   <span>{rightActionLabel}</span>
                 </button>
               </div>
-              
+
             </div>
 
             {/* ── Shifts ── */}
