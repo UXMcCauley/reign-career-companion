@@ -23,7 +23,8 @@ async function initializeApp() {
   localStorage.shouldReloadApp = result.activeApplicationPathChanged;
 }
 
-await initializeApp();
-
-        // CHANGE: Call the element loader before the render call
-await defineCustomElements(window);
+void (async () => {
+  await initializeApp();
+  // CHANGE: Call the element loader before the render call
+  await defineCustomElements(window);
+})();
