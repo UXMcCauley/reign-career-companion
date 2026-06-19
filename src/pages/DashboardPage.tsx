@@ -43,6 +43,25 @@ const MASTERY_DEMO = [
 ];
 
 const metrics = defaultLoggedInEmployee.dashboard.metrics;
+type DashboardMetric = (typeof metrics)[number];
+
+const METRIC_ACRONYMS = new Set(['PPI', 'OTS']);
+
+const formatMetricLabel = (label: string) =>
+  METRIC_ACRONYMS.has(label) ? label.toUpperCase() : label;
+
+const METRIC_LAYOUT: { label: string; row: 'top' | 'mid' | 'productivity' }[] = [
+  { label: 'PPI', row: 'top' },
+  { label: 'OTS', row: 'top' },
+  { label: 'Team', row: 'top' },
+  { label: 'Success', row: 'mid' },
+  { label: 'Daily', row: 'mid' },
+  { label: 'Productivity', row: 'productivity' },
+];
+
+const metricsByLabel = Object.fromEntries(
+  metrics.map(metric => [metric.label, metric])
+) as Record<string, DashboardMetric>;
 const announcements = defaultLoggedInEmployee.dashboard.announcements;
 const activeContests = [
   {
@@ -642,25 +661,51 @@ const DashboardPage: React.FC = () => {
             <div className="dash-hero-glow" />
 
             <div className="metrics-grid">
-              {metrics.map((metric, index) => (
-                <IonCard
-                  key={metric.label}
-                  className="metric-card"
-                  ref={(el) => { metricsRef.current[index] = el as HTMLElement; }}
-                >
-                  <IonCardHeader>
-                    <div className="metric-header-row">
-                      <IonCardSubtitle>{metric.label}</IonCardSubtitle>
-                    </div>
-                  </IonCardHeader>
-                  <IonCardContent>
-                    <div className="metric-reading">
-                      <span className="metric-value">{metric.value}</span>
-                      {metric.total ? <span className="metric-total">{metric.total}</span> : null}
-                    </div>
-                  </IonCardContent>
-                </IonCard>
-              ))}
+              {METRIC_LAYOUT.map(({ label, row }, index) => {
+                const metric = metricsByLabel[label];
+                if (!metric) return null;
+
+                if (row === 'productivity') {
+                  return (
+                    <IonCard
+                      key={label}
+                      className="metric-card metric-card--productivity"
+                      ref={(el) => { metricsRef.current[index] = el as HTMLElement; }}
+                    >
+                      <IonCardContent className="metric-inline-reading">
+                        <IonCardSubtitle className="metric-label metric-label--word">
+                          {formatMetricLabel(metric.label)}
+                        </IonCardSubtitle>
+                        <span className="metric-value">{metric.value}</span>
+                      </IonCardContent>
+                    </IonCard>
+                  );
+                }
+
+                return (
+                  <IonCard
+                    key={label}
+                    className={`metric-card metric-card--${row}`}
+                    ref={(el) => { metricsRef.current[index] = el as HTMLElement; }}
+                  >
+                    <IonCardHeader>
+                      <div className="metric-header-row">
+                        <IonCardSubtitle
+                          className={`metric-label ${METRIC_ACRONYMS.has(metric.label) ? 'metric-label--acronym' : 'metric-label--word'}`}
+                        >
+                          {formatMetricLabel(metric.label)}
+                        </IonCardSubtitle>
+                      </div>
+                    </IonCardHeader>
+                    <IonCardContent>
+                      <div className="metric-reading">
+                        <span className="metric-value">{metric.value}</span>
+                        {metric.total ? <span className="metric-total">{metric.total}</span> : null}
+                      </div>
+                    </IonCardContent>
+                  </IonCard>
+                );
+              })}
             </div>
 
             <div className="dash-mastery-section-label">
@@ -752,7 +797,7 @@ const DashboardPage: React.FC = () => {
                 </MapContainer>
 
                 {/* Skeleton placeholder — fades out once tiles are loaded */}
-                <div className={`map-placeholder${mapTilesLoaded ? ' map-placeholder--loaded' : ''}`}>
+                {/* <div className={`map-placeholder${mapTilesLoaded ? ' map-placeholder--loaded' : ''}`}>
                   <svg viewBox="0 0 100 100" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="50" cy="50" r="36" fill="none" stroke="#8b7355" strokeWidth="1.2" strokeDasharray="5 4" />
                     <circle cx="50" cy="50" r="5" fill="#8b7355" />
@@ -762,7 +807,7 @@ const DashboardPage: React.FC = () => {
                     <line x1="78" y1="50" x2="86" y2="50" stroke="#8b7355" strokeWidth="1" />
                   </svg>
                   <span>Loading map…</span>
-                </div>
+                </div> */}
 
                 {/* Zoom controls */}
                 <div className="map-zoom-controls">

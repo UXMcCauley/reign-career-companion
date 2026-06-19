@@ -111,6 +111,8 @@
   position: relative;
   z-index: 1;
   width: 100%;
+  top: auto;
+  left: auto;
 }
 
 /* ──────────────── PANEL ──────────────── */
@@ -1001,19 +1003,40 @@
 /* ──────────────── METRICS GRID ──────────────── */
 
 .metrics-grid {
+  --metric-grid-inset-x: 10px;
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  margin-top: var(--ion-safe-area-top);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin-top: calc(var(--ion-safe-area-top) - 20px);
+  margin-bottom: 12px;
   gap: 0;
   position: fixed;
-  top: var(--ion-safe-area-top);
+  top: calc(var(--ion-safe-area-top) - 10px);
   left: 0;
   width: 100%;
-  height: 100%;
+  height: auto;
+}
+
+.metrics-grid::before,
+.metrics-grid::after {
+  content: '';
+  position: absolute;
+  left: var(--metric-grid-inset-x);
+  right: var(--metric-grid-inset-x);
+  height: 1px;
+  background: rgba(255, 255, 255, 0.14);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.metrics-grid::before {
+  top: 0;
+}
+
+.metrics-grid::after {
+  bottom: 0;
 }
 
 .metric-card {
-  grid-column: span 2;
   margin: 0;
   will-change: opacity, filter, box-shadow;
   --background: transparent;
@@ -1022,37 +1045,95 @@
   box-shadow: none;
   border-radius: 0;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 8px;
+  box-sizing: border-box;
 }
 
-.metric-card:nth-child(5),
-.metric-card:nth-child(6) { grid-column: span 4; }
+.metric-card--top { grid-column: span 2; }
 
-.metric-card:nth-child(2)::before,
-.metric-card:nth-child(3)::before,
-.metric-card:nth-child(4)::before,
-.metric-card:nth-child(6)::before {
+.metric-card--mid { grid-column: span 3; }
+
+.metric-card--productivity { grid-column: 1 / -1; }
+
+.metric-card--top:not(:first-child)::before,
+.metric-card--mid + .metric-card--mid::before {
   content: '';
   position: absolute;
   left: 0;
-  top: 8px;
-  bottom: 8px;
+  top: 14px;
+  bottom: 14px;
   width: 1px;
   background: rgba(255, 255, 255, 0.14);
 }
 
-.metric-card:nth-child(5)::after,
-.metric-card:nth-child(6)::after {
+.metric-card--mid::after,
+.metric-card--productivity::after {
   content: '';
   position: absolute;
-  left: 10px;
-  right: 10px;
+  left: var(--metric-grid-inset-x, 10px);
+  right: var(--metric-grid-inset-x, 10px);
   top: 0;
   height: 1px;
   background: rgba(255, 255, 255, 0.14);
 }
 
-.metric-card ion-card-header { padding-bottom: 4px; text-align: center; }
-.metric-card ion-card-content { text-align: center; }
+.metric-card ion-card-header,
+.metric-card:not(.metric-card--productivity) ion-card-content {
+  padding: 0;
+  margin: 0;
+  text-align: center;
+  width: 100%;
+}
+
+.metric-card--productivity ion-card-content {
+  padding: 0;
+  width: 100%;
+  text-align: unset;
+}
+
+.metric-inline-reading {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  line-height: 1;
+}
+
+.metric-label {
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-size: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.metric-label--acronym {
+  text-transform: uppercase;
+}
+
+.metric-label--word {
+  text-transform: none;
+}
+
+.metric-card:not(.metric-card--productivity) ion-card-header {
+  padding-bottom: 6px;
+}
+
+.metric-card--productivity {
+  padding: 14px 16px;
+}
+
+.metric-inline-reading .metric-label,
+.metric-inline-reading .metric-value {
+  text-align: unset;
+}
 
 .metric-header-row {
   display: flex;
@@ -1061,16 +1142,18 @@
   width: 100%;
 }
 
-.metric-card ion-card-subtitle {
-  color: #ffffff;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  font-size: 18px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.metric-card:not(.metric-card--productivity) ion-card-subtitle.metric-label {
   width: 100%;
   text-align: center;
+}
+
+.metric-inline-reading .metric-label {
+  width: auto;
+}
+
+.metric-inline-reading .metric-value {
+  font-size: 20px;
+  font-weight: 300;
 }
 
 .metric-value {
@@ -1103,9 +1186,9 @@
 .dash-mastery {
   width: 100%;
   box-sizing: border-box;
-  margin-top: 12px;
+  margin-top: 32px;
   margin-bottom: 12px;
-  padding: 10px 16px 62px 16px;
+  padding: 10px 16px 14px 16px;
   border-radius: 16px;
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.038), rgba(234, 132, 220, 0.118));
   border: 1px solid rgba(237, 240, 244, 0.128);
