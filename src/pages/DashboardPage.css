@@ -131,6 +131,7 @@
   -moz-box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.22);
   -o-box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.22);
   -ms-box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.22);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.038), rgba(234, 132, 220, 0.118));
 }
 
 .dash-panel-handle {
