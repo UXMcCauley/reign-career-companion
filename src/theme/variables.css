@@ -48,7 +48,6 @@ html {
   background: var(--app-night-base);
 }
 
-html,
 body,
 ion-app {
   background: transparent
