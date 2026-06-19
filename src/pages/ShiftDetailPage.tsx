@@ -25,7 +25,12 @@ import {
 } from 'ionicons/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
-import { loadEmployees, loadShifts, loadShiftRuntime, saveShiftRuntime } from '../data/blobStorage';
+import { useWorkforce } from '../context/WorkforceContext';
+import { loadEmployees } from '../data/blobStorage';
+import {
+  getShiftDateForShiftId,
+  getShiftStatus,
+} from '../data/scheduleResolver';
 import {
   DAY_NAMES,
   MONTH_NAMES,
@@ -37,35 +42,9 @@ import {
 import type { DemoEmployee } from '../data/employees';
 import './ShiftDetailPage.css';
 
-type ShiftStatus = 'upcoming' | 'in-progress' | 'completed';
 type ChangeRequestMode = 'swap' | 'off';
-type ShiftChangeRequestMap = Record<string, { mode: ChangeRequestMode; submittedAt: number; targetName?: string }>;
 
 const MISC = -1;
-const SHIFT_CHANGE_REQUESTS_LOCAL_KEY = 'reign_shift_change_requests_v1';
-
-function getShiftDateForShiftId(id: string): Date {
-  const numericId = parseInt(id, 10);
-  const today = new Date();
-  const weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - today.getDay());
-  weekStart.setHours(0, 0, 0, 0);
-  if (Number.isNaN(numericId)) return weekStart;
-  const resolved = new Date(weekStart);
-  resolved.setDate(weekStart.getDate() + Math.max(0, numericId - 1));
-  return resolved;
-}
-
-function getStatus(shiftDate: Date, startHour: number, endHour: number): ShiftStatus {
-  const now = new Date();
-  const start = new Date(shiftDate);
-  start.setHours(Math.floor(startHour), Math.round((startHour % 1) * 60), 0, 0);
-  const end = new Date(shiftDate);
-  end.setHours(Math.floor(endHour), Math.round((endHour % 1) * 60), 0, 0);
-  if (now < start) return 'upcoming';
-  if (now > end) return 'completed';
-  return 'in-progress';
-}
 
 function formatCountdown(shiftDate: Date, startHour: number): string | null {
   const now = new Date();
@@ -88,53 +67,42 @@ function breakAlertLabel(b: Break): string {
   return b.type === 'meal' ? 'lunch break' : `${b.durationMins}-minute break`;
 }
 
-const STATUS_LABELS: Record<ShiftStatus, string> = {
+const STATUS_LABELS = {
   upcoming: 'UPCOMING',
   'in-progress': 'IN PROGRESS',
   completed: 'COMPLETED',
-};
+} as const;
 
 const ShiftDetailPage: React.FC = () => {
   const { shiftId } = useParams<{ shiftId: string }>();
   const history = useHistory();
   const [presentAlert] = useIonAlert();
-  const [shifts, setShifts] = useState<Record<string, Shift>>({});
-  const [hasLoadedShifts, setHasLoadedShifts] = useState(false);
+  const {
+    shifts,
+    isLoading,
+    anchorWeekStart,
+    scheduleByDate,
+    getShiftForDate,
+    activeSession,
+    isClockedInForShift,
+    clockIn,
+    clockOut,
+    startBreak,
+    endBreak,
+    changeRequests,
+    saveChangeRequest,
+  } = useWorkforce();
   const [employees, setEmployees] = useState<DemoEmployee[]>([]);
   const [isChangeModalOpen, setIsChangeModalOpen] = useState(false);
   const [changeSearch, setChangeSearch] = useState('');
   const [changeMode, setChangeMode] = useState<ChangeRequestMode>('swap');
-  const [changeRequests, setChangeRequests] = useState<ShiftChangeRequestMap>({});
   const shift = shifts[shiftId];
 
-  const [isClockedIn, setIsClockedIn] = useState(false);
-  // null = no active break, MISC (-1) = misc/away, 0+ = scheduled break index
-  const [activeBreakIndex, setActiveBreakIndex] = useState<number | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const loaded = await loadShifts();
-      if (active) {
-        setShifts(loaded);
-        setHasLoadedShifts(true);
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(SHIFT_CHANGE_REQUESTS_LOCAL_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as ShiftChangeRequestMap;
-      setChangeRequests(parsed);
-    } catch {
-      // Ignore malformed local request state.
-    }
-  }, []);
+  const isClockedIn = isClockedInForShift(shiftId);
+  const activeBreakIndex =
+    isClockedIn && activeSession?.shiftId === shiftId
+      ? (activeSession.activeBreakIndex ?? null)
+      : null;
 
   useEffect(() => {
     let active = true;
@@ -147,9 +115,12 @@ const ShiftDetailPage: React.FC = () => {
     };
   }, []);
 
-  const shiftDate = useMemo(() => getShiftDateForShiftId(shiftId), [shiftId]);
+  const shiftDate = useMemo(
+    () => getShiftDateForShiftId(shiftId, anchorWeekStart, scheduleByDate),
+    [shiftId, anchorWeekStart, scheduleByDate]
+  );
   const status = useMemo(
-    () => (shift ? getStatus(shiftDate, shift.startHour, shift.endHour) : 'upcoming'),
+    () => (shift ? getShiftStatus(shiftDate, shift.startHour, shift.endHour) : 'upcoming'),
     [shift, shiftDate]
   );
   const countdown = useMemo(
@@ -164,48 +135,48 @@ const ShiftDetailPage: React.FC = () => {
   const dayOfWeek = shiftDate.getDay();
   const headerTitle = `${DAY_NAMES[dayOfWeek]}, ${MONTH_NAMES[shiftDate.getMonth()]} ${shiftDate.getDate()}`;
 
-  // Restore persisted state and surface active-break prompt on each visit
+  const scheduledToday = getShiftForDate(new Date());
+
   useEffect(() => {
-    (async () => {
-      const runtime = await loadShiftRuntime(shiftId);
-      setIsClockedIn(runtime.isClockedIn);
+    if (!isClockedIn || activeBreakIndex === null || !shift) return;
 
-      if (runtime.activeBreakIndex !== null) {
-        const idx = runtime.activeBreakIndex;
-        const currentShift = shifts[shiftId];
-        if (!currentShift) return;
-
-        setActiveBreakIndex(idx);
-        const label = idx === MISC
-          ? 'miscellaneous break'
-          : currentShift.breaks[idx] ? breakAlertLabel(currentShift.breaks[idx]) : 'break';
-        presentAlert({
-          header: 'Break in progress',
-          message: `Your ${label} is still active. Ready to end it?`,
-          buttons: [
-            { text: 'Not yet', role: 'cancel' },
-            {
-              text: 'End Break',
-              handler: () => {
-                setActiveBreakIndex(null);
-                void saveShiftRuntime(shiftId, { isClockedIn: runtime.isClockedIn, activeBreakIndex: null });
-              }
-            }
-          ]
-        });
-      }
-    })();
+    const idx = activeBreakIndex;
+    const label = idx === MISC
+      ? 'miscellaneous break'
+      : shift.breaks[idx] ? breakAlertLabel(shift.breaks[idx]) : 'break';
+    presentAlert({
+      header: 'Break in progress',
+      message: `Your ${label} is still active. Ready to end it?`,
+      buttons: [
+        { text: 'Not yet', role: 'cancel' },
+        {
+          text: 'End Break',
+          handler: () => {
+            void endBreak();
+          }
+        }
+      ]
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shiftId, shifts]);
+  }, [shiftId, shift, isClockedIn, activeBreakIndex]);
 
-  const persistRuntime = (clockedIn: boolean, breakIndex: number | null) => {
-    void saveShiftRuntime(shiftId, { isClockedIn: clockedIn, activeBreakIndex: breakIndex });
-  };
-
-  // ── Clock in / out ──
   const handleClockIn = () => {
-    setIsClockedIn(true);
-    persistRuntime(true, activeBreakIndex);
+    if (!shift) return;
+    if (!isToday) {
+      presentAlert({
+        header: 'Not today',
+        message: 'You can only clock in on the day of your scheduled shift.',
+      });
+      return;
+    }
+    if (!scheduledToday || scheduledToday.id !== shiftId) {
+      presentAlert({
+        header: 'Not scheduled',
+        message: 'You are not scheduled to work today.',
+      });
+      return;
+    }
+    void clockIn({ shiftId, keyCardId: activeSession?.activeKeyCardId ?? null });
   };
 
   const handleClockOut = () => {
@@ -218,15 +189,13 @@ const ShiftDetailPage: React.FC = () => {
           text: 'Clock Out',
           cssClass: 'alert-button-danger',
           handler: () => {
-            setIsClockedIn(false);
-            persistRuntime(false, activeBreakIndex);
+            void clockOut();
           }
         }
       ]
     });
   };
 
-  // ── Break controls ──
   const handleStartBreak = (index: number) => {
     const label = index === MISC
       ? 'a miscellaneous break'
@@ -239,8 +208,7 @@ const ShiftDetailPage: React.FC = () => {
         {
           text: 'Start Break',
           handler: () => {
-            setActiveBreakIndex(index);
-            persistRuntime(isClockedIn, index);
+            void startBreak(index);
           }
         }
       ]
@@ -259,8 +227,7 @@ const ShiftDetailPage: React.FC = () => {
         {
           text: 'End Break',
           handler: () => {
-            setActiveBreakIndex(null);
-            persistRuntime(isClockedIn, null);
+            void endBreak();
           }
         }
       ]
@@ -296,24 +263,17 @@ const ShiftDetailPage: React.FC = () => {
     setIsChangeModalOpen(true);
   };
 
-  const saveChangeRequest = (payload: { mode: ChangeRequestMode; targetName?: string }) => {
-    setChangeRequests(prev => {
-      const next = {
-        ...prev,
-        [shiftId]: {
-          mode: payload.mode,
-          submittedAt: Date.now(),
-          ...(payload.targetName ? { targetName: payload.targetName } : {}),
-        },
-      };
-      localStorage.setItem(SHIFT_CHANGE_REQUESTS_LOCAL_KEY, JSON.stringify(next));
-      return next;
+  const submitChangeRequest = (payload: { mode: ChangeRequestMode; targetName?: string }) => {
+    void saveChangeRequest(shiftId, {
+      mode: payload.mode,
+      submittedAt: Date.now(),
+      ...(payload.targetName ? { targetName: payload.targetName } : {}),
     });
   };
 
   const onChooseChangeEmployee = (employee: DemoEmployee) => {
     setIsChangeModalOpen(false);
-    saveChangeRequest({ mode: 'swap', targetName: employee.name });
+    submitChangeRequest({ mode: 'swap', targetName: employee.name });
     presentAlert({
       header: 'Shift change request sent',
       message: `We sent a request to ${employee.name} for this ${shift?.role ?? 'shift'}.`,
@@ -323,7 +283,7 @@ const ShiftDetailPage: React.FC = () => {
 
   const onSubmitAskOff = () => {
     setIsChangeModalOpen(false);
-    saveChangeRequest({ mode: 'off' });
+    submitChangeRequest({ mode: 'off' });
     presentAlert({
       header: 'Time-off request sent',
       message: 'Your ask-off request has been submitted for this shift.',
@@ -331,7 +291,7 @@ const ShiftDetailPage: React.FC = () => {
     });
   };
 
-  if (!hasLoadedShifts) {
+  if (isLoading) {
     return (
       <IonPage>
         <IonHeader translucent>

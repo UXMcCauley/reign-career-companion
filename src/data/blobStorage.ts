@@ -1,11 +1,11 @@
 import { DEMO_EMPLOYEES, type DemoEmployee } from './employees';
+import { persistShiftStartOverride as persistShiftStartOverrideDb, readLocalDatabase, updateLocalDatabase } from './localDatabase';
 import { MOCK_SHIFTS, type Shift } from './scheduleData';
 import type { Conversation } from './chatTypes';
 
 const CHAT_LOCAL_KEY = 'reign_chat_v2';
 const EMPLOYEE_LOCAL_KEY = 'reign_employees_v1';
 const SCHEDULE_LOCAL_KEY = 'reign_schedule_v1';
-const SHIFT_RUNTIME_LOCAL_KEY = 'reign_shift_runtime_v1';
 const SHIFT_START_OVERRIDES_LOCAL_KEY = 'reign_shift_start_overrides_v1';
 const FORCE_SHIFT_SEED = import.meta.env.VITE_SHIFT_TEST === 'true';
 const EMPLOYEE_BLOB_NAMES = ['employees', 'Employees'];
@@ -18,8 +18,6 @@ interface ShiftRuntimeState {
   isClockedIn: boolean;
   activeBreakIndex: number | null;
 }
-
-type ShiftRuntimeMap = Record<string, ShiftRuntimeState>;
 
 interface ExternalChatMessage {
   id: string;
@@ -268,14 +266,18 @@ export async function loadShifts(): Promise<Record<string, Shift>> {
 
 export async function saveShiftStartOverride(shiftId: string, startHour: number): Promise<void> {
   if (!Number.isFinite(startHour)) return;
+
+  await persistShiftStartOverrideDb(shiftId, startHour);
+
   const nextOverrides = {
     ...(readLocalJson<Record<string, number>>(SHIFT_START_OVERRIDES_LOCAL_KEY) ?? {}),
     [shiftId]: startHour,
   };
   writeLocalJson(SHIFT_START_OVERRIDES_LOCAL_KEY, nextOverrides);
-  const shifts = await loadShifts();
-  writeLocalJson(SCHEDULE_LOCAL_KEY, shifts);
-  await writeBlobJson('shifts', shifts);
+
+  const db = await readLocalDatabase();
+  writeLocalJson(SCHEDULE_LOCAL_KEY, db.shifts);
+  await writeBlobJson('shifts', db.shifts);
 }
 
 export async function loadChats(seedFactory: () => Conversation[]): Promise<Conversation[]> {
@@ -303,28 +305,20 @@ export async function saveChats(conversations: Conversation[]): Promise<void> {
   await writeBlobJson(activeChatBlobName, toExternalChats(conversations));
 }
 
-async function loadShiftRuntimeMap(): Promise<ShiftRuntimeMap> {
-  const blobData = await readBlobJson<ShiftRuntimeMap>('shift-runtime');
-  if (blobData) {
-    writeLocalJson(SHIFT_RUNTIME_LOCAL_KEY, blobData);
-    return blobData;
-  }
-
-  return readLocalJson<ShiftRuntimeMap>(SHIFT_RUNTIME_LOCAL_KEY) ?? {};
-}
-
-async function saveShiftRuntimeMap(data: ShiftRuntimeMap): Promise<void> {
-  writeLocalJson(SHIFT_RUNTIME_LOCAL_KEY, data);
-  await writeBlobJson('shift-runtime', data);
-}
-
 export async function loadShiftRuntime(shiftId: string): Promise<ShiftRuntimeState> {
-  const map = await loadShiftRuntimeMap();
-  return map[shiftId] ?? { isClockedIn: false, activeBreakIndex: null };
+  const db = await readLocalDatabase();
+  if (db.activeClockSession?.shiftId === shiftId) {
+    return {
+      isClockedIn: true,
+      activeBreakIndex: db.activeClockSession.activeBreakIndex,
+    };
+  }
+  return db.shiftRuntime[shiftId] ?? { isClockedIn: false, activeBreakIndex: null };
 }
 
 export async function saveShiftRuntime(shiftId: string, state: ShiftRuntimeState): Promise<void> {
-  const map = await loadShiftRuntimeMap();
-  map[shiftId] = state;
-  await saveShiftRuntimeMap(map);
+  await updateLocalDatabase(db => {
+    db.shiftRuntime[shiftId] = state;
+    return db;
+  });
 }

@@ -126,9 +126,64 @@ export const MOCK_SHIFTS: Record<string, Shift> = {
       { name: empName(18), role: 'Customer Service'  },
       { name: empName(19), role: 'Floor Associate'   },
     ],
+  },
+  '6': {
+    id: '6',
+    startHour: 9,
+    endHour: 17,
+    role: 'Cashier',
+    location: 'Front End',
+    manager: empName(0),
+    breaks: [
+      { startHour: 11.5, durationMins: 15, type: 'rest' },
+      { startHour: 13,   durationMins: 30, type: 'meal' },
+      { startHour: 15.5, durationMins: 15, type: 'rest' },
+    ],
+    team: [
+      { name: empName(1), role: 'Manager'   },
+      { name: empName(2), role: 'Cashier'   },
+      { name: empName(3), role: 'Cashier'   },
+    ],
+    notes: 'Friday close-out — verify register counts before leaving.',
+  },
+  '7': {
+    id: '7',
+    startHour: 10,
+    endHour: 18,
+    role: 'Floor Associate',
+    location: 'Main Floor',
+    manager: empName(4),
+    breaks: [
+      { startHour: 12,   durationMins: 15, type: 'rest' },
+      { startHour: 14,   durationMins: 30, type: 'meal' },
+      { startHour: 16.5, durationMins: 15, type: 'rest' },
+    ],
+    team: [
+      { name: empName(5), role: 'Manager'           },
+      { name: empName(6), role: 'Floor Associate' },
+      { name: empName(7), role: 'Customer Service'  },
+    ],
     notes: 'Saturday returns volume is high — expect extended customer service queue.',
   },
 };
+
+/** Bump when seed templates or patterns change — triggers schedule regeneration on device. */
+export const SCHEDULE_SEED_VERSION = 3;
+
+/** Weeks of history/future to materialize in scheduleByDate. */
+export const SCHEDULE_WEEKS_BACK = 2;
+export const SCHEDULE_WEEKS_FORWARD = 12;
+
+/**
+ * Rotating assignment patterns (0=Sun … 6=Sat). null = day off.
+ * Week 0 is a full week; later patterns leave gaps for clock-in / off-day testing.
+ */
+export const DEMO_WEEK_PATTERNS: (string | null)[][] = [
+  ['1', '2', '3', '4', '5', '6', '7'],
+  ['1', '2', null, '4', '5', null, '7'],
+  ['1', null, '3', '4', null, '6', '7'],
+  [null, '2', '3', null, '5', '6', null],
+];
 
 export function getWeekDays(ref: Date): Date[] {
   const sun = new Date(ref);

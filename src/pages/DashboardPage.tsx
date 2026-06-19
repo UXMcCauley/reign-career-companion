@@ -23,9 +23,20 @@ import type { ScrollDetail } from '@ionic/core';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { loadShifts } from '../data/blobStorage';
+import { useGeofenceTest } from '../context/GeofenceTestContext';
+import { useWorkforce } from '../context/WorkforceContext';
+import { isSameDay, startOfDay, toDateKey } from '../data/scheduleResolver';
+import { bypassGeofenceCheck, useEmployeeLocationOverride } from '../config/geofenceTesting';
+import { configuredJobSite, FEET_PER_METER, GEOFENCE_RADIUS_FEET } from '../config/jobSite';
+import { distanceInFeet, pointFromBearing } from '../lib/geoMath';
+import {
+  PROXIMITY_APPROACH_BEARING_DEG,
+  PROXIMITY_APPROACH_SPEED_FT_PER_SEC,
+  PROXIMITY_TEST_START_DISTANCE_FT,
+  feetFromGeofenceEdge,
+} from '../lib/geofenceSimulation';
 import { defaultLoggedInEmployee } from '../data/defaultLoggedInEmployee';
-import { formatHour, type Shift } from '../data/scheduleData';
+import { formatHour } from '../data/scheduleData';
 import { demoEmployeeTalentCards } from '../data/talentCards';
 import { MapContainer, TileLayer, Circle, CircleMarker, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -94,8 +105,6 @@ const activeContests = [
   },
 ];
 
-const FEET_PER_METER = 3.28084;
-const GEOFENCE_RADIUS_FEET = 100;
 const HOURLY_RATE = defaultLoggedInEmployee.resume.stats.hourlyRate;
 
 type WeatherData = { tempF: number; condition: string; windMph: number };
@@ -110,43 +119,6 @@ const WMO_CONDITIONS: Record<number, string> = {
   95: 'Thunderstorm',
 };
 
-const configuredJobSite = (() => {
-  const lat = Number(import.meta.env.VITE_JOB_SITE_LAT);
-  const lng = Number(import.meta.env.VITE_JOB_SITE_LNG);
-  if (Number.isFinite(lat) && Number.isFinite(lng)) {
-    return {
-      name: (import.meta.env.VITE_JOB_SITE_NAME as string | undefined) ?? 'Configured Job Site',
-      latitude: lat,
-      longitude: lng,
-    };
-  }
-  return {
-    name: 'Downtown Job Site',
-    latitude: 43.052639,
-    longitude: -87.896407,
-  };
-})();
-
-function toRadians(degrees: number): number {
-  return (degrees * Math.PI) / 180;
-}
-
-function distanceInFeet(
-  from: { latitude: number; longitude: number },
-  to: { latitude: number; longitude: number }
-): number {
-  const earthRadiusMeters = 6371000;
-  const dLat = toRadians(to.latitude - from.latitude);
-  const dLng = toRadians(to.longitude - from.longitude);
-  const lat1 = toRadians(from.latitude);
-  const lat2 = toRadians(to.latitude);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return earthRadiusMeters * c * FEET_PER_METER;
-}
-
 function formatDuration(totalSeconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(totalSeconds));
   const hours = Math.floor(safeSeconds / 3600);
@@ -156,6 +128,11 @@ function formatDuration(totalSeconds: number): string {
     return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   }
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function breakSecondsSince(startedAt: number | null): number {
+  if (!startedAt) return 0;
+  return Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
 }
 
 function pickGreeting(): string {
@@ -264,20 +241,40 @@ const ExpandedMapController: React.FC<{
 const DashboardPage: React.FC = () => {
   const history = useHistory();
   const [presentAlert] = useIonAlert();
+  const { proximityTestEnabled } = useGeofenceTest();
+  const {
+    weekSchedule,
+    todayShift,
+    hasShiftToday,
+    getShiftStatusForDate,
+    activeSession,
+    isClockedIn,
+    clockIn,
+    clockOut,
+    startBreak,
+    endBreak,
+    setActiveKeyCard,
+  } = useWorkforce();
+  const [selectedKeyCardId, setSelectedKeyCardId] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [isClockedIn, setIsClockedIn] = useState(false);
-  const [activeKeyCardId, setActiveKeyCardId] = useState<string | null>(null);
-  const [onBreak, setOnBreak] = useState(false);
-  const [breakStartedAt, setBreakStartedAt] = useState<number | null>(null);
+  const [userPosition, setUserPosition] = useState<{ latitude: number; longitude: number } | null>(() => {
+    if (proximityTestEnabled) {
+      return pointFromBearing(
+        configuredJobSite,
+        PROXIMITY_APPROACH_BEARING_DEG,
+        PROXIMITY_TEST_START_DISTANCE_FT
+      );
+    }
+    if (useEmployeeLocationOverride) {
+      return { latitude: configuredJobSite.latitude, longitude: configuredJobSite.longitude };
+    }
+    return null;
+  });
   const [breakElapsedSeconds, setBreakElapsedSeconds] = useState(0);
-  const [userPosition, setUserPosition] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [shiftMap, setShiftMap] = useState<Record<string, Shift>>({});
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-  const [clockInTimestamp, setClockInTimestamp] = useState<number | null>(null);
   const [workElapsedSeconds, setWorkElapsedSeconds] = useState(0);
   const { userName } = useAuth();
   const metricsRef = useRef<(HTMLElement | null)[]>([]);
-  const totalBreakSecondsRef = useRef(0);
   const mapShellRef = useRef<HTMLDivElement | null>(null);
   const clockBtnRef = useRef<HTMLButtonElement | null>(null);
   const clockBtnIsPinned = useRef(false);
@@ -403,6 +400,14 @@ const DashboardPage: React.FC = () => {
 
   const onAnnouncementTap = (id: string) => history.push(`/announcements/${id}`);
 
+  const onBreak = activeSession?.onBreak ?? false;
+  const breakStartedAt = activeSession?.breakStartedAt ?? null;
+  const clockInTimestamp = activeSession?.clockInTimestamp ?? null;
+  const totalBreakSeconds = activeSession?.totalBreakSeconds ?? 0;
+  const activeKeyCardId = isClockedIn
+    ? (activeSession?.activeKeyCardId ?? null)
+    : selectedKeyCardId;
+
   const chooseKeyCard = (header: string, onPick: (keyCardId: string) => void) => {
     presentAlert({
       header,
@@ -426,42 +431,37 @@ const DashboardPage: React.FC = () => {
     });
   };
 
-  const handleSelectKeyCard = () => chooseKeyCard('Select keycard', setActiveKeyCardId);
-  const handleSwitchKeyCard = () => chooseKeyCard('Switch keycard', setActiveKeyCardId);
+  const handleSelectKeyCard = () => chooseKeyCard('Select keycard', setSelectedKeyCardId);
+  const handleSwitchKeyCard = () =>
+    chooseKeyCard('Switch keycard', id => {
+      void setActiveKeyCard(id);
+    });
 
   const handleClockIn = () => {
-    totalBreakSecondsRef.current = 0;
-    setWorkElapsedSeconds(0);
-    setClockInTimestamp(Date.now());
-    setIsClockedIn(true);
-    setOnBreak(false);
-    setBreakStartedAt(null);
-    setBreakElapsedSeconds(0);
+    if (!todayShift) {
+      presentAlert({
+        header: 'Not scheduled',
+        message: 'You have no shift scheduled for today.',
+        buttons: ['OK'],
+      });
+      return;
+    }
+    if (!activeKeyCardId) return;
+    void clockIn({ shiftId: todayShift.id, keyCardId: activeKeyCardId });
   };
 
   const handleClockOut = () => {
-    setIsClockedIn(false);
-    setOnBreak(false);
-    setBreakStartedAt(null);
-    setBreakElapsedSeconds(0);
-    setActiveKeyCardId(null);
-    setClockInTimestamp(null);
-    setWorkElapsedSeconds(0);
-    totalBreakSecondsRef.current = 0;
+    void clockOut();
+    setSelectedKeyCardId(null);
   };
 
   const handleBreakToggle = () => {
     if (!isClockedIn) return;
-    setOnBreak(current => {
-      if (current) {
-        totalBreakSecondsRef.current += breakElapsedSeconds;
-        setBreakStartedAt(null);
-        setBreakElapsedSeconds(0);
-        return false;
-      }
-      setBreakStartedAt(Date.now());
-      return true;
-    });
+    if (onBreak) {
+      void endBreak();
+      return;
+    }
+    void startBreak();
   };
 
   /* Clock tick — every 30s for the header time display */
@@ -470,15 +470,43 @@ const DashboardPage: React.FC = () => {
     return () => window.clearInterval(id);
   }, []);
 
-  /* Load shifts */
+  /* Simulated walk toward the job site for proximity demos */
   useEffect(() => {
-    let active = true;
-    loadShifts().then(loaded => { if (active) setShiftMap(loaded); });
-    return () => { active = false; };
-  }, []);
+    if (!proximityTestEnabled) return;
 
-  /* GPS watch */
+    let distanceFromCenterFt = PROXIMITY_TEST_START_DISTANCE_FT;
+
+    const applyPosition = () => {
+      setUserPosition(
+        pointFromBearing(configuredJobSite, PROXIMITY_APPROACH_BEARING_DEG, distanceFromCenterFt)
+      );
+    };
+
+    applyPosition();
+    const id = window.setInterval(() => {
+      if (distanceFromCenterFt > 0) {
+        distanceFromCenterFt = Math.max(0, distanceFromCenterFt - PROXIMITY_APPROACH_SPEED_FT_PER_SEC);
+      }
+      applyPosition();
+    }, 1000);
+
+    return () => window.clearInterval(id);
+  }, [proximityTestEnabled]);
+
+  /* GPS watch — skipped during proximity test or env location override */
   useEffect(() => {
+    if (proximityTestEnabled) return;
+
+    if (useEmployeeLocationOverride) {
+      setUserPosition({
+        latitude: configuredJobSite.latitude,
+        longitude: configuredJobSite.longitude,
+      });
+      return;
+    }
+
+    setUserPosition(null);
+
     let watchId: string | null = null;
     let cancelled = false;
 
@@ -513,25 +541,36 @@ const DashboardPage: React.FC = () => {
       cancelled = true;
       if (watchId !== null) Geolocation.clearWatch({ id: watchId });
     };
-  }, []);
+  }, [proximityTestEnabled]);
   /* Break timer */
   useEffect(() => {
     if (!onBreak || !breakStartedAt) return;
-    const id = window.setInterval(() => {
-      setBreakElapsedSeconds(Math.floor((Date.now() - breakStartedAt) / 1000));
-    }, 1000);
+
+    const tick = () => {
+      setBreakElapsedSeconds(breakSecondsSince(breakStartedAt));
+    };
+
+    tick();
+    const id = window.setInterval(tick, 1000);
     return () => window.clearInterval(id);
   }, [onBreak, breakStartedAt]);
 
   /* Work timer — pauses automatically while on break */
   useEffect(() => {
-    if (!isClockedIn || onBreak || !clockInTimestamp) return;
-    const id = window.setInterval(() => {
+    if (!isClockedIn || onBreak || !clockInTimestamp) {
+      setWorkElapsedSeconds(0);
+      return;
+    }
+
+    const tick = () => {
       const total = Math.floor((Date.now() - clockInTimestamp) / 1000);
-      setWorkElapsedSeconds(Math.max(0, total - totalBreakSecondsRef.current));
-    }, 1000);
+      setWorkElapsedSeconds(Math.max(0, total - totalBreakSeconds));
+    };
+
+    tick();
+    const id = window.setInterval(tick, 1000);
     return () => window.clearInterval(id);
-  }, [isClockedIn, onBreak, clockInTimestamp]);
+  }, [isClockedIn, onBreak, clockInTimestamp, totalBreakSeconds]);
 
   /* Open-Meteo — free weather API, no key required */
   useEffect(() => {
@@ -588,23 +627,49 @@ const DashboardPage: React.FC = () => {
     [currentTime]
   );
 
-  const upcomingShifts = useMemo(() => {
-    const ordered = Object.values(shiftMap).sort((a, b) => Number(a.id) - Number(b.id));
-    if (!ordered.length) return [];
-    const now = new Date();
-    return Array.from({ length: Math.min(6, ordered.length) }, (_, i) => {
-      const d = new Date(now);
-      d.setDate(now.getDate() + i);
-      const label = d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
-      const shift = ordered[i];
-      return {
-        id: `shift-${i}`,
-        shiftId: shift.id,
-        title: i === 0 ? 'Today Shift' : `${label} Shift`,
-        time: `${formatHour(shift.startHour)} - ${formatHour(shift.endHour)}`,
-      };
-    });
-  }, [currentTime, shiftMap]);
+  const shiftsThisWeek = useMemo(() => {
+    const today = startOfDay(new Date());
+    return weekSchedule
+      .filter(({ date, shift }) => shift && date >= today)
+      .map(({ date, shift }) => {
+        const label = date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+        return {
+          id: `shift-${shift!.id}-${toDateKey(date)}`,
+          shiftId: shift!.id,
+          title: isSameDay(date, today) ? 'Today Shift' : `${label} Shift`,
+          time: `${formatHour(shift!.startHour)} - ${formatHour(shift!.endHour)}`,
+          location: shift!.location,
+        };
+      });
+  }, [weekSchedule, currentTime]);
+
+  const todayShiftStatus = useMemo(
+    () => (todayShift ? getShiftStatusForDate(new Date(), todayShift) : null),
+    [todayShift, getShiftStatusForDate, currentTime]
+  );
+
+  const clockBowlState = useMemo(() => {
+    if (isClockedIn && onBreak) return 'break' as const;
+    if (isClockedIn) return 'working' as const;
+    if (todayShiftStatus) return todayShiftStatus;
+    return 'off' as const;
+  }, [isClockedIn, onBreak, todayShiftStatus]);
+
+  const clockBowlStateLabel = useMemo(() => {
+    switch (clockBowlState) {
+      case 'working': return 'On shift';
+      case 'break': return 'On break';
+      case 'upcoming': return 'Shift upcoming';
+      case 'in-progress': return 'Shift in progress';
+      case 'completed': return 'Shift completed';
+      default: return 'Not scheduled';
+    }
+  }, [clockBowlState]);
+
+  const todayShiftMeta = useMemo(() => {
+    if (!todayShift) return null;
+    return `${formatHour(todayShift.startHour)} – ${formatHour(todayShift.endHour)} · ${todayShift.location}`;
+  }, [todayShift]);
 
   const activeKeyCardName = useMemo(
     () => demoEmployeeTalentCards.find(c => c.id === activeKeyCardId)?.name ?? null,
@@ -619,11 +684,16 @@ const DashboardPage: React.FC = () => {
   /* Gross earnings since clock-in, break time excluded */
   const earnedAmount = useMemo(() => (workElapsedSeconds / 3600) * HOURLY_RATE, [workElapsedSeconds]);
 
-  const isWithinGeofence =
-    import.meta.env.VITE_BYPASS_GEOFENCE === 'true' ||
-    (distanceToJobSiteFeet !== null && distanceToJobSiteFeet <= GEOFENCE_RADIUS_FEET);
-  const canClockIn = Boolean(activeKeyCardId) && isWithinGeofence && !isClockedIn;
-  const canUseMainButton = isClockedIn || canClockIn;
+  const isWithinGeofence = proximityTestEnabled
+    ? distanceToJobSiteFeet !== null && distanceToJobSiteFeet <= GEOFENCE_RADIUS_FEET
+    : bypassGeofenceCheck ||
+      useEmployeeLocationOverride ||
+      (distanceToJobSiteFeet !== null && distanceToJobSiteFeet <= GEOFENCE_RADIUS_FEET);
+
+  const distanceFromGeofenceEdgeFeet =
+    distanceToJobSiteFeet !== null ? feetFromGeofenceEdge(distanceToJobSiteFeet) : null;
+  const canClockIn =
+    hasShiftToday && Boolean(activeKeyCardId) && isWithinGeofence && !isClockedIn;
   const keyCardActionLabel = isClockedIn ? 'Switch Keycard' : 'Select Keycard';
   const rightActionLabel = isClockedIn ? (onBreak ? 'End Break' : 'Start Break') : 'Shift Details';
 
@@ -634,11 +704,25 @@ const DashboardPage: React.FC = () => {
 
   const handleMainClockButton = () => {
     if (isClockedIn) { handleClockOut(); return; }
-    if (canClockIn) handleClockIn();
+    if (canClockIn) {
+      handleClockIn();
+      return;
+    }
+    if (!hasShiftToday) {
+      presentAlert({
+        header: 'Not scheduled',
+        message: 'You are not scheduled to work today.',
+        buttons: ['OK'],
+      });
+    }
   };
 
   const handleRightAction = () => {
     if (isClockedIn) { handleBreakToggle(); return; }
+    if (todayShift) {
+      history.push(`/schedule/${todayShift.id}`);
+      return;
+    }
     history.push('/schedule');
   };
 
@@ -809,40 +893,15 @@ const DashboardPage: React.FC = () => {
                   <span>Loading map…</span>
                 </div> */}
 
-                {/* Zoom controls */}
-                <div className="map-zoom-controls">
-                  <button className="map-zoom-btn" onClick={handleZoomIn} aria-label="Zoom in">+</button>
-                  <button className="map-zoom-btn" onClick={handleZoomOut} aria-label="Zoom out">−</button>
-                </div>
-
-                {/* Locate — centres the view on the employee's position */}
-                <button
-                  className={`map-locate-btn${userPosition ? ' is-active' : ''}`}
-                  onClick={handleLocate}
-                  aria-label="Center on my location"
-                >
-                  <IonIcon icon={locateOutline} />
-                </button>
-
-                {/* Live weather — Open-Meteo free API */}
-                {weatherData && (
-                  <div className="clock-weather-chip">
-                    <span className="clock-weather-temp">{weatherData.tempF}&deg;F</span>
-                    <span className="clock-weather-sep" aria-hidden="true">·</span>
-                    <span className="clock-weather-cond">{weatherData.condition}</span>
-                    <span className="clock-weather-wind">{weatherData.windMph}&nbsp;mph</span>
-                  </div>
-                )}
-
-                {/* Distance chip */}
+                {/* Proximity — top of mini map */}
                 {distanceToJobSiteFeet !== null && (
                   <div className={`clock-distance-chip${isWithinGeofence ? ' in-range' : ''}`}>
                     <IonIcon icon={navigateOutline} />
                     {isWithinGeofence ? (
-                      <span>In geofence</span>
+                      <span>At worksite</span>
                     ) : (
                       <span className="clock-distance-chip__out">
-                        <span>{Math.round(Math.max(0, distanceToJobSiteFeet - GEOFENCE_RADIUS_FEET))} ft from geofence</span>
+                        <span>{Math.round(distanceFromGeofenceEdgeFeet ?? 0)} ft from worksite</span>
                         <a
                           className="clock-distance-chip__directions"
                           href={`maps://maps.apple.com/?daddr=${configuredJobSite.latitude},${configuredJobSite.longitude}&dirflg=d`}
@@ -854,6 +913,31 @@ const DashboardPage: React.FC = () => {
                     )}
                   </div>
                 )}
+
+                {/* Weather — bottom-left */}
+                {weatherData && (
+                  <div className="clock-weather-chip">
+                    <span className="clock-weather-temp">{weatherData.tempF}&deg;F</span>
+                    <span className="clock-weather-sep" aria-hidden="true">·</span>
+                    <span className="clock-weather-cond">{weatherData.condition}</span>
+                    <span className="clock-weather-wind">{weatherData.windMph}&nbsp;mph</span>
+                  </div>
+                )}
+
+                {/* Zoom + locate — bottom-right */}
+                <div className="map-bottom-controls">
+                  <div className="map-zoom-controls">
+                    <button className="map-zoom-btn" onClick={handleZoomIn} aria-label="Zoom in">+</button>
+                    <button className="map-zoom-btn" onClick={handleZoomOut} aria-label="Zoom out">−</button>
+                  </div>
+                  <button
+                    className={`map-locate-btn${userPosition ? ' is-active' : ''}`}
+                    onClick={handleLocate}
+                    aria-label="Center on my location"
+                  >
+                    <IonIcon icon={locateOutline} />
+                  </button>
+                </div>
               </div>
 
               {/* ── Big clock button — sits at arch peak between map and bowl ── */}
@@ -862,8 +946,8 @@ const DashboardPage: React.FC = () => {
                 type="button"
                 className={`clock-main-btn${canClockIn ? ' is-ready' : ''}${isClockedIn ? ' is-clockout' : ''}`}
                 onClick={handleMainClockButton}
-                disabled={!canUseMainButton}
-                aria-disabled={!canUseMainButton}
+                disabled={!isClockedIn && !canClockIn}
+                aria-disabled={!isClockedIn && !canClockIn}
               >
                 <IonIcon icon={timeOutline} />
                 <span>{isClockedIn ? 'Clock Out' : 'Clock In'}</span>
@@ -886,8 +970,8 @@ const DashboardPage: React.FC = () => {
                     </div>
                     {onBreak && (
                       <>
-                        <div className="clock-live-divider" />
-                        <div className="clock-live-stat clock-live-stat--break">
+                        <div className="clock-live-divider clock-live-divider--break" />
+                        <div className="clock-live-stat clock-live-stat--break" aria-live="polite">
                           <span className="clock-live-value">{formatDuration(breakElapsedSeconds)}</span>
                           <span className="clock-live-label">On Break</span>
                         </div>
@@ -924,8 +1008,27 @@ const DashboardPage: React.FC = () => {
                       >
                         {activeKeyCardName ?? 'No keycard selected'}
                       </span>
-
+                      <span
+                        className={`clock-note-status state--${
+                          clockBowlState === 'break' ? 'break' : clockBowlState === 'working' ? 'working' : 'off'
+                        }`}
+                      >
+                        <span className="clock-note-status-dot" aria-hidden="true" />
+                        {clockBowlStateLabel}
+                      </span>
                     </div>
+                    {todayShiftMeta && (
+                      <div className="clock-note-meta">
+                        {todayShiftMeta}
+                        <button
+                          type="button"
+                          className="clock-note-adjust"
+                          onClick={() => history.push('/settings')}
+                        >
+                          Adjust start time
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -952,8 +1055,9 @@ const DashboardPage: React.FC = () => {
 
                 <button
                   type="button"
-                  className="clock-float-btn clock-float-btn--action"
+                  className={`clock-float-btn clock-float-btn--action${isClockedIn ? ' is-clocked-in' : ''}${onBreak ? ' is-on-break' : ''}`}
                   onClick={handleRightAction}
+                  aria-label={rightActionLabel}
                 >
                   <IonIcon icon={isClockedIn ? cafeOutline : timeOutline} />
                   <span>{rightActionLabel}</span>
@@ -967,7 +1071,7 @@ const DashboardPage: React.FC = () => {
               <span className="dash-section-label dash-section-label--shifts">Shifts This Week</span>
             </div>
             <div className="shift-rail">
-              {upcomingShifts.map(shift => (
+              {shiftsThisWeek.map(shift => (
                 <IonCard
                   key={shift.id}
                   button
@@ -976,11 +1080,18 @@ const DashboardPage: React.FC = () => {
                 >
                   <IonCardHeader>
                     <IonCardTitle>{shift.title}</IonCardTitle>
-                    <IonCardSubtitle><IonIcon icon={timeOutline} /> {shift.time}</IonCardSubtitle>
+                    <IonCardSubtitle>
+                      <IonIcon icon={timeOutline} /> {shift.time}
+                      {shift.location ? ` · ${shift.location}` : ''}
+                    </IonCardSubtitle>
                   </IonCardHeader>
                 </IonCard>
               ))}
-              <button className="shift-view-all">
+              <button
+                type="button"
+                className="shift-view-all"
+                onClick={() => history.push('/schedule')}
+              >
                 <IonIcon icon={chevronForwardOutline} />
                 <span>View all</span>
               </button>

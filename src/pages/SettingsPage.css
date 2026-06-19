@@ -14,6 +14,88 @@
   color: rgba(255, 255, 255, 0.75);
 }
 
+.settings-shift-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.settings-shift-role {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.settings-shift-location {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.settings-shift-status {
+  margin-left: auto;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.settings-shift-status--upcoming {
+  color: #7dd3fc;
+  background: rgba(56, 189, 248, 0.15);
+}
+
+.settings-shift-status--in-progress {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.15);
+}
+
+.settings-shift-status--completed {
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.settings-section-label {
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.settings-preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.settings-preset-btn {
+  flex: 1 1 calc(33% - 8px);
+  min-width: 96px;
+  border: 1px solid rgba(170, 132, 255, 0.35);
+  background: rgba(123, 63, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  padding: 10px 8px;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.settings-preset-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .settings-time-label {
   display: block;
   margin-bottom: 6px;
@@ -43,6 +125,12 @@
 }
 
 .settings-empty-state {
-  margin: 0;
+  margin: 0 0 12px;
   color: rgba(255, 255, 255, 0.75);
+}
+
+.settings-empty-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }

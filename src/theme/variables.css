@@ -36,6 +36,8 @@ http://ionicframework.com/docs/theming/ */
   --ion-margin: 0px; /* Remove margin from the app */
   --ion-padding: 0px; /* Remove padding from the app */
   --ion-placeholder-opacity: 0;
+  --app-floating-tab-height: 72px;
+  --app-floating-tab-clearance: calc(var(--ion-safe-area-bottom, 0px) + var(--app-floating-tab-height) + 24px);
 
 }
 
@@ -101,7 +103,7 @@ ion-content {
 
 .floating-tab-bar {
   position: fixed;
-  bottom: calc(-20px + var(--ion-safe-area-bottom, 0px));
+  bottom: calc( var(--ion-safe-area-bottom, 20px));
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 32px);
@@ -111,10 +113,9 @@ ion-content {
   pointer-events: none;
 }  
 
-.plt-mobileweb .floating-tab-bar {
-  /* Mobile web needs env() support for browser UI overlap. */
-  bottom: calc(10px + max(var(--ion-safe-area-bottom, 0px), env(safe-area-inset-bottom, 0px)));
-}
+/* .plt-mobileweb .floating-tab-bar {
+  bottom: calc(10px + max(var(--ion-safe-area-bottom, 20px), env(safe-area-inset-bottom, 20px)));
+} */
 
 .floating-tab-bar-track {
   position: relative;

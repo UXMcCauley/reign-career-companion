@@ -14,6 +14,7 @@ import {
   IonTabButton,
   IonTabs,
   IonTitle,
+  IonToggle,
   IonToolbar,
   createAnimation,
   setupIonicReact,
@@ -42,6 +43,8 @@ import SchedulePage from './pages/SchedulePage';
 import SettingsPage from './pages/SettingsPage';
 import ShiftDetailPage from './pages/ShiftDetailPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { GeofenceTestProvider, useGeofenceTest } from './context/GeofenceTestContext';
+import { WorkforceProvider } from './context/WorkforceContext';
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
 
@@ -172,6 +175,7 @@ const AppTabs: React.FC = () => {
   const location = useLocation();
   const history = useHistory();
   const { logout } = useAuth();
+  const { proximityTestEnabled, setProximityTestEnabled } = useGeofenceTest();
 
   const currentTab = resolveTab(location.pathname);
 
@@ -189,6 +193,17 @@ const AppTabs: React.FC = () => {
       | null;
     await profileMenu?.close();
     logout();
+  };
+
+  const handleProximityTestToggle = async (enabled: boolean) => {
+    setProximityTestEnabled(enabled);
+    const profileMenu = document.querySelector('ion-menu[menu-id="profile-drawer"]') as
+      | HTMLIonMenuElement
+      | null;
+    if (enabled) {
+      await profileMenu?.close();
+      history.push('/dashboard');
+    }
   };
 
   return (
@@ -222,6 +237,17 @@ const AppTabs: React.FC = () => {
             </IonItem>
             <IonItem button detail onClick={() => onMenuItemTap('/real-time-resume')}>
               Real-time Resume
+            </IonItem>
+            <IonItem lines="full">
+              <IonLabel>
+                <h2>Proximity test mode</h2>
+                <p>Simulate walking toward the job site boundary</p>
+              </IonLabel>
+              <IonToggle
+                slot="end"
+                checked={proximityTestEnabled}
+                onIonChange={e => void handleProximityTestToggle(e.detail.checked)}
+              />
             </IonItem>
             <IonItem button onClick={handleLogout} style={{ marginTop: '16px' }}>
               <IonIcon icon={logOutOutline} slot="start" color="danger" />
@@ -327,6 +353,8 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => (
   <AuthProvider>
+    <WorkforceProvider>
+    <GeofenceTestProvider>
     {/* <IonHeader>
     {
         Capacitor.getPlatform() === 'ios' && (
@@ -341,6 +369,8 @@ const App: React.FC = () => (
         <AppContent />
       </IonReactRouter>
     </IonApp>
+    </GeofenceTestProvider>
+    </WorkforceProvider>
   </AuthProvider>
 );
 

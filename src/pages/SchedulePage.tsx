@@ -19,7 +19,7 @@ import {
 } from 'ionicons/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { loadShifts } from '../data/blobStorage';
+import { useWorkforce } from '../context/WorkforceContext';
 import {
   DAY_NAMES,
   MONTH_NAMES,
@@ -30,6 +30,13 @@ import {
   type Break,
   type Shift,
 } from '../data/scheduleData';
+import {
+  addDays,
+  getShiftStatus,
+  isSameDay,
+  startOfDay,
+  startOfWeek,
+} from '../data/scheduleResolver';
 import './SchedulePage.css';
 
 type ViewMode = 'week' | 'month';
@@ -37,49 +44,11 @@ type MonthCell = { date: Date | null; shift: Shift | null; isToday: boolean };
 type ShiftRequestStatus = 'submitted' | 'approved' | 'denied';
 type ShiftChangeRequestMap = Record<string, { mode: 'swap' | 'off'; submittedAt: number; targetName?: string; status: ShiftRequestStatus }>;
 type ShiftStatus = 'upcoming' | 'in-progress' | 'completed';
-const SHIFT_CHANGE_REQUESTS_LOCAL_KEY = 'reign_shift_change_requests_v1';
 const STATUS_LABELS: Record<ShiftStatus, string> = {
   upcoming: 'UPCOMING',
   'in-progress': 'IN PROGRESS',
   completed: 'COMPLETED',
 };
-
-function startOfDay(date: Date): Date {
-  const copy = new Date(date);
-  copy.setHours(0, 0, 0, 0);
-  return copy;
-}
-
-function startOfWeek(date: Date): Date {
-  const copy = startOfDay(date);
-  copy.setDate(copy.getDate() - copy.getDay());
-  return copy;
-}
-
-function addDays(date: Date, days: number): Date {
-  const copy = new Date(date);
-  copy.setDate(copy.getDate() + days);
-  return copy;
-}
-
-function daysBetween(a: Date, b: Date): number {
-  return Math.floor((startOfDay(a).getTime() - startOfDay(b).getTime()) / 86400000);
-}
-
-function isSameDay(a: Date, b: Date): boolean {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-}
-
-function getStatus(shiftDate: Date, startHour: number, endHour: number): ShiftStatus {
-  const now = new Date();
-  const start = new Date(shiftDate);
-  start.setHours(Math.floor(startHour), Math.round((startHour % 1) * 60), 0, 0);
-  const end = new Date(shiftDate);
-  end.setHours(Math.floor(endHour), Math.round((endHour % 1) * 60), 0, 0);
-  if (now < start) return 'upcoming';
-  if (now > end) return 'completed';
-  return 'in-progress';
-}
 
 function formatCountdown(shiftDate: Date, startHour: number): string | null {
   const now = new Date();
@@ -114,56 +83,23 @@ const SchedulePage: React.FC = () => {
   const today = useMemo(() => new Date(), []);
   const history = useHistory();
   const [presentAlert] = useIonAlert();
+  const {
+    getShiftForDate,
+    changeRequests,
+    saveChangeRequest,
+  } = useWorkforce();
   const [cursorDate, setCursorDate] = useState(today);
   const [viewMode, setViewMode] = useState<ViewMode>('week');
-  const [shifts, setShifts] = useState<Record<string, DaySchedule['shift']>>({});
-  const [changeRequests, setChangeRequests] = useState<ShiftChangeRequestMap>({});
   const [selectedWeekDate, setSelectedWeekDate] = useState(startOfDay(today));
-
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const loaded = await loadShifts();
-      if (active) setShifts(loaded);
-    })();
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(SHIFT_CHANGE_REQUESTS_LOCAL_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as ShiftChangeRequestMap;
-      setChangeRequests(parsed);
-    } catch {
-      // Ignore malformed local request state.
-    }
-  }, []);
-
-  const orderedShifts = useMemo(
-    () => Object.values(shifts as Record<string, Shift>).sort((a, b) => Number(a.id) - Number(b.id)),
-    [shifts]
-  );
-
-  const anchorWeekStart = useMemo(() => startOfWeek(today), [today]);
 
   const visibleDays = useMemo(
     () => (viewMode === 'week' ? buildWeekDays(cursorDate) : buildMonthDays(cursorDate)),
     [cursorDate, viewMode]
   );
 
-  const resolveShiftForDate = (date: Date): Shift | null => {
-    if (orderedShifts.length === 0) return null;
-    const offset = daysBetween(date, anchorWeekStart);
-    if (offset < 0 || offset >= orderedShifts.length) return null;
-    return orderedShifts[offset];
-  };
-
   const schedule: DaySchedule[] = useMemo(
-    () => visibleDays.map((date) => ({ date, shift: resolveShiftForDate(date) })),
-    [visibleDays, orderedShifts, anchorWeekStart]
+    () => visibleDays.map((date) => ({ date, shift: getShiftForDate(date) })),
+    [visibleDays, getShiftForDate]
   );
 
   const isToday = (date: Date) =>
@@ -202,7 +138,7 @@ const SchedulePage: React.FC = () => {
   );
   const selectedWeekShift = selectedWeekEntry?.shift ?? null;
   const selectedStatus = useMemo(
-    () => (selectedWeekEntry?.shift ? getStatus(selectedWeekEntry.date, selectedWeekEntry.shift.startHour, selectedWeekEntry.shift.endHour) : null),
+    () => (selectedWeekEntry?.shift ? getShiftStatus(selectedWeekEntry.date, selectedWeekEntry.shift.startHour, selectedWeekEntry.shift.endHour) : null),
     [selectedWeekEntry]
   );
   const selectedCountdown = useMemo(
@@ -229,17 +165,10 @@ const SchedulePage: React.FC = () => {
   };
 
   const saveRequest = (shiftId: string, status: ShiftRequestStatus = 'submitted') => {
-    setChangeRequests(prev => {
-      const next: ShiftChangeRequestMap = {
-        ...prev,
-        [shiftId]: {
-          mode: 'off',
-          submittedAt: Date.now(),
-          status,
-        },
-      };
-      localStorage.setItem(SHIFT_CHANGE_REQUESTS_LOCAL_KEY, JSON.stringify(next));
-      return next;
+    void saveChangeRequest(shiftId, {
+      mode: 'off',
+      submittedAt: Date.now(),
+      status,
     });
   };
 
