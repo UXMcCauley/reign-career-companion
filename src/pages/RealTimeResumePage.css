@@ -76,7 +76,70 @@
   text-transform: uppercase;
 }
 
+.resume-card--bio {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, rgba(8, 24, 52, 0.52), rgba(10, 14, 34, 0.54));
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.resume-card--bio::before {
+  content: '';
+  position: absolute;
+  inset: -30%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(6, 119, 240, 0.18) 0%, transparent 52%),
+    radial-gradient(circle at 85% 80%, rgba(70, 201, 255, 0.12) 0%, transparent 48%);
+}
+
+.resume-card--bio .resume-bio {
+  position: relative;
+  z-index: 1;
+}
+
+.resume-card--badges {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, rgba(34, 18, 62, 0.52), rgba(14, 10, 32, 0.54));
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.resume-card--badges::before {
+  content: '';
+  position: absolute;
+  inset: -30%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(123, 63, 255, 0.22) 0%, transparent 52%),
+    radial-gradient(circle at 88% 80%, rgba(200, 64, 232, 0.15) 0%, transparent 48%);
+}
+
+.resume-card__section-label {
+  display: block;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 14px;
+  color: rgba(248, 251, 255, 0.72);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .resume-badge-row {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;

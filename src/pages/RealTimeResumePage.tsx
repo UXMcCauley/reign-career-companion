@@ -166,23 +166,41 @@ const RealTimeResumePage: React.FC = () => {
   const shareToplatform = async (platform: string) => {
     if (!activeBadge) return;
     const text = `I just earned the "${activeBadge.label}" badge on Reign!`;
-    const url = 'https://reign-career-companion.vercel.app';
-    switch (platform) {
-      case 'facebook':
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank');
-        break;
-      case 'x':
-        window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
-        break;
-      case 'linkedin':
-        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&summary=${encodeURIComponent(text)}`, '_blank');
-        break;
-      case 'instagram':
-      case 'messages':
-        if (navigator.share) {
-          try { await navigator.share({ title: activeBadge.label, text, url }); } catch { /* cancelled */ }
-        }
-        break;
+    const shareUrl = 'https://reign-career-companion.vercel.app';
+    const fileName = `${activeBadge.label.replace(/\s+/g, '-').toLowerCase()}-badge.png`;
+
+    const fetchBadgeFile = async (): Promise<File | null> => {
+      try {
+        const res = await fetch(activeBadge.fullUrl);
+        const blob = await res.blob();
+        return new File([blob], fileName, { type: blob.type || 'image/png' });
+      } catch {
+        return null;
+      }
+    };
+
+    if (platform === 'instagram') {
+      const file = await fetchBadgeFile();
+      if (file && navigator.canShare?.({ files: [file] })) {
+        try { await navigator.share({ title: activeBadge.label, text, files: [file] }); } catch { /* cancelled */ }
+      } else if (navigator.share) {
+        try { await navigator.share({ title: activeBadge.label, text, url: shareUrl }); } catch { /* cancelled */ }
+      }
+    } else if (platform === 'messages') {
+      const smsBody = encodeURIComponent(`${text} ${shareUrl}`);
+      window.open(`sms:?&body=${smsBody}`, '_self');
+    } else {
+      switch (platform) {
+        case 'facebook':
+          window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(text)}`, '_blank');
+          break;
+        case 'x':
+          window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`, '_blank');
+          break;
+        case 'linkedin':
+          window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&summary=${encodeURIComponent(text)}`, '_blank');
+          break;
+      }
     }
     setShareOpen(false);
   };
@@ -209,13 +227,13 @@ const RealTimeResumePage: React.FC = () => {
 
           {bioOpen ? (
             <section className="resume-card resume-card--bio">
-              <h3>Bio</h3>
+              <span className="resume-card__section-label">Bio</span>
               <p className="resume-bio">{profile.bio}</p>
             </section>
           ) : null}
 
-          <section className="resume-card">
-            <h3>Badges</h3>
+          <section className="resume-card resume-card--badges">
+            <span className="resume-card__section-label">Badges</span>
             <div className="resume-badge-row">
               {defaultLoggedInEmployee.resume.badges.map(badge => (
                 <button
