@@ -1,3 +1,24 @@
+
+const ALLOWED_ORIGINS = new Set([
+  'capacitor://localhost',
+  'ionic://localhost',
+  'http://localhost',
+  'http://localhost:5173',
+  'https://reign-career-companion.vercel.app',
+  // custom domain when live
+]);
+
+function applyCors(req: ApiRequest, res: ApiResponse): void {
+  const origin = (req as { headers?: Record<string, string> }).headers?.origin ?? null;
+  if (origin && ALLOWED_ORIGINS.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Max-Age', '86400');
+}
+
 type CoachPersonality = 'professional' | 'witty' | 'straight-shooter' | 'detailed' | 'playful' | 'laid-back' | 'friendly';
 type ResponseType = 'brief' | 'simple' | 'data-driven' | 'in-depth';
 type ResponseStyle = 'plan-strategy' | 'conversational';
@@ -20,11 +41,14 @@ type AIRequest = {
 type ApiRequest = {
   method?: string;
   body?: unknown;
+  headers?: Record<string, string>;   // add
 };
 
 type ApiResponse = {
   status: (code: number) => ApiResponse;
   json: (payload: unknown) => void;
+  setHeader: (name: string, value: string) => void;   // add
+  end: () => void;                                      // add — for the 204 preflight
 };
 
 type AnthropicTextChunk = {
@@ -70,6 +94,17 @@ function sanitizeMessages(messages: AIMessage[] = []): AIMessage[] {
 }
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
+  applyCors(req, res);
+
+  // Preflight: browser sends OPTIONS first because Content-Type makes the POST
+  // non-simple. Answer it with the headers (already set above) and an empty 204,
+  // or the real POST never leaves the WebView.
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return;
+  }
+
+
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
