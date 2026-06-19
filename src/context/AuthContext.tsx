@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { DEMO_CREDENTIALS } from '../config/demoCredentials';
 import { defaultLoggedInEmployee } from '../data/defaultLoggedInEmployee';
 
 interface AuthContextType {
@@ -21,9 +22,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (username: string, password: string) => {
     await new Promise(r => setTimeout(r, 950));
-    const validUser = import.meta.env.VITE_DEMO_USERNAME;
-    const validPass = import.meta.env.VITE_DEMO_PASSWORD;
-    if (username === validUser && password === validPass) {
+    if (username === DEMO_CREDENTIALS.username && password === DEMO_CREDENTIALS.password) {
       localStorage.setItem('reign_auth', 'true');
       localStorage.setItem('reign_user_name', defaultLoggedInEmployee.displayName);
       setIsAuthenticated(true);

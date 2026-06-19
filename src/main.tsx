@@ -24,7 +24,19 @@ async function initializeApp() {
 }
 
 void (async () => {
-  await initializeApp();
-  // CHANGE: Call the element loader before the render call
+  try {
+    await initializeApp();
+  } catch (error) {
+    console.error('LiveUpdates init failed:', error);
+  }
+
   await defineCustomElements(window);
+
+  const container = document.getElementById('root');
+  const root = createRoot(container!);
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
 })();

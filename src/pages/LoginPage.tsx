@@ -1,5 +1,6 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { IonContent, IonPage } from '@ionic/react';
+import { DEMO_CREDENTIALS } from '../config/demoCredentials';
 import { useAuth } from '../context/AuthContext';
 import './LoginPage.css';
 
@@ -136,8 +137,8 @@ const LoginPage: React.FC = () => {
   };
 
   const fillDemo = () => {
-    setLoginUser(import.meta.env.VITE_DEMO_USERNAME ?? '');
-    setLoginPass(import.meta.env.VITE_DEMO_PASSWORD ?? '');
+    setLoginUser(DEMO_CREDENTIALS.username);
+    setLoginPass(DEMO_CREDENTIALS.password);
   };
 
   const switchView = (v: AuthView) => {
