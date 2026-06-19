@@ -2,6 +2,7 @@ import {
   IonButton,
   IonContent,
   IonIcon,
+  IonModal,
   IonPage,
   useIonAlert,
 } from '@ionic/react';
@@ -17,7 +18,7 @@ import {
   restaurantOutline,
   swapHorizontalOutline
 } from 'ionicons/icons';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useWorkforce } from '../context/WorkforceContext';
 import {
@@ -38,6 +39,11 @@ import {
   startOfWeek,
 } from '../data/scheduleResolver';
 import './SchedulePage.css';
+
+const FULL_MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MON_FIRST_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const STRIP_MONTHS_BACK = 12;
+const STRIP_MONTHS_FORWARD = 12;
 
 type ViewMode = 'week' | 'month';
 type MonthCell = { date: Date | null; shift: Shift | null; isToday: boolean };
@@ -88,9 +94,24 @@ const SchedulePage: React.FC = () => {
     changeRequests,
     saveChangeRequest,
   } = useWorkforce();
+
   const [cursorDate, setCursorDate] = useState(today);
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [selectedWeekDate, setSelectedWeekDate] = useState(startOfDay(today));
+  const [selectedDayDate, setSelectedDayDate] = useState<Date | null>(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  const stripRef = useRef<HTMLDivElement>(null);
+  const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isScrollingFromCode = useRef(false);
+
+  const stripMonths = useMemo(() => {
+    return Array.from({ length: STRIP_MONTHS_BACK + 1 + STRIP_MONTHS_FORWARD }, (_, i) => {
+      const offset = i - STRIP_MONTHS_BACK;
+      const d = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+      return { year: d.getFullYear(), month: d.getMonth(), index: i };
+    });
+  }, [today]);
 
   const visibleDays = useMemo(
     () => (viewMode === 'week' ? buildWeekDays(cursorDate) : buildMonthDays(cursorDate)),
@@ -107,12 +128,14 @@ const SchedulePage: React.FC = () => {
     date.getMonth() === today.getMonth() &&
     date.getDate() === today.getDate();
 
+  // Mon-first month cells
   const monthCells = useMemo<MonthCell[]>(() => {
     if (viewMode !== 'month') return [];
     const firstDayOfMonth = new Date(cursorDate.getFullYear(), cursorDate.getMonth(), 1);
-    const leadingBlanks = firstDayOfMonth.getDay();
+    // Mon-first: Sun=0→6, Mon=1→0, Tue=2→1, ...
+    const leadingBlanks = (firstDayOfMonth.getDay() + 6) % 7;
     const cells: MonthCell[] = [];
-    for (let i = 0; i < leadingBlanks; i += 1) {
+    for (let i = 0; i < leadingBlanks; i++) {
       cells.push({ date: null, shift: null, isToday: false });
     }
     schedule.forEach(({ date, shift }) => {
@@ -123,6 +146,68 @@ const SchedulePage: React.FC = () => {
     }
     return cells;
   }, [cursorDate, schedule, viewMode]);
+
+  const selectedMonthShift = useMemo(
+    () => (selectedDayDate ? getShiftForDate(selectedDayDate) : null),
+    [selectedDayDate, getShiftForDate]
+  );
+
+  const selectedMonthStatus = useMemo(
+    () => (selectedDayDate && selectedMonthShift
+      ? getShiftStatus(selectedDayDate, selectedMonthShift.startHour, selectedMonthShift.endHour)
+      : null),
+    [selectedDayDate, selectedMonthShift]
+  );
+
+  const selectedMonthCountdown = useMemo(
+    () => (selectedDayDate && selectedMonthShift && selectedMonthStatus === 'upcoming'
+      ? formatCountdown(selectedDayDate, selectedMonthShift.startHour)
+      : null),
+    [selectedDayDate, selectedMonthShift, selectedMonthStatus]
+  );
+
+  const initStripScroll = useCallback(() => {
+    if (!stripRef.current) return;
+    const container = stripRef.current;
+    const targetIndex = stripMonths.findIndex(
+      m => m.year === cursorDate.getFullYear() && m.month === cursorDate.getMonth()
+    );
+    if (targetIndex < 0) return;
+    const itemWidth = container.clientWidth / 3;
+    isScrollingFromCode.current = true;
+    container.scrollLeft = Math.max(0, (targetIndex - 1) * itemWidth);
+    setTimeout(() => { isScrollingFromCode.current = false; }, 250);
+  }, [stripMonths, cursorDate]);
+
+  // Scroll strip to current month when switching to month view
+  useEffect(() => {
+    if (viewMode !== 'month') return;
+    const frame = requestAnimationFrame(initStripScroll);
+    return () => cancelAnimationFrame(frame);
+  }, [viewMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Close sheet when month changes
+  useEffect(() => {
+    setIsSheetOpen(false);
+    setSelectedDayDate(null);
+  }, [cursorDate.getMonth(), cursorDate.getFullYear()]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleStripScroll = useCallback(() => {
+    if (isScrollingFromCode.current) return;
+    if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+    scrollTimerRef.current = setTimeout(() => {
+      if (!stripRef.current) return;
+      const container = stripRef.current;
+      const itemWidth = container.clientWidth / 3;
+      const centerX = container.scrollLeft + container.clientWidth / 2;
+      const N = Math.round(centerX / itemWidth - 0.5);
+      const clamped = Math.max(0, Math.min(stripMonths.length - 1, N));
+      const m = stripMonths[clamped];
+      if (m) {
+        setCursorDate(new Date(m.year, m.month, 1));
+      }
+    }, 80);
+  }, [stripMonths]);
 
   useEffect(() => {
     if (viewMode !== 'week') return;
@@ -148,7 +233,7 @@ const SchedulePage: React.FC = () => {
 
   const rangeLabel = useMemo(() => {
     if (viewMode === 'month') {
-      return `${MONTH_NAMES[cursorDate.getMonth()]} ${cursorDate.getFullYear()}`;
+      return `${FULL_MONTH_NAMES[cursorDate.getMonth()]} ${cursorDate.getFullYear()}`;
     }
     const start = visibleDays[0];
     const end = visibleDays[visibleDays.length - 1];
@@ -226,6 +311,11 @@ const SchedulePage: React.FC = () => {
     });
   };
 
+  const openDaySheet = (date: Date) => {
+    setSelectedDayDate(date);
+    setIsSheetOpen(true);
+  };
+
   return (
     <IonPage className="schedule-page">
       <IonContent fullscreen className="schedule-content">
@@ -252,17 +342,6 @@ const SchedulePage: React.FC = () => {
               Month
             </button>
           </div>
-          {/* <div className="schedule-range-inline">{rangeLabel}</div> */}
-          {viewMode === 'month' ? (
-            <div className="schedule-month-nav-inline">
-              <IonButton fill="clear" className="schedule-nav-btn" onClick={() => moveRange(-1)} aria-label="Previous range">
-                <IonIcon icon={chevronBackOutline} />
-              </IonButton>
-              <IonButton fill="clear" className="schedule-nav-btn" onClick={() => moveRange(1)} aria-label="Next range">
-                <IonIcon icon={chevronForwardOutline} />
-              </IonButton>
-            </div>
-          ) : null}
         </div>
 
         {viewMode === 'week' ? (
@@ -398,39 +477,181 @@ const SchedulePage: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="schedule-month">
-            <div className="schedule-month-weekdays">
-              {DAY_NAMES.map(day => (
-                <span key={day} className="schedule-month-weekday">{day.slice(0, 3)}</span>
-              ))}
-            </div>
-            <div className="schedule-month-grid">
-              {monthCells.map((cell, index) => {
-                if (!cell.date) return <div key={`blank-${index}`} className="schedule-month-cell schedule-month-cell--blank" />;
-                const shift = cell.shift;
-                const request = shift ? changeRequests[shift.id] : undefined;
-                const requestStatusClass = request?.status ? ` schedule-month-request--${request.status}` : '';
+          <div className="schedule-month-view">
+            {/* Swipeable month strip */}
+            <div
+              className="month-strip"
+              ref={stripRef}
+              onScroll={handleStripScroll}
+            >
+              {stripMonths.map(({ year, month, index }) => {
+                const isActive = year === cursorDate.getFullYear() && month === cursorDate.getMonth();
                 return (
-                  <button
-                    key={cell.date.toISOString()}
-                    type="button"
-                    className={`schedule-month-cell${cell.isToday ? ' schedule-month-cell--today' : ''}${shift ? ' has-shift' : ''}`}
-                    onClick={shift ? (event) => navigateToShift(event, shift.id) : undefined}
-                    disabled={!shift}
+                  <div
+                    key={`${year}-${month}`}
+                    className={`month-strip-item${isActive ? ' active' : ''}`}
                   >
-                    <span className="schedule-month-day">{cell.date.getDate()}</span>
-                    {request ? (
-                      <span className={`schedule-month-request${requestStatusClass}`} aria-label={`Request ${request.status}`}>
-                        <IonIcon icon={request.status === 'approved' ? checkmarkCircleOutline : request.status === 'denied' ? closeCircleOutline : paperPlaneOutline} />
-                      </span>
-                    ) : null}
-                    <span className="schedule-month-meta">
-                      {shift ? shiftDurationShort(shift) : 'Off'}
-                    </span>
-                  </button>
+                    {FULL_MONTH_NAMES[month]}
+                  </div>
                 );
               })}
             </div>
+
+            {/* Calendar grid */}
+            <div className="schedule-month">
+              <div className="schedule-month-weekdays">
+                {MON_FIRST_DAYS.map(day => (
+                  <span key={day} className="schedule-month-weekday">{day}</span>
+                ))}
+              </div>
+              <div className="schedule-month-grid">
+                {monthCells.map((cell, index) => {
+                  if (!cell.date) {
+                    return <div key={`blank-${index}`} className="schedule-month-cell schedule-month-cell--blank" />;
+                  }
+                  const shift = cell.shift;
+                  return (
+                    <button
+                      key={cell.date.toISOString()}
+                      type="button"
+                      className="schedule-month-cell"
+                      onClick={() => openDaySheet(cell.date!)}
+                    >
+                      <span className={`schedule-month-day-num${cell.isToday ? ' today' : ''}`}>
+                        {cell.date.getDate()}
+                      </span>
+                      <div className="schedule-month-dots">
+                        {shift && <span className="schedule-month-shift-dot" />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Shift detail bottom sheet */}
+            <IonModal
+              isOpen={isSheetOpen}
+              onDidDismiss={() => { setIsSheetOpen(false); setSelectedDayDate(null); }}
+              initialBreakpoint={0.62}
+              breakpoints={[0, 0.62, 1]}
+              handle={true}
+              className="shift-detail-sheet"
+            >
+              <IonContent className="schedule-sheet-content">
+                {selectedDayDate && (
+                  <div className="schedule-sheet-header">
+                    <div className="schedule-sheet-date">
+                      {DAY_NAMES[selectedDayDate.getDay()]}, {FULL_MONTH_NAMES[selectedDayDate.getMonth()]} {selectedDayDate.getDate()}
+                    </div>
+                  </div>
+                )}
+
+                {selectedMonthShift ? (
+                  <div className="schedule-week-detail schedule-sheet-body">
+                    <div className="schedule-inline-card schedule-inline-hero">
+                      <IonButton
+                        fill="clear"
+                        size="small"
+                        className={`schedule-inline-request${changeRequests[selectedMonthShift.id] ? ' schedule-inline-request--submitted' : ''}`}
+                        onClick={() => requestOff(selectedMonthShift.id)}
+                      >
+                        <IonIcon icon={changeRequests[selectedMonthShift.id] ? checkmarkCircleOutline : swapHorizontalOutline} slot="start" />
+                        {changeRequests[selectedMonthShift.id] ? 'Request Submitted' : 'Request Change'}
+                      </IonButton>
+                      {selectedMonthStatus ? (
+                        <div className={`schedule-inline-status schedule-inline-status--${selectedMonthStatus}`}>
+                          {STATUS_LABELS[selectedMonthStatus]}
+                        </div>
+                      ) : null}
+                      <div className="schedule-inline-time">
+                        {formatHour(selectedMonthShift.startHour)}
+                        <span className="schedule-inline-arrow"> → </span>
+                        {formatHour(selectedMonthShift.endHour)}
+                      </div>
+                      <div className="schedule-inline-duration">{shiftDuration(selectedMonthShift)}</div>
+                      {selectedMonthCountdown ? <div className="schedule-inline-countdown">{selectedMonthCountdown}</div> : null}
+                    </div>
+
+                    <div className="schedule-inline-info-row">
+                      <div className="schedule-inline-card schedule-inline-info-tile">
+                        <div className="schedule-inline-info-label">Key Card</div>
+                        <div className="schedule-inline-info-value">{selectedMonthShift.role}</div>
+                      </div>
+                      <div className="schedule-inline-card schedule-inline-info-tile">
+                        <div className="schedule-inline-info-label">Project</div>
+                        <div className="schedule-inline-info-value">{selectedMonthShift.location}</div>
+                      </div>
+                      <div className="schedule-inline-card schedule-inline-info-tile">
+                        <div className="schedule-inline-info-label">Team</div>
+                        <div className="schedule-inline-info-value">{selectedMonthShift.manager}</div>
+                      </div>
+                    </div>
+
+                    <div className="schedule-inline-section-label">Breaks</div>
+                    <div className="schedule-inline-card schedule-inline-section-card">
+                      {selectedMonthShift.breaks.map((b, i) => (
+                        <div
+                          key={`sheet-break-${i}`}
+                          className={`schedule-inline-break-row${i < selectedMonthShift.breaks.length - 1 ? ' schedule-inline-break-row--divider' : ''}`}
+                        >
+                          <IonIcon icon={b.type === 'meal' ? restaurantOutline : cafeOutline} className="schedule-inline-break-icon" />
+                          <span className="schedule-inline-break-label">{breakLabel(b)}</span>
+                          <span className="schedule-inline-break-time">{formatHour(b.startHour)}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="schedule-inline-section-label">Team</div>
+                    <div className="schedule-inline-card schedule-inline-section-card">
+                      {selectedMonthShift.team.map((member, i) => (
+                        <div
+                          key={`sheet-member-${i}`}
+                          className={`schedule-inline-team-row${i < selectedMonthShift.team.length - 1 ? ' schedule-inline-team-row--divider' : ''}`}
+                        >
+                          <span className="schedule-inline-team-name">{member.name}</span>
+                          <span className="schedule-inline-team-role">{member.role}</span>
+                          <IonButton
+                            fill="clear"
+                            size="small"
+                            className="schedule-inline-team-chat-btn"
+                            onClick={() => history.push('/chat', { chatWith: member.name })}
+                            aria-label={`Chat with ${member.name}`}
+                          >
+                            <IonIcon icon={chatbubbleOutline} />
+                          </IonButton>
+                        </div>
+                      ))}
+                    </div>
+
+                    {selectedMonthShift.notes ? (
+                      <>
+                        <div className="schedule-inline-section-label">Notes</div>
+                        <div className="schedule-inline-card schedule-inline-section-card">
+                          <p className="schedule-inline-notes-text">{selectedMonthShift.notes}</p>
+                        </div>
+                      </>
+                    ) : null}
+
+                    <button
+                      type="button"
+                      className="schedule-inline-open-btn"
+                      onClick={() => {
+                        setIsSheetOpen(false);
+                        history.push(`/schedule/${selectedMonthShift.id}`);
+                      }}
+                    >
+                      Open Full Shift View
+                    </button>
+                  </div>
+                ) : (
+                  <div className="schedule-week-off-card schedule-sheet-off-card">
+                    <span>Day Off</span>
+                    <small>No shift scheduled for this day.</small>
+                  </div>
+                )}
+              </IonContent>
+            </IonModal>
           </div>
         )}
       </IonContent>

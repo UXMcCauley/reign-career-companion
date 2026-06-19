@@ -539,91 +539,179 @@
   opacity: 0;
 }
 
+/* ── Month view wrapper ─────────────────────────────────────── */
+
+.schedule-month-view {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Month strip ────────────────────────────────────────────── */
+
+.month-strip {
+  display: flex;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  padding: 8px 0 18px;
+}
+
+.month-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.month-strip-item {
+  flex: 0 0 33.333%;
+  text-align: center;
+  scroll-snap-align: center;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.22);
+  letter-spacing: -0.01em;
+  padding: 4px 0;
+  pointer-events: none;
+  transition: color 0.25s ease, font-size 0.25s ease, font-weight 0.25s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+.month-strip-item.active {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #9b6dff;
+  letter-spacing: -0.02em;
+}
+
+/* ── Calendar grid ──────────────────────────────────────────── */
+
 .schedule-month {
-  padding: 0 10px calc(var(--ion-safe-area-bottom, 0px) + 24px);
+  padding: 0 12px calc(var(--app-floating-tab-clearance, 90px) + 16px);
 }
 
 .schedule-month-weekdays {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 4px;
   margin-bottom: 6px;
 }
 
 .schedule-month-weekday {
   text-align: center;
-  font-size: 0.66rem;
-  letter-spacing: 0.07em;
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(179, 192, 224, 0.7);
+  color: rgba(179, 192, 224, 0.5);
+  font-weight: 600;
+  padding: 2px 0 6px;
 }
 
 .schedule-month-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 4px;
+  row-gap: 2px;
 }
 
 .schedule-month-cell {
-  min-height: 64px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  background: rgba(20, 24, 42, 0.5);
-  padding: 6px;
+  min-height: 52px;
+  background: transparent;
+  border: none;
+  padding: 4px 2px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  color: rgba(232, 240, 255, 0.9);
-  text-align: left;
+  align-items: center;
+  justify-content: flex-start;
+  color: rgba(232, 240, 255, 0.88);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .schedule-month-cell--blank {
-  border: none;
-  background: transparent;
   pointer-events: none;
 }
 
-.schedule-month-cell:disabled {
-  opacity: 0.52;
-}
-
-.schedule-month-cell.has-shift {
-  border-color: rgba(52, 211, 153, 0.34);
-  background: linear-gradient(180deg, rgba(52, 211, 153, 0.16), rgba(18, 30, 28, 0.42));
-}
-
-.schedule-month-cell--today {
-  box-shadow: 0 0 0 1px rgba(99, 179, 237, 0.44) inset;
-}
-
-.schedule-month-day {
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-.schedule-month-request {
-  display: inline-flex;
+.schedule-month-day-num {
+  width: 32px;
+  height: 32px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(201, 212, 234, 0.34);
-  font-size: 0.95rem;
+  border-radius: 50%;
+  font-size: 0.82rem;
+  font-weight: 600;
   line-height: 1;
 }
 
-.schedule-month-request--submitted {
-  color: rgba(201, 212, 234, 0.34);
+.schedule-month-day-num.today {
+  background: linear-gradient(135deg, #7b3fff, #a855f7);
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 2px 12px rgba(123, 63, 255, 0.45);
 }
 
-.schedule-month-request--approved {
-  color: rgba(104, 232, 177, 0.95);
+.schedule-month-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 10px;
+  margin-top: 2px;
 }
 
-.schedule-month-request--denied {
-  color: rgba(224, 74, 123, 0.95);
+.schedule-month-shift-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(71, 238, 154, 0.9);
+  box-shadow: 0 0 6px rgba(71, 238, 154, 0.5);
 }
 
-.schedule-month-meta {
-  font-size: 0.64rem;
-  color: rgba(188, 206, 236, 0.9);
+/* ── Shift detail bottom sheet ──────────────────────────────── */
+
+.shift-detail-sheet {
+  --background: transparent;
+  --border-radius: 22px 22px 0 0;
+}
+
+.shift-detail-sheet::part(content) {
+  background: linear-gradient(180deg, rgba(20, 22, 42, 0.98) 0%, rgba(12, 14, 28, 0.99) 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px 22px 0 0;
+}
+
+.shift-detail-sheet::part(handle) {
+  background: rgba(255, 255, 255, 0.2);
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+}
+
+.schedule-sheet-content {
+  --background: transparent;
+}
+
+.schedule-sheet-header {
+  padding: 16px 20px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 4px;
+}
+
+.schedule-sheet-date {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(200, 210, 240, 0.8);
+}
+
+.schedule-sheet-body {
+  padding: 8px 16px 32px !important;
+  margin-top: 0 !important;
+  max-height: none !important;
+  overflow-y: visible !important;
+}
+
+.schedule-sheet-off-card {
+  margin: 16px;
 }

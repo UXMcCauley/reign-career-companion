@@ -9,6 +9,7 @@ import { useHistory, useLocation } from 'react-router-dom';
 import { loadChats, loadEmployees, saveChats } from '../data/blobStorage';
 import type { Conversation, Message } from '../data/chatTypes';
 import { DEMO_EMPLOYEES, initialsFromName, type DemoEmployee } from '../data/employees';
+import { ensureNotificationPermission, notifyIncomingMessage, onNotificationTap } from '../lib/notifications';
 import './ChatPage.css';
 
 const isIOS = isPlatform('ios') || /iphone|ipad|ipod/i.test(
@@ -162,6 +163,8 @@ const ChatPage: React.FC = () => {
   const [swipedId, setSwipedId]   = useState<string | null>(null);
 
   const msgEndRef   = useRef<HTMLDivElement>(null);
+  const convsRef    = useRef<Conversation[]>([]);
+  const activeIdRef = useRef<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const cameraRef   = useRef<HTMLInputElement>(null);
   const libraryRef  = useRef<HTMLInputElement>(null);
@@ -172,6 +175,10 @@ const ChatPage: React.FC = () => {
   const platformClass = isIOS ? 'chat-ios' : 'chat-android';
   const activeConv    = convs.find(c => c.id === activeId) ?? null;
   const totalUnread   = convs.reduce((n, c) => n + c.unread, 0);
+
+  // Keep live refs so the delayed auto-reply reads the latest conversation state.
+  convsRef.current = convs;
+  activeIdRef.current = activeId;
 
   const archivedCount = convs.filter(c => c.archived).length;
   const filtered      = convs.filter(c => {
@@ -219,6 +226,18 @@ const ChatPage: React.FC = () => {
     const t = setTimeout(() => msgEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 60);
     return () => clearTimeout(t);
   }, [activeId, convs]);
+
+  // Tapping a chat notification opens that conversation and clears its unread count.
+  useEffect(() => {
+    onNotificationTap(conversationId => {
+      setActiveId(conversationId);
+      setConvs(prev => {
+        const next = prev.map(c => (c.id === conversationId ? { ...c, unread: 0 } : c));
+        void saveChats(next);
+        return next;
+      });
+    });
+  }, []);
 
   const persist = (nextConversations: Conversation[]) => {
     void saveChats(nextConversations);
@@ -292,18 +311,42 @@ const ChatPage: React.FC = () => {
     setInputText('');
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
 
+    // Prompt for notification permission on the first send (a real user gesture).
+    void ensureNotificationPermission();
+
     const myMsg: Message = { id: `${Date.now()}-me`, text, sender: 'me', ts: Date.now() };
     setConvs(prev => { const n = prev.map(c => c.id === activeId ? { ...c, messages: [...c.messages, myMsg] } : c); persist(n); return n; });
 
     setTyping(true);
-    const pool    = AUTO_REPLIES[activeId] ?? AUTO_REPLIES.manager;
+    const replyToId = activeId;
+    const pool    = AUTO_REPLIES[replyToId] ?? AUTO_REPLIES.manager;
     const replyTx = pool[Math.floor(Math.random() * pool.length)];
     const delay   = 1100 + Math.random() * 1100;
 
     setTimeout(() => {
       setTyping(false);
       const reply: Message = { id: `${Date.now()}-other`, text: replyTx, sender: 'other', ts: Date.now() };
-      setConvs(prev => { const n = prev.map(c => c.id === activeId ? { ...c, messages: [...c.messages, reply] } : c); persist(n); return n; });
+      const isActiveThreadOpen = activeIdRef.current === replyToId;
+      setConvs(prev => {
+        const n = prev.map(c => {
+          if (c.id !== replyToId) return c;
+          // Only bump unread when the user isn't currently looking at the thread.
+          const unread = isActiveThreadOpen ? c.unread : c.unread + 1;
+          return { ...c, messages: [...c.messages, reply], unread };
+        });
+        persist(n);
+        return n;
+      });
+
+      // Fire a real notification for the incoming reply (unless the chat is muted).
+      const conv = convsRef.current.find(c => c.id === replyToId);
+      if (conv && !conv.muted) {
+        void notifyIncomingMessage({
+          conversationId: replyToId,
+          title: conv.name,
+          body: replyTx,
+        });
+      }
     }, delay);
   }, [inputText, activeId, typing]);
 
