@@ -3,6 +3,28 @@ import react from '@vitejs/plugin-react';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Connect } from 'vite';
 
+function parseQuery(url: string): Record<string, string | string[]> {
+  const query: Record<string, string | string[]> = {};
+  const search = url.includes('?') ? url.slice(url.indexOf('?') + 1) : '';
+  if (!search) return query;
+
+  for (const part of search.split('&')) {
+    if (!part) continue;
+    const [rawKey, rawValue = ''] = part.split('=');
+    const key = decodeURIComponent(rawKey);
+    const value = decodeURIComponent(rawValue.replace(/\+/g, ' '));
+    const existing = query[key];
+    if (existing === undefined) {
+      query[key] = value;
+    } else if (Array.isArray(existing)) {
+      existing.push(value);
+    } else {
+      query[key] = [existing, value];
+    }
+  }
+  return query;
+}
+
 function vercelApiPlugin(): Plugin {
   return {
     name: 'local-vercel-api',
@@ -31,7 +53,12 @@ function vercelApiPlugin(): Plugin {
           if (typeof handler !== 'function') return next();
 
           let statusCode = 200;
-          const apiReq = { method: req.method, body };
+          const apiReq = {
+            method: req.method,
+            body,
+            query: parseQuery(url),
+            url,
+          };
           const apiRes = {
             status(code: number) { statusCode = code; return apiRes; },
             json(payload: unknown) {

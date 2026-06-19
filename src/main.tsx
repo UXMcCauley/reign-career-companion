@@ -1,34 +1,42 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { Capacitor } from '@capacitor/core';
 import App from './App';
 // CHANGE: Add the following import
 import { defineCustomElements } from '@ionic/pwa-elements/loader';
 // import { ShiftCountdownIsland } from './components/ShiftCountdownIsland';
 import './theme/variables.css';
-import * as LiveUpdates from '@capacitor/live-updates'; 
+import * as LiveUpdates from '@capacitor/live-updates';
+
+async function syncLiveUpdates(): Promise<void> {
+  try {
+    const result = await LiveUpdates.sync();
+    localStorage.shouldReloadApp = result.activeApplicationPathChanged;
+  } catch {
+    // Unavailable in web dev or when Live Updates is not configured for this build.
+  }
+}
 
 async function initializeApp() {
-  // Register event to fire each time user resumes the app  
+  if (!Capacitor.isNativePlatform()) return;
+
   document.addEventListener('ion:resume', async () => {
     if (localStorage.shouldReloadApp === 'true') {
-      await LiveUpdates.reload();
+      try {
+        await LiveUpdates.reload();
+      } catch {
+        localStorage.shouldReloadApp = 'false';
+      }
+      return;
     }
-    else {
-      const result = await LiveUpdates.sync();
-      localStorage.shouldReloadApp = result.activeApplicationPathChanged;
-    }
+    await syncLiveUpdates();
   });
-  // First sync on app load
-  const result = await LiveUpdates.sync();
-  localStorage.shouldReloadApp = result.activeApplicationPathChanged;
+
+  await syncLiveUpdates();
 }
 
 void (async () => {
-  try {
-    await initializeApp();
-  } catch (error) {
-    console.error('LiveUpdates init failed:', error);
-  }
+  await initializeApp();
 
   await defineCustomElements(window);
 

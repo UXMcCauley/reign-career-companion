@@ -35,13 +35,33 @@
   padding: 9px 10px;
 }
 
+.ai-category-color-swatches {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.ai-color-swatch {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.ai-color-swatch.selected {
+  border-color: #fff;
+  transform: scale(1.18);
+}
+
 .ai-category-create {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 6px;
+  gap: 8px;
+  align-items: center;
 }
 
-.ai-category-create button,
 .ai-settings-save {
   border-radius: 10px;
   border: 1px solid var(--app-brand-accent-border);
@@ -50,20 +70,34 @@
   font-weight: 700;
 }
 
-.ai-category-create button {
-  width: 36px;
-  display: inline-flex;
+.ai-category-add-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--app-brand-accent-border);
+  background: var(--app-brand-accent-bg);
+  color: #f6f9ff;
+  font-size: 1.1rem;
+  display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+
+.ai-category-add-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .ai-category-chip {
   border-radius: 999px;
-  border: 1px solid rgba(126, 177, 255, 0.46);
+  border: 1px solid transparent;
   background: rgba(6, 119, 240, 0.2);
-  color: #ddecff;
+  color: #fff;
   font-size: 0.67rem;
-  padding: 4px 8px;
+  font-weight: 600;
+  padding: 4px 10px;
 }
 
 .ai-filter-row {
@@ -230,6 +264,79 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.ai-thread-header {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+}
+
+.ai-thread-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-thread-cat-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.ai-thread-cat-btn.open {
+  border-color: rgba(255, 255, 255, 0.7);
+  transform: scale(1.1);
+}
+
+.ai-thread-cat-picker {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0 4px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ai-thread-cat-picker-item {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2.5px solid transparent;
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.ai-thread-cat-picker-item.selected {
+  border-color: #fff;
+  transform: scale(1.15);
+}
+
+.ai-conv-row .conv-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
 }
 
 .ai-thread-rename-btn {

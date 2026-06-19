@@ -243,7 +243,7 @@ const ChatPage: React.FC = () => {
 
   useEffect(() => {
     if (!activeId) return;
-    const t = setTimeout(() => msgEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 60);
+    const t = setTimeout(() => msgEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 80);
     return () => clearTimeout(t);
   }, [activeId, convs]);
 

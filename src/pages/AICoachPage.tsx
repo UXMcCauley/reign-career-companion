@@ -5,7 +5,6 @@ import {
   chevronBackOutline,
   createOutline,
   funnelOutline,
-  imageOutline,
   saveOutline,
   searchOutline,
   sendOutline,
@@ -14,7 +13,7 @@ import {
 } from 'ionicons/icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { defaultLoggedInEmployee } from '../data/defaultLoggedInEmployee';
-import { loadAICoachState, saveAICoachState } from '../data/aiCoachStorage';
+import { CATEGORY_COLORS, loadAICoachState, pickCategoryColor, saveAICoachState } from '../data/aiCoachStorage';
 import type {
   CoachApiPayload,
   CoachCategory,
@@ -46,14 +45,23 @@ const RESPONSE_TYPE_OPTIONS: { value: ResponseType; label: string }[] = [
   { value: 'in-depth', label: 'In-depth' },
 ];
 
-const SUGGESTION_PROMPTS = [
-  'How can I handle conflict with a teammate without escalating things?',
-  'Help me build a 30-day plan to improve my leadership visibility.',
-  'What should I say in a difficult conversation with my manager?',
-  'How do I prepare for a promotion conversation next quarter?',
+const SUGGESTION_PROMPTS: Array<{ text: string; categoryId: string }> = [
+  { text: 'How can I handle conflict with a teammate without escalating things?', categoryId: 'cat-workplace' },
+  { text: 'Help me build a 30-day plan to improve my leadership visibility.', categoryId: 'cat-career' },
+  { text: 'What should I say in a difficult conversation with my manager?', categoryId: 'cat-workplace' },
+  { text: 'How do I prepare for a promotion conversation next quarter?', categoryId: 'cat-career' },
+  { text: 'What are some ways I can stand out during a busy shift?', categoryId: 'cat-general' },
+  { text: 'How do I ask for more responsibility without seeming pushy?', categoryId: 'cat-career' },
+  { text: 'Give me tips for staying motivated when work feels repetitive.', categoryId: 'cat-general' },
+  { text: 'How should I respond when a customer is being unreasonable?', categoryId: 'cat-workplace' },
+  { text: 'What habits separate top performers from average ones?', categoryId: 'cat-general' },
 ];
 
 const ARCHIVED_FILTER_ID = '__archived__';
+
+function categoryInitials(name: string): string {
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
 
 function colorForConversation(id: string): string {
   const palette = ['#7b3fff', '#2e85ff', '#00c875', '#ff6b6b', '#46c9ff', '#e87d30'];
@@ -75,23 +83,26 @@ const AICoachPage: React.FC = () => {
   const [state, setState] = useState<CoachState | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
   const [search, setSearch] = useState('');
-  const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
+  const [filterCategoryId, setFilterCategoryId] = useState<string>(
+    () => localStorage.getItem('reign_ai_coach_filter') ?? 'all'
+  );
   const [draft, setDraft] = useState('');
   const [draftCoachName, setDraftCoachName] = useState('');
   const [draftPersonalities, setDraftPersonalities] = useState<CoachPersonality[]>([]);
   const [draftResponseType, setDraftResponseType] = useState<ResponseType>('brief');
   const [draftResponseStyle, setDraftResponseStyle] = useState<ResponseStyle>('conversational');
-  const [draftAvatarPrompt, setDraftAvatarPrompt] = useState('');
-  const [draftAvatarUrl, setDraftAvatarUrl] = useState('');
-  const [avatarStatus, setAvatarStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [draftCategories, setDraftCategories] = useState<CoachCategory[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryColor, setNewCategoryColor] = useState(CATEGORY_COLORS[0]);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState('');
   const [showFilterSelect, setShowFilterSelect] = useState(false);
+  const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
   const [swipedId, setSwipedId] = useState<string | null>(null);
   const [suggestionIndex, setSuggestionIndex] = useState(0);
   const [suggestionPhase, setSuggestionPhase] = useState<'idle' | 'exiting' | 'entering'>('idle');
+
+  const msgEndRef = useRef<HTMLDivElement>(null);
   const swipeStartX = useRef(0);
   const swipeStartY = useRef(0);
   const didSwipeRef = useRef(false);
@@ -122,6 +133,14 @@ const AICoachPage: React.FC = () => {
   }, [state?.categories, filterCategoryId]);
 
   useEffect(() => {
+    localStorage.setItem('reign_ai_coach_filter', filterCategoryId);
+  }, [filterCategoryId]);
+
+  useEffect(() => {
+    setCategoryPickerOpen(false);
+  }, [state?.activeConversationId]);
+
+  useEffect(() => {
     if (!state) return;
     const interval = window.setInterval(() => {
       setSuggestionPhase('exiting');
@@ -132,7 +151,7 @@ const AICoachPage: React.FC = () => {
       }, 280);
     }, 9000);
     return () => window.clearInterval(interval);
-  }, []);
+  }, [state]);
 
   const employeeContext = useMemo(() => ({
     employeeName: defaultLoggedInEmployee.displayName,
@@ -148,6 +167,12 @@ const AICoachPage: React.FC = () => {
     [state]
   );
 
+  useEffect(() => {
+    if (!activeConversation) return;
+    const t = setTimeout(() => msgEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 80);
+    return () => clearTimeout(t);
+  }, [activeConversation?.id, activeConversation?.messages.length, isSending]);
+
   const filteredConversations = useMemo(() => {
     if (!state) return [];
     const query = search.trim().toLowerCase();
@@ -162,17 +187,20 @@ const AICoachPage: React.FC = () => {
     }).sort((a, b) => b.updatedAt - a.updatedAt);
   }, [state, filterCategoryId, search]);
 
+  const totalUnreadReplies = useMemo(
+    () => state?.conversations.reduce((sum, c) => sum + (!c.archived ? (c.unreadReplies ?? 0) : 0), 0) ?? 0,
+    [state?.conversations]
+  );
+
   const openSettingsView = () => {
     if (!state) return;
     setDraftCoachName(state.coachName);
     setDraftPersonalities(state.personalities);
     setDraftResponseType(state.responseType);
     setDraftResponseStyle(state.responseStyle);
-    setDraftAvatarPrompt(state.avatarPrompt);
-    setDraftAvatarUrl(state.avatarUrl);
-    setAvatarStatus(state.avatarUrl ? 'ready' : 'idle');
     setDraftCategories(state.categories);
     setNewCategoryName('');
+    setNewCategoryColor(pickCategoryColor(state.categories.map(c => c.color)));
     setView('settings');
   };
 
@@ -186,8 +214,6 @@ const AICoachPage: React.FC = () => {
         personalities: draftPersonalities.length ? draftPersonalities : ['professional'],
         responseType: draftResponseType,
         responseStyle: draftResponseStyle,
-        avatarPrompt: draftAvatarPrompt.trim(),
-        avatarUrl: draftAvatarUrl,
         categories: draftCategories,
         conversations: prev.conversations.map(conversation => ({
           ...conversation,
@@ -205,29 +231,6 @@ const AICoachPage: React.FC = () => {
     setDraftPersonalities(prev =>
       prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]
     );
-  };
-
-  const generateAvatar = () => {
-    const desc = draftAvatarPrompt.trim();
-    if (!desc) return;
-    // DiceBear: free, no API key, instant vector avatars. Style is picked from description keywords.
-    const STYLES: Array<[RegExp, string]> = [
-      [/robot|bot|android|tech|cyber|ai|machine/i, 'bottts-neutral'],
-      [/cute|fun|emoji|playful|silly/i, 'fun-emoji'],
-      [/sketch|line|draw|notion|minimal/i, 'notionists'],
-      [/face|person|human|character|coach|professional/i, 'lorelei'],
-      [/pixel|retro|game/i, 'pixel-art'],
-    ];
-    const fallbackStyles = ['bottts-neutral', 'micah', 'lorelei', 'notionists', 'fun-emoji'];
-    const matched = STYLES.find(([re]) => re.test(desc));
-    const style = matched ? matched[1] : fallbackStyles[simpleHash(desc) % fallbackStyles.length];
-    const url = `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(desc)}&size=256`;
-    setDraftAvatarUrl(url);
-    setAvatarStatus('loading');
-    const preloader = new window.Image();
-    preloader.onload = () => setAvatarStatus('ready');
-    preloader.onerror = () => setAvatarStatus('error');
-    preloader.src = url;
   };
 
   const createConversation = () => {
@@ -260,8 +263,10 @@ const AICoachPage: React.FC = () => {
     const name = newCategoryName.trim();
     if (!name) return;
     if (draftCategories.some(category => category.name.toLowerCase() === name.toLowerCase())) return;
-    setDraftCategories(prev => [...prev, { id: uid('cat'), name }]);
+    const color = newCategoryColor;
+    setDraftCategories(prev => [...prev, { id: uid('cat'), name, color }]);
     setNewCategoryName('');
+    setNewCategoryColor(pickCategoryColor([...draftCategories.map(c => c.color), color]));
   };
 
   const updateConversationCategory = (conversationId: string, categoryId: string) => {
@@ -335,7 +340,13 @@ const AICoachPage: React.FC = () => {
       setSwipedId(null);
       return;
     }
-    setState(prev => (prev ? { ...prev, activeConversationId: conversationId } : prev));
+    setState(prev => prev ? {
+      ...prev,
+      activeConversationId: conversationId,
+      conversations: prev.conversations.map(c =>
+        c.id === conversationId ? { ...c, unreadReplies: 0 } : c
+      ),
+    } : prev);
   };
 
   const renameConversation = (conversationId: string) => {
@@ -414,11 +425,17 @@ const AICoachPage: React.FC = () => {
 
       setState(prev => {
         if (!prev) return prev;
+        const isActive = prev.activeConversationId === conversation.id;
         return {
           ...prev,
           conversations: prev.conversations.map(candidate =>
             candidate.id === conversation.id
-              ? { ...candidate, updatedAt: Date.now(), messages: [...candidate.messages, assistantMessage] }
+              ? {
+                  ...candidate,
+                  updatedAt: Date.now(),
+                  messages: [...candidate.messages, assistantMessage],
+                  unreadReplies: isActive ? (candidate.unreadReplies ?? 0) : (candidate.unreadReplies ?? 0) + 1,
+                }
               : candidate
           ),
         };
@@ -432,12 +449,15 @@ const AICoachPage: React.FC = () => {
 
   const sendSuggestionPrompt = () => {
     if (isSending || !state) return;
-    const prompt = SUGGESTION_PROMPTS[suggestionIndex];
+    const suggestion = SUGGESTION_PROMPTS[suggestionIndex];
     const now = Date.now();
+    const resolvedCategoryId = state.categories.some(c => c.id === suggestion.categoryId)
+      ? suggestion.categoryId
+      : (state.categories[0]?.id || 'cat-general');
     const conversation: CoachConversation = {
       id: uid('conv'),
-      title: prompt.slice(0, 34) + (prompt.length > 34 ? '...' : ''),
-      categoryId: state.categories[0]?.id || 'cat-general',
+      title: suggestion.text.slice(0, 34) + (suggestion.text.length > 34 ? '...' : ''),
+      categoryId: resolvedCategoryId,
       createdAt: now,
       updatedAt: now,
       messages: [],
@@ -452,7 +472,7 @@ const AICoachPage: React.FC = () => {
     });
     setSwipedId(null);
     setShowFilterSelect(false);
-    void sendPromptToConversation(conversation, prompt);
+    void sendPromptToConversation(conversation, suggestion.text);
   };
 
   const onComposerKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -503,42 +523,6 @@ const AICoachPage: React.FC = () => {
                 Coach Name
                 <input value={draftCoachName} onChange={event => setDraftCoachName(event.target.value.slice(0, 32))} placeholder="Name your coach" />
               </label>
-              <div className="ai-coach-field">
-                Avatar — describe your coach
-                <div className="ai-avatar-row">
-                  <input
-                    value={draftAvatarPrompt}
-                    onChange={event => setDraftAvatarPrompt(event.target.value)}
-                    placeholder="e.g. friendly robot with glasses, neon blue"
-                  />
-                  <button
-                    type="button"
-                    className="ai-avatar-generate-btn"
-                    onClick={generateAvatar}
-                    disabled={!draftAvatarPrompt.trim()}
-                  >
-                    <IonIcon icon={imageOutline} />
-                    Generate
-                  </button>
-                </div>
-                {avatarStatus !== 'idle' ? (
-                  <div className="ai-avatar-preview-wrap">
-                    {avatarStatus === 'loading' ? (
-                      <div className="ai-avatar-preview ai-avatar-preview--loading" aria-label="Generating avatar" />
-                    ) : avatarStatus === 'error' ? (
-                      <div className="ai-avatar-preview ai-avatar-preview--error" aria-label="Avatar failed" />
-                    ) : (
-                      <img src={draftAvatarUrl} className="ai-avatar-preview" alt="Avatar preview" />
-                    )}
-                    <span className="ai-avatar-preview-hint">
-                      {avatarStatus === 'loading' && 'Generating...'}
-                      {avatarStatus === 'error' && 'Failed to load. Try a different description.'}
-                      {avatarStatus === 'ready' && 'Save to apply this avatar.'}
-                    </span>
-                  </div>
-                ) : null}
-              </div>
-
               <div className="ai-settings-section-label">Personality</div>
               <div className="ai-personality-grid">
                 {PERSONALITY_OPTIONS.map(p => (
@@ -586,12 +570,44 @@ const AICoachPage: React.FC = () => {
               </div>
 
               <div className="ai-settings-section-label">Categories</div>
+              <div className="ai-category-color-swatches">
+                {CATEGORY_COLORS.map(color => (
+                  <button
+                    key={color}
+                    type="button"
+                    className={`ai-color-swatch${newCategoryColor === color ? ' selected' : ''}`}
+                    style={{ background: color }}
+                    aria-label={`Select color ${color}`}
+                    onClick={() => setNewCategoryColor(color)}
+                  />
+                ))}
+              </div>
               <div className="ai-category-create">
-                <input value={newCategoryName} onChange={event => setNewCategoryName(event.target.value)} placeholder="Create category" />
-                <button type="button" onClick={createCategory}><IonIcon icon={addOutline} /></button>
+                <input
+                  value={newCategoryName}
+                  onChange={event => setNewCategoryName(event.target.value)}
+                  placeholder="Create category"
+                  style={{ boxShadow: `0 0 0 1.5px ${newCategoryColor}` }}
+                />
+                <button
+                  type="button"
+                  className="ai-category-add-btn"
+                  onClick={createCategory}
+                  disabled={!newCategoryName.trim()}
+                >
+                  <IonIcon icon={addOutline} />
+                </button>
               </div>
               <div className="ai-category-list">
-                {draftCategories.map(category => <span key={category.id} className="ai-category-chip">{category.name}</span>)}
+                {draftCategories.map(category => (
+                  <span
+                    key={category.id}
+                    className="ai-category-chip"
+                    style={{ background: category.color, borderColor: 'transparent' }}
+                  >
+                    {category.name}
+                  </span>
+                ))}
               </div>
 
             </section>
@@ -604,7 +620,7 @@ const AICoachPage: React.FC = () => {
                   <h1 className="chat-list-title">
                     <IonIcon icon={sparklesOutline} className="ai-title-icon" />
                     AI Coach
-                    <span className="chat-unread-chip">{filteredConversations.length}</span>
+                    {totalUnreadReplies > 0 && <span className="chat-unread-chip">{totalUnreadReplies}</span>}
                   </h1>
                 </div>
                 <div className="ai-search-controls-row">
@@ -673,17 +689,15 @@ const AICoachPage: React.FC = () => {
                         onMouseDown={onMouseDown}
                         onMouseUp={event => onMouseUp(conversation.id, event)}
                       >
-                        {state.avatarUrl ? (
-                          <img
-                            src={state.avatarUrl}
-                            className="chat-avatar ai-avatar-img"
-                            alt={state.coachName || 'AI Coach'}
-                          />
-                        ) : (
-                          <div className="chat-avatar" style={{ background: colorForConversation(conversation.id) }}>
-                            {(state.coachName || 'AI').slice(0, 2).toUpperCase()}
-                          </div>
-                        )}
+                        {(() => {
+                          const cat = state.categories.find(c => c.id === conversation.categoryId);
+                          const bg = cat?.color || colorForConversation(conversation.id);
+                          return (
+                            <div className="chat-avatar" style={{ background: bg }}>
+                              {cat ? categoryInitials(cat.name) : 'AI'}
+                            </div>
+                          );
+                        })()}
                         <div className="conv-body">
                           <div className="conv-top">
                             <span className="conv-name">{conversation.title}</span>
@@ -712,7 +726,7 @@ const AICoachPage: React.FC = () => {
                   disabled={isSending}
                 >
                   <span className="ai-suggestion-chip-label">Try asking</span>
-                  <span className="ai-suggestion-chip-text">{SUGGESTION_PROMPTS[suggestionIndex]}</span>
+                  <span className="ai-suggestion-chip-text">{SUGGESTION_PROMPTS[suggestionIndex].text}</span>
                 </button>
               ) : null}
             </section>
@@ -720,22 +734,55 @@ const AICoachPage: React.FC = () => {
             <section className={`chat-panel chat-thread-panel ${threadClass}`}>
               {activeConversation ? (
                 <>
-                  <div className="thread-header">
-                    <button className="back-btn" onClick={() => setState(prev => (prev ? { ...prev, activeConversationId: null } : prev))} aria-label="Back to AI chats">
-                      <IonIcon icon={chevronBackOutline} />
-                      <span>Back</span>
-                    </button>
-                    <div className="thread-contact">
-                      <div className="thread-name ai-thread-title">{getConversationPromptTitle(activeConversation)}</div>
+                  <div className="thread-header ai-thread-header">
+                    <div className="ai-thread-header-row">
+                      <button className="back-btn" onClick={() => setState(prev => (prev ? { ...prev, activeConversationId: null } : prev))} aria-label="Back to AI chats">
+                        <IonIcon icon={chevronBackOutline} />
+                        <span>Back</span>
+                      </button>
+                      <span className="thread-name ai-thread-title">{activeConversation.title}</span>
+                      {(() => {
+                        const cat = state.categories.find(c => c.id === activeConversation.categoryId);
+                        return (
+                          <button
+                            type="button"
+                            className={`ai-thread-cat-btn${categoryPickerOpen ? ' open' : ''}`}
+                            style={{ background: cat?.color || colorForConversation(activeConversation.id) }}
+                            aria-label="Change category"
+                            onClick={() => setCategoryPickerOpen(v => !v)}
+                          >
+                            {cat ? categoryInitials(cat.name) : 'AI'}
+                          </button>
+                        );
+                      })()}
+                      <button
+                        type="button"
+                        className="thread-action-btn ai-thread-rename-btn"
+                        aria-label="Rename chat"
+                        onClick={() => renameConversation(activeConversation.id)}
+                      >
+                        <IonIcon icon={createOutline} />
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      className="thread-action-btn ai-thread-rename-btn"
-                      aria-label="Rename chat"
-                      onClick={() => renameConversation(activeConversation.id)}
-                    >
-                      <IonIcon icon={createOutline} />
-                    </button>
+                    {categoryPickerOpen && (
+                      <div className="ai-thread-cat-picker">
+                        {state.categories.map(cat => (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            className={`ai-thread-cat-picker-item${cat.id === activeConversation.categoryId ? ' selected' : ''}`}
+                            style={{ background: cat.color }}
+                            aria-label={cat.name}
+                            onClick={() => {
+                              updateConversationCategory(activeConversation.id, cat.id);
+                              setCategoryPickerOpen(false);
+                            }}
+                          >
+                            {categoryInitials(cat.name)}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="thread-messages">
@@ -769,6 +816,7 @@ const AICoachPage: React.FC = () => {
                       </div>
                     )}
                     {isSending ? <div className="ai-thinking">Thinking...</div> : null}
+                    <div ref={msgEndRef} />
                   </div>
 
                   <div className="thread-input-bar">

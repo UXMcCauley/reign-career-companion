@@ -26,6 +26,18 @@ const PERSONALITY_SET = new Set<CoachPersonality>([
 const RESPONSE_TYPE_SET = new Set<ResponseType>(['brief', 'simple', 'data-driven', 'in-depth']);
 const RESPONSE_STYLE_SET = new Set<ResponseStyle>(['plan-strategy', 'conversational']);
 
+export const CATEGORY_COLORS = [
+  '#7b3fff', '#2e85ff', '#00c875', '#e87d30', '#ff4d8d', '#46c9ff',
+  '#c44dff', '#00d4aa', '#f7c948', '#ff6b6b', '#14b8a6', '#f43f5e',
+];
+
+export function pickCategoryColor(usedColors: string[]): string {
+  const unused = CATEGORY_COLORS.filter(c => !usedColors.includes(c));
+  if (unused.length) return unused[0];
+  // All used — cycle by count
+  return CATEGORY_COLORS[usedColors.length % CATEGORY_COLORS.length];
+}
+
 let memoryCache: CoachState | null = null;
 let blobReadDisabled = false;
 let blobWriteDisabled = false;
@@ -38,12 +50,10 @@ export function buildInitialCoachState(): CoachState {
     personalities: ['professional', 'friendly'],
     responseType: 'brief',
     responseStyle: 'conversational',
-    avatarPrompt: '',
-    avatarUrl: '',
     categories: [
-      { id: defaultCategoryId, name: 'General Coaching' },
-      { id: 'cat-workplace', name: 'Workplace Relationships' },
-      { id: 'cat-career', name: 'Career Development' },
+      { id: defaultCategoryId, name: 'General Coaching', color: CATEGORY_COLORS[0] },
+      { id: 'cat-workplace', name: 'Workplace Relationships', color: CATEGORY_COLORS[1] },
+      { id: 'cat-career', name: 'Career Development', color: CATEGORY_COLORS[2] },
     ],
     conversations: [{
       id: 'conv-welcome',
@@ -103,7 +113,11 @@ function normalizeCategory(raw: unknown): CoachCategory | null {
   if (typeof category.id !== 'string' || typeof category.name !== 'string') return null;
   const name = category.name.trim();
   if (!name) return null;
-  return { id: category.id, name: name.slice(0, 64) };
+  return {
+    id: category.id,
+    name: name.slice(0, 64),
+    color: typeof category.color === 'string' && category.color ? category.color : '',
+  };
 }
 
 export function normalizeCoachState(parsed: unknown): CoachState {
@@ -127,6 +141,13 @@ export function normalizeCoachState(parsed: unknown): CoachState {
     ? raw.coachName.trim().slice(0, 32)
     : defaults.coachName;
 
+  const resolvedCategories: CoachCategory[] = [];
+  for (const cat of (categories.length ? categories : defaults.categories)) {
+    const usedColors = resolvedCategories.map(c => c.color);
+    const colorIsUnique = cat.color && !usedColors.includes(cat.color);
+    resolvedCategories.push({ ...cat, color: colorIsUnique ? cat.color : pickCategoryColor(usedColors) });
+  }
+
   return {
     coachName,
     personalities: personalities.length ? personalities : defaults.personalities,
@@ -136,9 +157,7 @@ export function normalizeCoachState(parsed: unknown): CoachState {
     responseStyle: RESPONSE_STYLE_SET.has(raw.responseStyle as ResponseStyle)
       ? (raw.responseStyle as ResponseStyle)
       : defaults.responseStyle,
-    avatarPrompt: typeof raw.avatarPrompt === 'string' ? raw.avatarPrompt.slice(0, 240) : '',
-    avatarUrl: typeof raw.avatarUrl === 'string' ? raw.avatarUrl.slice(0, 2048) : '',
-    categories: categories.length ? categories : defaults.categories,
+    categories: resolvedCategories,
     conversations: conversations.length ? conversations : defaults.conversations,
     activeConversationId: null,
   };
@@ -169,8 +188,10 @@ async function readBlobJson<T>(name: string): Promise<T | null> {
       method: 'GET',
       headers: { Accept: 'application/json' },
     });
-    if ([401, 403, 500, 503].includes(response.status)) {
-      blobReadDisabled = true;
+    if ([400, 401, 403, 404, 500, 503].includes(response.status)) {
+      if (response.status !== 404) {
+        blobReadDisabled = true;
+      }
       return null;
     }
     if (!response.ok) return null;
@@ -189,7 +210,7 @@ async function writeBlobJson(name: string, data: unknown): Promise<void> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    if ([401, 403, 405, 500, 503].includes(response.status)) {
+    if ([400, 401, 403, 405, 500, 503].includes(response.status)) {
       blobWriteDisabled = true;
       return;
     }

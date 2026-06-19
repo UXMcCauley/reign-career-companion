@@ -10,7 +10,7 @@ export type CoachPersonality =
 export type ResponseType = 'brief' | 'simple' | 'data-driven' | 'in-depth';
 export type ResponseStyle = 'plan-strategy' | 'conversational';
 
-export type CoachCategory = { id: string; name: string };
+export type CoachCategory = { id: string; name: string; color: string };
 
 export type CoachMessage = {
   id: string;
@@ -28,6 +28,7 @@ export type CoachConversation = {
   createdAt: number;
   updatedAt: number;
   messages: CoachMessage[];
+  unreadReplies?: number;
 };
 
 export type CoachState = {
@@ -35,8 +36,6 @@ export type CoachState = {
   personalities: CoachPersonality[];
   responseType: ResponseType;
   responseStyle: ResponseStyle;
-  avatarPrompt: string;
-  avatarUrl: string;
   categories: CoachCategory[];
   conversations: CoachConversation[];
   activeConversationId: string | null;

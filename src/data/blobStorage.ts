@@ -141,11 +141,12 @@ async function readBlobJson<T>(name: string): Promise<T | null> {
       method: 'GET',
       headers: { Accept: 'application/json' },
     });
-    if ([401, 403, 500, 503].includes(response.status)) {
-      blobReadDisabled = true;
+    if ([400, 401, 403, 404, 500, 503].includes(response.status)) {
+      if (response.status !== 404) {
+        blobReadDisabled = true;
+      }
       return null;
     }
-    if (!response.ok) return null;
     return (await response.json()) as T;
   } catch {
     // Avoid repeated noisy network failures in client runtime.
@@ -162,7 +163,7 @@ async function writeBlobJson(name: string, data: unknown): Promise<boolean> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    if ([401, 403, 405, 500, 503].includes(response.status)) {
+    if ([400, 401, 403, 405, 500, 503].includes(response.status)) {
       blobWriteDisabled = true;
       return false;
     }
