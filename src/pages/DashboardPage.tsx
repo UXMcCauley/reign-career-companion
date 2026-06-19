@@ -736,11 +736,11 @@ const DashboardPage: React.FC = () => {
                     radius={GEOFENCE_RADIUS_FEET / FEET_PER_METER}
                     pathOptions={{ color: '#ff4f8d', fillColor: '#ff4f8d', fillOpacity: 0.14, weight: 2, opacity: 0.58 }}
                   />
-                  <CircleMarker
+                  {/* <CircleMarker
                     center={[configuredJobSite.latitude, configuredJobSite.longitude]}
                     radius={7}
                     pathOptions={{ color: '#ffffff', fillColor: '#ff4f8d', fillOpacity: 1, weight: 1.5 }}
-                  />
+                  /> */}
                   {userPosition && (
                     <CircleMarker
                       center={[userPosition.latitude, userPosition.longitude]}
