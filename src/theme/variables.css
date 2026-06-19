@@ -29,7 +29,10 @@ http://ionicframework.com/docs/theming/ */
   --app-brand-accent-border: rgba(126, 177, 255, 0.44);
   --ion-font-family: 'Inter', sans-serif;
   /* --ion-statusbar-padding: 10px; */
-  --ion-safe-area-top: 15px;
+  /* Respect the real top device safe-area inset (notch / Dynamic Island / status bar)
+     instead of a fixed guess, so no page content lands in the top "danger zone".
+     Falls back to 0px on browsers/devices that report no inset. */
+  --ion-safe-area-top: env(safe-area-inset-top, 0px);
   --ion-safe-area-right: 10px;
   --ion-safe-area-bottom: 10px;
   --ion-safe-area-left: 10px;
@@ -58,7 +61,8 @@ body {
 ion-app {
   position: relative;
   isolation: isolate;
-  padding-top: var(--ion-safe-area-top);
+  /* Top safe-area inset is handled per-page (custom headers/heroes) and by
+     Ionic toolbars, so we don't add a global padding here to avoid doubling it. */
 }
 
 ion-app::before,

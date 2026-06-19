@@ -57,7 +57,7 @@
 }
 
 .schedule-controls-row {
-  margin: 20px 12px 12px;
+  margin: calc(var(--ion-safe-area-top, 0px) + 20px) 12px 12px;
   padding-left: 12px;
   display: flex;
   align-items: center;
