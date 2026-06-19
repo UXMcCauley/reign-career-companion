@@ -12,7 +12,7 @@ type GaugeChartProps = {
 };
 
 const CENTER_X = 100;
-const CENTER_Y = 92;
+const CENTER_Y = 108;
 const RADIUS = 72;
 const START_ANGLE = 180;
 const END_ANGLE = 0;
@@ -21,7 +21,7 @@ function polarToCartesian(centerX: number, centerY: number, radius: number, angl
   const angleInRadians = (angleInDegrees * Math.PI) / 180;
   return {
     x: centerX + radius * Math.cos(angleInRadians),
-    y: centerY + radius * Math.sin(angleInRadians)
+    y: centerY - radius * Math.sin(angleInRadians)
   };
 }
 
@@ -34,9 +34,10 @@ function describeArc(
 ) {
   const start = polarToCartesian(centerX, centerY, radius, startAngle);
   const end = polarToCartesian(centerX, centerY, radius, endAngle);
-  const sweep = startAngle > endAngle ? 0 : 1;
   const delta = Math.abs(endAngle - startAngle);
   const largeArcFlag = delta > 180 ? 1 : 0;
+  // Sweep 0 traces the upper semicircle from left (0) to right (max).
+  const sweep = 0;
 
   return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} ${sweep} ${end.x} ${end.y}`;
 }
@@ -72,7 +73,7 @@ const GaugeChart: React.FC<GaugeChartProps> = ({
       <h4 className="chart-card-title">{title}</h4>
       <svg
         className="gauge-svg"
-        viewBox="0 0 200 118"
+        viewBox="0 0 200 128"
         role="img"
         aria-label={`${title} ${clamped} out of ${max}`}
       >

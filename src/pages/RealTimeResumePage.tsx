@@ -12,7 +12,8 @@ import {
   sunnyOutline,
 } from 'ionicons/icons';
 import { useMemo, useState } from 'react';
-import { CareerOverviewChart, GaugeChart, SuccessProbabilityChart } from '../components/charts';
+import { CareerOverviewChart, GaugeChart, SkillsInventoryChart, SuccessProbabilityChart } from '../components/charts';
+import type { SkillsInventoryNode } from '../components/charts';
 import { useAuth } from '../context/AuthContext';
 import { defaultLoggedInEmployee } from '../data/defaultLoggedInEmployee';
 import { readStoredProfile } from '../data/profileData';
@@ -63,6 +64,57 @@ const RESUME_METRICS: ResumeMetricConfig[] = [
     label: 'Employer Flags',
     value: String(defaultLoggedInEmployee.resume.stats.employerFlags),
     icon: flagOutline,
+  },
+];
+
+const SKILLS_INVENTORY_NODES: SkillsInventoryNode[] = [
+  {
+    id: 'soc-11-3020',
+    label: 'Computer and Information Systems Managers',
+    shortLabel: 'IT Systems',
+    proficiency: 88,
+    trainingHours: 420,
+    emphasis: 'Lead key card with the deepest cert stack and completed systems apprenticeship.',
+  },
+  {
+    id: 'soc-15-1250',
+    label: 'Software Developers and Quality Assurance Analysts and Testers',
+    shortLabel: 'Software Dev',
+    proficiency: 84,
+    trainingHours: 380,
+    emphasis: 'Strong proficiency backed by bootcamp coursework and QA certification prep.',
+  },
+  {
+    id: 'soc-15-1210',
+    label: 'Computer Occupations',
+    shortLabel: 'Computer Ops',
+    proficiency: 76,
+    trainingHours: 320,
+    emphasis: 'Core digital fundamentals built through classroom modules and lab hours.',
+  },
+  {
+    id: 'soc-17-2050',
+    label: 'Engineers',
+    shortLabel: 'Engineering',
+    proficiency: 81,
+    trainingHours: 290,
+    emphasis: 'Proficiency outpaces formal training thanks to supervised field engineering rotations.',
+  },
+  {
+    id: 'soc-27-1020',
+    label: 'Designers',
+    shortLabel: 'Design',
+    proficiency: 72,
+    trainingHours: 260,
+    emphasis: 'Growing design cert portfolio; training investment is ahead of current proficiency.',
+  },
+  {
+    id: 'trade-project-controls',
+    label: 'Project Controls',
+    shortLabel: 'Project Controls',
+    proficiency: 68,
+    trainingHours: 210,
+    emphasis: 'Early-stage trade with safety and scheduling coursework still converting into skill depth.',
   },
 ];
 
@@ -160,6 +212,10 @@ const RealTimeResumePage: React.FC = () => {
               title="Career Overview"
               segments={defaultLoggedInEmployee.resume.careerOverview}
             />
+          </section>
+
+          <section className="resume-card">
+            <SkillsInventoryChart nodes={SKILLS_INVENTORY_NODES} maxTrainingHours={420} />
           </section>
 
           <section className="resume-metrics-grid" aria-label="Career metrics">
