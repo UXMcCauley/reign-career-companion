@@ -12,7 +12,7 @@ import {
   sunnyOutline,
 } from 'ionicons/icons';
 import { useMemo, useState } from 'react';
-import { CareerOverviewChart, GaugeChart, SkillsInventoryChart, SuccessProbabilityChart } from '../components/charts';
+import { GaugeChart, SkillsInventoryChart, SuccessProbabilityChart } from '../components/charts';
 import type { SkillsInventoryNode } from '../components/charts';
 import { demoEmployeeTalentCards } from '../data/talentCards';
 import { useAuth } from '../context/AuthContext';
@@ -217,13 +217,6 @@ const RealTimeResumePage: React.FC = () => {
                 </button>
               ))}
             </div>
-          </section>
-
-          <section className="resume-card">
-            <CareerOverviewChart
-              title="Career Overview"
-              segments={defaultLoggedInEmployee.resume.careerOverview}
-            />
           </section>
 
           <SkillsInventoryChart

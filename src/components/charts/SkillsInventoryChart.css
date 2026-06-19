@@ -8,8 +8,6 @@
 }
 
 .skills-inventory-chart__header {
-  display: grid;
-  gap: 14px;
   padding: 2px 4px 0;
 }
 
@@ -21,20 +19,85 @@
   font-weight: 800;
   letter-spacing: 0.01em;
   line-height: 1.1;
+  text-align: center;
   white-space: nowrap;
 }
 
-.skills-inventory-chart__controls-row {
+.skills-inventory-chart__stage {
+  position: relative;
+}
+
+.skills-inventory-chart__stage--fullscreen {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  flex-direction: column;
   width: 100%;
+  height: 100%;
+}
+
+.skills-inventory-chart__fullscreen-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(8, 9, 18, 0.78);
+  color: rgba(248, 251, 255, 0.94);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.skills-inventory-chart__fullscreen-btn ion-icon {
+  font-size: 1.05rem;
+}
+
+.skills-inventory-chart__viewport {
+  position: relative;
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+  min-height: 280px;
+  padding: 8px 6px 12px;
+}
+
+.skills-inventory-chart__stage--fullscreen .skills-inventory-chart__viewport {
+  flex: 1;
+  min-height: 0;
+}
+
+.skills-inventory-chart__viewport:active {
+  cursor: grabbing;
+}
+
+.skills-inventory-chart__surface {
+  width: 100%;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.skills-inventory-chart__svg {
+  display: block;
+  width: 100%;
+  max-width: none;
+  min-height: 260px;
+  overflow: visible;
+}
+
+.skills-inventory-chart__footer {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  width: 100%;
+  padding: 0 4px;
 }
 
 .skills-inventory-chart__toggle {
   display: inline-flex;
-  flex-shrink: 0;
+  width: fit-content;
   padding: 3px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.06);
@@ -61,9 +124,7 @@
 }
 
 .skills-inventory-chart__select {
-  flex: 1;
-  min-width: 0;
-  max-width: 58%;
+  width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 12px;
   background: rgba(8, 9, 18, 0.72);
@@ -72,19 +133,6 @@
   font-weight: 600;
   padding: 10px 12px;
   cursor: pointer;
-}
-
-.skills-inventory-chart__chart {
-  padding: 8px 6px 12px;
-  overflow: visible;
-}
-
-.skills-inventory-chart__svg {
-  display: block;
-  width: 100%;
-  max-width: none;
-  min-height: 280px;
-  overflow: visible;
 }
 
 .skills-inventory-chart__grid {
@@ -186,8 +234,12 @@
 }
 
 @media (min-width: 420px) {
-  .skills-inventory-chart__svg {
+  .skills-inventory-chart__viewport {
     min-height: 320px;
+  }
+
+  .skills-inventory-chart__svg {
+    min-height: 300px;
   }
 
   .skills-inventory-chart__vertex-name--active {
@@ -197,4 +249,12 @@
   .skills-inventory-chart__vertex-value--active {
     font-size: 15px;
   }
+}
+
+.skills-inventory-chart__stage:fullscreen {
+  background: var(--app-night-base, #080912);
+}
+
+.skills-inventory-chart__stage:fullscreen .skills-inventory-chart__viewport {
+  min-height: 100%;
 }
