@@ -40,7 +40,7 @@ const ProfilePage: React.FC = () => {
   }, [userName]);
   const displayName = useMemo(() => profile.displayName.trim() || fallbackName, [profile.displayName, fallbackName]);
   const profileSlug = useMemo(() => encodeURIComponent(displayName.toLowerCase().replace(/\s+/g, '-')), [displayName]);
-  const shareBaseUrl = (import.meta.env.VITE_API_BASE_URL || window.location.origin).replace(/\/+$/, '');
+  const shareBaseUrl = (import.meta.env.VITE_SHARE_BASE_URL || window.location.origin).replace(/\/+$/, '');
   const profileLink = useMemo(
     () => `${shareBaseUrl}/profile/public/${profileSlug}`,
     [profileSlug, shareBaseUrl]

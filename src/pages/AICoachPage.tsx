@@ -25,6 +25,8 @@ import type {
 } from '../data/aiCoachTypes';
 import './ChatPage.css';
 import './AICoachPage.css';
+import { apiUrl } from '../config/apiBase';
+
 
 type AppView = 'chats' | 'settings';
 
@@ -58,6 +60,8 @@ const SUGGESTION_PROMPTS: Array<{ text: string; categoryId: string }> = [
 ];
 
 const ARCHIVED_FILTER_ID = '__archived__';
+
+
 
 function categoryInitials(name: string): string {
   return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
@@ -837,13 +841,22 @@ const AICoachPage: React.FC = () => {
 };
 
 async function requestCoachReply(payload: CoachApiPayload): Promise<string> {
-  const response = await fetch('/api/ai-coach', {
+  const response = await fetch(apiUrl('/api/ai-coach'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
 
-  const parsed = (await response.json()) as { reply?: string; error?: string };
+  // why this matters: a 404/500 returns an HTML error page; response.json()
+  // then throws the same opaque WebKit pattern error. Read text first.
+  const raw = await response.text();
+  let parsed: { reply?: string; error?: string };
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error(`Coach API ${response.status}: ${raw.slice(0, 140)}`);
+  }
+
   if (!response.ok || !parsed.reply) throw new Error(parsed.error || 'AI coach request failed');
   return parsed.reply;
 }

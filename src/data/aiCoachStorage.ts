@@ -8,6 +8,7 @@ import type {
   ResponseStyle,
   ResponseType,
 } from './aiCoachTypes';
+import { apiUrl } from '../config/apiBase';
 
 const PREFS_KEY = 'reign_ai_coach_v1';
 const LEGACY_LOCAL_KEY = 'reign_ai_coach_v1';
@@ -184,7 +185,7 @@ function writeLegacyLocal(state: CoachState) {
 async function readBlobJson<T>(name: string): Promise<T | null> {
   if (blobReadDisabled) return null;
   try {
-    const response = await fetch(`/api/blob?name=${encodeURIComponent(name)}`, {
+    const response = await fetch(apiUrl(`/api/blob?name=${encodeURIComponent(name)}`), {
       method: 'GET',
       headers: { Accept: 'application/json' },
     });
@@ -205,7 +206,7 @@ async function readBlobJson<T>(name: string): Promise<T | null> {
 async function writeBlobJson(name: string, data: unknown): Promise<void> {
   if (blobWriteDisabled) return;
   try {
-    const response = await fetch(`/api/blob?name=${encodeURIComponent(name)}`, {
+    const response = await fetch(apiUrl(`/api/blob?name=${encodeURIComponent(name)}`), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),

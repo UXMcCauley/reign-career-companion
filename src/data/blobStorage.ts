@@ -2,6 +2,7 @@ import { DEMO_EMPLOYEES, type DemoEmployee } from './employees';
 import { persistShiftStartOverride as persistShiftStartOverrideDb, readLocalDatabase, updateLocalDatabase } from './localDatabase';
 import { MOCK_SHIFTS, type Shift } from './scheduleData';
 import type { Conversation, Message } from './chatTypes';
+import { apiUrl } from '../config/apiBase';
 
 const CHAT_LOCAL_KEY = 'reign_chat_v2';
 const EMPLOYEE_LOCAL_KEY = 'reign_employees_v1';
@@ -137,7 +138,7 @@ function toExternalChats(conversations: Conversation[]): ExternalChatConversatio
 async function readBlobJson<T>(name: string): Promise<T | null> {
   if (blobReadDisabled) return null;
   try {
-    const response = await fetch(`/api/blob?name=${encodeURIComponent(name)}`, {
+    const response = await fetch(apiUrl(`/api/blob?name=${encodeURIComponent(name)}`), {
       method: 'GET',
       headers: { Accept: 'application/json' },
     });
@@ -158,7 +159,7 @@ async function readBlobJson<T>(name: string): Promise<T | null> {
 async function writeBlobJson(name: string, data: unknown): Promise<boolean> {
   if (blobWriteDisabled) return false;
   try {
-    const response = await fetch(`/api/blob?name=${encodeURIComponent(name)}`, {
+    const response = await fetch(apiUrl(`/api/blob?name=${encodeURIComponent(name)}`), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
