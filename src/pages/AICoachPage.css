@@ -3,6 +3,16 @@
   --background: transparent;
 }
 
+.ai-coach-loading {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  color: rgba(188, 198, 223, 0.78);
+  font-size: 0.92rem;
+}
+
 .ai-coach-field {
   display: grid;
   gap: 6px;

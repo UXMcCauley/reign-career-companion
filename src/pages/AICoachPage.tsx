@@ -14,40 +14,20 @@ import {
 } from 'ionicons/icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { defaultLoggedInEmployee } from '../data/defaultLoggedInEmployee';
+import { loadAICoachState, saveAICoachState } from '../data/aiCoachStorage';
+import type {
+  CoachApiPayload,
+  CoachCategory,
+  CoachConversation,
+  CoachPersonality,
+  CoachState,
+  ResponseStyle,
+  ResponseType,
+} from '../data/aiCoachTypes';
 import './ChatPage.css';
 import './AICoachPage.css';
 
-type CoachPersonality = 'professional' | 'witty' | 'straight-shooter' | 'detailed' | 'playful' | 'laid-back' | 'friendly';
-type ResponseType = 'brief' | 'simple' | 'data-driven' | 'in-depth';
-type ResponseStyle = 'plan-strategy' | 'conversational';
 type AppView = 'chats' | 'settings';
-
-type CoachCategory = { id: string; name: string };
-type CoachMessage = { id: string; role: 'user' | 'assistant'; content: string; ts: number };
-type CoachConversation = {
-  id: string;
-  title: string;
-  categoryId: string;
-  pinned?: boolean;
-  archived?: boolean;
-  createdAt: number;
-  updatedAt: number;
-  messages: CoachMessage[];
-};
-type CoachState = {
-  coachName: string;
-  personalities: CoachPersonality[];
-  responseType: ResponseType;
-  responseStyle: ResponseStyle;
-  avatarPrompt: string;
-  avatarUrl: string;
-  categories: CoachCategory[];
-  conversations: CoachConversation[];
-  activeConversationId: string | null;
-};
-
-const STORAGE_KEY = 'reign_ai_coach_v1';
-const ARCHIVED_FILTER_ID = '__archived__';
 
 const PERSONALITY_OPTIONS: { value: CoachPersonality; label: string }[] = [
   { value: 'professional', label: 'Professional' },
@@ -73,17 +53,7 @@ const SUGGESTION_PROMPTS = [
   'How do I prepare for a promotion conversation next quarter?',
 ];
 
-type CoachApiPayload = {
-  coachName: string;
-  personalities: CoachPersonality[];
-  responseType: ResponseType;
-  responseStyle: ResponseStyle;
-  categoryName: string;
-  employeeContext: Record<string, unknown>;
-  messages: Array<{ role: 'user' | 'assistant'; content: string }>;
-};
-
-const uid = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
+const ARCHIVED_FILTER_ID = '__archived__';
 
 function colorForConversation(id: string): string {
   const palette = ['#7b3fff', '#2e85ff', '#00c875', '#ff6b6b', '#46c9ff', '#e87d30'];
@@ -98,41 +68,12 @@ function simpleHash(str: string): number {
   return Math.abs(h);
 }
 
-function buildInitialState(): CoachState {
-  const defaultCategoryId = 'cat-general';
-  const now = Date.now();
-  return {
-    coachName: 'Nova',
-    personalities: ['professional', 'friendly'],
-    responseType: 'brief',
-    responseStyle: 'conversational',
-    avatarPrompt: '',
-    avatarUrl: '',
-    categories: [
-      { id: defaultCategoryId, name: 'General Coaching' },
-      { id: 'cat-workplace', name: 'Workplace Relationships' },
-      { id: 'cat-career', name: 'Career Development' },
-    ],
-    conversations: [{
-      id: 'conv-welcome',
-      title: 'Welcome Plan',
-      categoryId: defaultCategoryId,
-      createdAt: now,
-      updatedAt: now,
-      messages: [{
-        id: 'msg-welcome',
-        role: 'assistant',
-        ts: now,
-        content: "I can coach you through team dynamics, conflict navigation, and career growth. Start a chat and I'll tailor advice to your current performance metrics.",
-      }],
-    }],
-    activeConversationId: null,
-  };
-}
+const uid = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
 
 const AICoachPage: React.FC = () => {
   const [view, setView] = useState<AppView>('chats');
-  const [state, setState] = useState<CoachState>(() => buildInitialState());
+  const [state, setState] = useState<CoachState | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
   const [search, setSearch] = useState('');
   const [filterCategoryId, setFilterCategoryId] = useState<string>('all');
   const [draft, setDraft] = useState('');
@@ -156,41 +97,32 @@ const AICoachPage: React.FC = () => {
   const didSwipeRef = useRef(false);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as CoachState;
-      if (parsed?.conversations?.length) {
-        const defaults = buildInitialState();
-        setState({
-          ...defaults,
-          ...parsed,
-          personalities: parsed.personalities ?? defaults.personalities,
-          responseType: parsed.responseType ?? defaults.responseType,
-          responseStyle: parsed.responseStyle ?? defaults.responseStyle,
-          avatarPrompt: parsed.avatarPrompt ?? '',
-          avatarUrl: parsed.avatarUrl ?? '',
-          activeConversationId: null,
-        });
-      }
-    } catch {
-      // Ignore malformed local state.
-    }
+    let active = true;
+    void loadAICoachState().then(loaded => {
+      if (!active) return;
+      setState(loaded);
+      setIsHydrated(true);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
+    if (!isHydrated || !state) return;
+    void saveAICoachState(state);
+  }, [state, isHydrated]);
 
   useEffect(() => {
-    if (!state.categories.length) return;
+    if (!state?.categories.length) return;
     if (filterCategoryId === 'all' || filterCategoryId === ARCHIVED_FILTER_ID) return;
     if (!state.categories.some(category => category.id === filterCategoryId)) {
       setFilterCategoryId('all');
     }
-  }, [state.categories, filterCategoryId]);
+  }, [state?.categories, filterCategoryId]);
 
   useEffect(() => {
+    if (!state) return;
     const interval = window.setInterval(() => {
       setSuggestionPhase('exiting');
       window.setTimeout(() => {
@@ -212,11 +144,12 @@ const AICoachPage: React.FC = () => {
   }), []);
 
   const activeConversation = useMemo(
-    () => state.conversations.find(conversation => conversation.id === state.activeConversationId) ?? null,
-    [state.activeConversationId, state.conversations]
+    () => state?.conversations.find(conversation => conversation.id === state.activeConversationId) ?? null,
+    [state]
   );
 
   const filteredConversations = useMemo(() => {
+    if (!state) return [];
     const query = search.trim().toLowerCase();
     return state.conversations.filter(conversation => {
       const isArchivedView = filterCategoryId === ARCHIVED_FILTER_ID;
@@ -227,9 +160,10 @@ const AICoachPage: React.FC = () => {
       const latest = conversation.messages[conversation.messages.length - 1]?.content ?? '';
       return conversation.title.toLowerCase().includes(query) || latest.toLowerCase().includes(query);
     }).sort((a, b) => b.updatedAt - a.updatedAt);
-  }, [state.conversations, filterCategoryId, search]);
+  }, [state, filterCategoryId, search]);
 
   const openSettingsView = () => {
+    if (!state) return;
     setDraftCoachName(state.coachName);
     setDraftPersonalities(state.personalities);
     setDraftResponseType(state.responseType);
@@ -244,22 +178,25 @@ const AICoachPage: React.FC = () => {
 
   const saveSettings = () => {
     const fallbackCategoryId = draftCategories[0]?.id ?? 'cat-general';
-    setState(prev => ({
-      ...prev,
-      coachName: draftCoachName.trim() || 'Nova',
-      personalities: draftPersonalities.length ? draftPersonalities : ['professional'],
-      responseType: draftResponseType,
-      responseStyle: draftResponseStyle,
-      avatarPrompt: draftAvatarPrompt.trim(),
-      avatarUrl: draftAvatarUrl,
-      categories: draftCategories,
-      conversations: prev.conversations.map(conversation => ({
-        ...conversation,
-        categoryId: draftCategories.some(category => category.id === conversation.categoryId)
-          ? conversation.categoryId
-          : fallbackCategoryId,
-      })),
-    }));
+    setState(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        coachName: draftCoachName.trim() || 'Nova',
+        personalities: draftPersonalities.length ? draftPersonalities : ['professional'],
+        responseType: draftResponseType,
+        responseStyle: draftResponseStyle,
+        avatarPrompt: draftAvatarPrompt.trim(),
+        avatarUrl: draftAvatarUrl,
+        categories: draftCategories,
+        conversations: prev.conversations.map(conversation => ({
+          ...conversation,
+          categoryId: draftCategories.some(category => category.id === conversation.categoryId)
+            ? conversation.categoryId
+            : fallbackCategoryId,
+        })),
+      };
+    });
     setFilterCategoryId(fallbackCategoryId);
     setView('chats');
   };
@@ -294,6 +231,7 @@ const AICoachPage: React.FC = () => {
   };
 
   const createConversation = () => {
+    if (!state) return;
     const now = Date.now();
     const conversation: CoachConversation = {
       id: uid('conv'),
@@ -306,11 +244,14 @@ const AICoachPage: React.FC = () => {
       messages: [],
     };
 
-    setState(prev => ({
-      ...prev,
-      activeConversationId: conversation.id,
-      conversations: [conversation, ...prev.conversations],
-    }));
+    setState(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        activeConversationId: conversation.id,
+        conversations: [conversation, ...prev.conversations],
+      };
+    });
     setError('');
     setDraft('');
   };
@@ -324,24 +265,30 @@ const AICoachPage: React.FC = () => {
   };
 
   const updateConversationCategory = (conversationId: string, categoryId: string) => {
-    setState(prev => ({
-      ...prev,
-      conversations: prev.conversations.map(conversation =>
-        conversation.id === conversationId ? { ...conversation, categoryId, updatedAt: Date.now() } : conversation
-      ),
-    }));
+    setState(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        conversations: prev.conversations.map(conversation =>
+          conversation.id === conversationId ? { ...conversation, categoryId, updatedAt: Date.now() } : conversation
+        ),
+      };
+    });
     setSwipedId(null);
   };
 
   const archiveConversation = (conversationId: string) => {
-    setState(prev => ({
-      ...prev,
-      conversations: prev.conversations.map(conversation =>
-        conversation.id === conversationId
-          ? { ...conversation, archived: !conversation.archived, updatedAt: Date.now() }
-          : conversation
-      ),
-    }));
+    setState(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        conversations: prev.conversations.map(conversation =>
+          conversation.id === conversationId
+            ? { ...conversation, archived: !conversation.archived, updatedAt: Date.now() }
+            : conversation
+        ),
+      };
+    });
     setSwipedId(null);
   };
 
@@ -388,22 +335,26 @@ const AICoachPage: React.FC = () => {
       setSwipedId(null);
       return;
     }
-    setState(prev => ({ ...prev, activeConversationId: conversationId }));
+    setState(prev => (prev ? { ...prev, activeConversationId: conversationId } : prev));
   };
 
   const renameConversation = (conversationId: string) => {
+    if (!state) return;
     const target = state.conversations.find(conversation => conversation.id === conversationId);
     if (!target) return;
     const nextTitle = window.prompt('Rename chat', target.title)?.trim();
     if (!nextTitle) return;
-    setState(prev => ({
-      ...prev,
-      conversations: prev.conversations.map(conversation =>
-        conversation.id === conversationId
-          ? { ...conversation, title: nextTitle.slice(0, 48), updatedAt: Date.now() }
-          : conversation
-      ),
-    }));
+    setState(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        conversations: prev.conversations.map(conversation =>
+          conversation.id === conversationId
+            ? { ...conversation, title: nextTitle.slice(0, 48), updatedAt: Date.now() }
+            : conversation
+        ),
+      };
+    });
     setSwipedId(null);
   };
 
@@ -424,22 +375,26 @@ const AICoachPage: React.FC = () => {
   };
 
   const sendPromptToConversation = async (conversation: CoachConversation, text: string) => {
-    const userMessage: CoachMessage = { id: uid('msg-user'), role: 'user', content: text, ts: Date.now() };
+    if (!state) return;
+    const userMessage = { id: uid('msg-user'), role: 'user' as const, content: text, ts: Date.now() };
     const nextTitle = conversation.title === 'New Coaching Chat'
       ? text.slice(0, 34) + (text.length > 34 ? '...' : '')
       : conversation.title;
     const conversationCategoryName =
       state.categories.find(category => category.id === conversation.categoryId)?.name ?? 'General Coaching';
 
-    setState(prev => ({
-      ...prev,
-      conversations: prev.conversations.map(candidate =>
-        candidate.id === conversation.id
-          ? { ...candidate, title: nextTitle, updatedAt: Date.now(), messages: [...candidate.messages, userMessage] }
-          : candidate
-      ),
-      activeConversationId: conversation.id,
-    }));
+    setState(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        conversations: prev.conversations.map(candidate =>
+          candidate.id === conversation.id
+            ? { ...candidate, title: nextTitle, updatedAt: Date.now(), messages: [...candidate.messages, userMessage] }
+            : candidate
+        ),
+        activeConversationId: conversation.id,
+      };
+    });
     setError('');
     setIsSending(true);
 
@@ -455,16 +410,19 @@ const AICoachPage: React.FC = () => {
       };
 
       const reply = await requestCoachReply(payload);
-      const assistantMessage: CoachMessage = { id: uid('msg-ai'), role: 'assistant', content: reply, ts: Date.now() };
+      const assistantMessage = { id: uid('msg-ai'), role: 'assistant' as const, content: reply, ts: Date.now() };
 
-      setState(prev => ({
-        ...prev,
-        conversations: prev.conversations.map(candidate =>
-          candidate.id === conversation.id
-            ? { ...candidate, updatedAt: Date.now(), messages: [...candidate.messages, assistantMessage] }
-            : candidate
-        ),
-      }));
+      setState(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          conversations: prev.conversations.map(candidate =>
+            candidate.id === conversation.id
+              ? { ...candidate, updatedAt: Date.now(), messages: [...candidate.messages, assistantMessage] }
+              : candidate
+          ),
+        };
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to reach AI coach');
     } finally {
@@ -473,7 +431,7 @@ const AICoachPage: React.FC = () => {
   };
 
   const sendSuggestionPrompt = () => {
-    if (isSending) return;
+    if (isSending || !state) return;
     const prompt = SUGGESTION_PROMPTS[suggestionIndex];
     const now = Date.now();
     const conversation: CoachConversation = {
@@ -484,11 +442,14 @@ const AICoachPage: React.FC = () => {
       updatedAt: now,
       messages: [],
     };
-    setState(prev => ({
-      ...prev,
-      activeConversationId: conversation.id,
-      conversations: [conversation, ...prev.conversations],
-    }));
+    setState(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        activeConversationId: conversation.id,
+        conversations: [conversation, ...prev.conversations],
+      };
+    });
     setSwipedId(null);
     setShowFilterSelect(false);
     void sendPromptToConversation(conversation, prompt);
@@ -503,6 +464,16 @@ const AICoachPage: React.FC = () => {
 
   const listClass = activeConversation ? 'panel-exit-left' : 'panel-enter';
   const threadClass = activeConversation ? 'panel-enter' : 'panel-exit-right';
+
+  if (!state) {
+    return (
+      <IonPage className="chat-page chat-ios ai-coach-page">
+        <IonContent fullscreen>
+          <div className="ai-coach-loading">Loading AI coach...</div>
+        </IonContent>
+      </IonPage>
+    );
+  }
 
   return (
     <IonPage className="chat-page chat-ios ai-coach-page">
@@ -750,7 +721,7 @@ const AICoachPage: React.FC = () => {
               {activeConversation ? (
                 <>
                   <div className="thread-header">
-                    <button className="back-btn" onClick={() => setState(prev => ({ ...prev, activeConversationId: null }))} aria-label="Back to AI chats">
+                    <button className="back-btn" onClick={() => setState(prev => (prev ? { ...prev, activeConversationId: null } : prev))} aria-label="Back to AI chats">
                       <IonIcon icon={chevronBackOutline} />
                       <span>Back</span>
                     </button>
