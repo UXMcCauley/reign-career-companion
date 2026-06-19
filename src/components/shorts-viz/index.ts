@@ -1,3 +1,5 @@
+export { default as DottedOutlineBorder } from './DottedOutlineBorder';
+export { DOTTED_OUTLINE_PATH } from './DottedOutlineBorder';
 export { default as DottedProgressChartCard } from './DottedProgressChartCard';
 export type { DottedProgressChartCardProps } from './DottedProgressChartCard';
 

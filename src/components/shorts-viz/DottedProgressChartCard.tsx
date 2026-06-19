@@ -1,5 +1,6 @@
 import { IonIcon } from '@ionic/react';
 import { arrowForwardOutline } from 'ionicons/icons';
+import DottedOutlineBorder from './DottedOutlineBorder';
 import { SHORTS_VIZ_COLORS } from './tokens';
 import type { BarChartConfig, ShortLink, ShortMetric } from './types';
 import './shortsViz.css';
@@ -45,27 +46,30 @@ const DottedProgressChartCard: React.FC<DottedProgressChartCardProps> = ({
   return (
     <section className={['sv-card sv-dotted-progress', className].filter(Boolean).join(' ')}>
       <header className="sv-dotted-progress__header">
-        <div className="sv-dotted-progress__top">
-          <h3 className="sv-dotted-progress__title">{title}</h3>
-          <div className="sv-dotted-progress__actions">
-            {link &&
-              (link.href ? (
-                <a className="sv-dotted-progress__link" href={link.href}>
-                  {linkContent}
-                </a>
-              ) : (
-                <button type="button" className="sv-dotted-progress__link" onClick={link.onClick}>
-                  {linkContent}
-                </button>
-              ))}
-            <span
-              className={`sv-dotted-progress__metric sv-dotted-progress__metric--${metricTone}`}
-              style={metric.backgroundColor ? { background: metric.backgroundColor } : undefined}
-            >
-              {metric.icon ? <span className="sv-dotted-progress__metric-icon">{metric.icon}</span> : null}
-              <span>{metric.value}</span>
-            </span>
+        <DottedOutlineBorder />
+        <div className="sv-dotted-progress__header-inner">
+          <div className="sv-dotted-progress__top">
+            <h3 className="sv-dotted-progress__title">{title}</h3>
+            <div className="sv-dotted-progress__actions">
+              {link &&
+                (link.href ? (
+                  <a className="sv-dotted-progress__link" href={link.href}>
+                    {linkContent}
+                  </a>
+                ) : (
+                  <button type="button" className="sv-dotted-progress__link" onClick={link.onClick}>
+                    {linkContent}
+                  </button>
+                ))}
+            </div>
           </div>
+          <span
+            className={`sv-dotted-progress__metric sv-dotted-progress__metric--${metricTone} sv-dotted-progress__metric--tab`}
+            style={metric.backgroundColor ? { background: metric.backgroundColor } : undefined}
+          >
+            {metric.icon ? <span className="sv-dotted-progress__metric-icon">{metric.icon}</span> : null}
+            <span>{metric.value}</span>
+          </span>
         </div>
       </header>
 

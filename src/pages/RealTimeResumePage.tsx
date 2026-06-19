@@ -14,6 +14,7 @@ import {
 import { useMemo, useState } from 'react';
 import { CareerOverviewChart, GaugeChart, SkillsInventoryChart, SuccessProbabilityChart } from '../components/charts';
 import type { SkillsInventoryNode } from '../components/charts';
+import { demoEmployeeTalentCards } from '../data/talentCards';
 import { useAuth } from '../context/AuthContext';
 import { defaultLoggedInEmployee } from '../data/defaultLoggedInEmployee';
 import { readStoredProfile } from '../data/profileData';
@@ -73,50 +74,61 @@ const SKILLS_INVENTORY_NODES: SkillsInventoryNode[] = [
     label: 'Computer and Information Systems Managers',
     shortLabel: 'IT Systems',
     proficiency: 88,
-    trainingHours: 420,
-    emphasis: 'Lead key card with the deepest cert stack and completed systems apprenticeship.',
+    educationHours: 180,
+    certificationHours: 140,
+    apprenticeshipHours: 100,
   },
   {
     id: 'soc-15-1250',
     label: 'Software Developers and Quality Assurance Analysts and Testers',
     shortLabel: 'Software Dev',
     proficiency: 84,
-    trainingHours: 380,
-    emphasis: 'Strong proficiency backed by bootcamp coursework and QA certification prep.',
+    educationHours: 150,
+    certificationHours: 130,
+    apprenticeshipHours: 100,
   },
   {
     id: 'soc-15-1210',
     label: 'Computer Occupations',
     shortLabel: 'Computer Ops',
     proficiency: 76,
-    trainingHours: 320,
-    emphasis: 'Core digital fundamentals built through classroom modules and lab hours.',
+    educationHours: 140,
+    certificationHours: 110,
+    apprenticeshipHours: 70,
   },
   {
     id: 'soc-17-2050',
     label: 'Engineers',
     shortLabel: 'Engineering',
     proficiency: 81,
-    trainingHours: 290,
-    emphasis: 'Proficiency outpaces formal training thanks to supervised field engineering rotations.',
+    educationHours: 90,
+    certificationHours: 110,
+    apprenticeshipHours: 90,
   },
   {
     id: 'soc-27-1020',
     label: 'Designers',
     shortLabel: 'Design',
     proficiency: 72,
-    trainingHours: 260,
-    emphasis: 'Growing design cert portfolio; training investment is ahead of current proficiency.',
+    educationHours: 110,
+    certificationHours: 90,
+    apprenticeshipHours: 60,
   },
   {
     id: 'trade-project-controls',
     label: 'Project Controls',
     shortLabel: 'Project Controls',
     proficiency: 68,
-    trainingHours: 210,
-    emphasis: 'Early-stage trade with safety and scheduling coursework still converting into skill depth.',
+    educationHours: 80,
+    certificationHours: 70,
+    apprenticeshipHours: 60,
   },
 ];
+
+const SKILLS_EXPERIENCE_OPTIONS = demoEmployeeTalentCards.map(card => ({
+  id: card.id,
+  label: card.name,
+}));
 
 const RealTimeResumePage: React.FC = () => {
   const { userName } = useAuth();
@@ -214,9 +226,10 @@ const RealTimeResumePage: React.FC = () => {
             />
           </section>
 
-          <section className="resume-card">
-            <SkillsInventoryChart nodes={SKILLS_INVENTORY_NODES} maxTrainingHours={420} />
-          </section>
+          <SkillsInventoryChart
+            nodes={SKILLS_INVENTORY_NODES}
+            experienceOptions={SKILLS_EXPERIENCE_OPTIONS}
+          />
 
           <section className="resume-metrics-grid" aria-label="Career metrics">
             {RESUME_METRICS.map(metric => (
