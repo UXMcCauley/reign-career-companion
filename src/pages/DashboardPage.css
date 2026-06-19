@@ -75,6 +75,14 @@
   box-shadow: 0 2px 8px rgba(123, 63, 255, 0.2);
 }
 
+.dash-avatar-photo {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
 /* ──────────────── HERO ──────────────── */
 
 .dash-hero {
@@ -1181,9 +1189,12 @@
   text-transform: uppercase;
 }
 
-.dash-section-label--contests     { color: var(--app-brand-light-green); }
-.dash-section-label--shifts       { color: var(--app-brand-light-blue); }
-.dash-section-label--announcements { color: var(--app-brand-light-pink); }
+.dash-section-label--contests       { color: var(--app-brand-light-green); }
+.dash-section-label--shifts         { color: var(--app-brand-light-blue); }
+.dash-section-label--announcements  { color: var(--app-brand-light-pink); }
+.dash-section-label--conversations  { color: #46c9ff; }
+
+.dash-section-header:has(.dash-section-label--conversations) { animation-delay: 0.44s; }
 
 /* ──────────────── SHARED SURFACE ──────────────── */
 
@@ -1779,3 +1790,123 @@
 .announcement-card ion-card-title  { font-size: 0.76rem; line-height: 1.2; }
 .announcement-card ion-card-subtitle { font-size: 0.64rem; }
 .announcement-card ion-card-subtitle ion-icon { vertical-align: text-bottom; }
+
+/* ──────────────── CONVERSATIONS LIST ──────────────── */
+
+.conversations-list {
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  margin-bottom: 8px;
+}
+
+.convo-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.14s ease;
+}
+
+.convo-row:last-child {
+  border-bottom: none;
+}
+
+.convo-row:active {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.convo-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  letter-spacing: 0.04em;
+}
+
+.convo-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.convo-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.convo-name {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #f0f4ff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.convo-badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #7b3fff;
+  color: #fff;
+  font-size: 0.63rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.convo-preview {
+  font-size: 0.74rem;
+  color: rgba(255, 255, 255, 0.42);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.convo-chevron {
+  color: rgba(255, 255, 255, 0.28);
+  font-size: 0.88rem;
+  flex-shrink: 0;
+}
+
+.convo-view-all {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.44);
+  font-size: 0.72rem;
+  cursor: pointer;
+  width: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.convo-view-all ion-icon {
+  font-size: 0.88rem;
+}

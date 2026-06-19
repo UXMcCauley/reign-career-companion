@@ -40,6 +40,11 @@ import { defaultLoggedInEmployee } from '../data/defaultLoggedInEmployee';
 import { formatHour } from '../data/scheduleData';
 import { demoEmployeeTalentCards } from '../data/talentCards';
 import { buildSessionSummary, formatHoursMinutes, keyCardName } from '../lib/sessionMetrics';
+import { readStoredProfile } from '../data/profileData';
+import { loadChats } from '../data/blobStorage';
+import { loadAICoachState } from '../data/aiCoachStorage';
+import type { Conversation } from '../data/chatTypes';
+import type { CoachConversation } from '../data/aiCoachTypes';
 import { MapContainer, TileLayer, Circle, CircleMarker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -277,6 +282,11 @@ const DashboardPage: React.FC = () => {
   } = useWorkforce();
   const [selectedKeyCardId, setSelectedKeyCardId] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [headshotUrl, setHeadshotUrl] = useState<string>('');
+  const [recentChats, setRecentChats] = useState<Conversation[]>([]);
+  const [recentCoachConvos, setRecentCoachConvos] = useState<CoachConversation[]>([]);
+  const [coachName, setCoachName] = useState('Nova');
+  const [coachCategoryColors, setCoachCategoryColors] = useState<Map<string, string>>(new Map());
   const [userPosition, setUserPosition] = useState<{ latitude: number; longitude: number } | null>(() => {
     if (proximityTestEnabled) {
       return pointFromBearing(
@@ -294,6 +304,33 @@ const DashboardPage: React.FC = () => {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [sessionNowTick, setSessionNowTick] = useState(() => Date.now());
   const { userName } = useAuth();
+
+  useEffect(() => {
+    setHeadshotUrl(readStoredProfile(userName).headshotDataUrl);
+
+    loadChats(() => []).then(chats => {
+      const active = chats
+        .filter(c => !c.archived && c.messages.some(m => m.sender === 'me'))
+        .sort((a, b) => {
+          const aTs = a.messages[a.messages.length - 1]?.ts ?? 0;
+          const bTs = b.messages[b.messages.length - 1]?.ts ?? 0;
+          return bTs - aTs;
+        })
+        .slice(0, 5);
+      setRecentChats(active);
+    });
+
+    loadAICoachState().then(state => {
+      setCoachName(state.coachName);
+      setCoachCategoryColors(new Map(state.categories.map(c => [c.id, c.color])));
+      const active = state.conversations
+        .filter(c => !c.archived && c.messages.some(m => m.role === 'user'))
+        .sort((a, b) => b.updatedAt - a.updatedAt)
+        .slice(0, 5);
+      setRecentCoachConvos(active);
+    });
+  }, [userName]);
+
   const metricsRef = useRef<(HTMLElement | null)[]>([]);
   const mapShellRef = useRef<HTMLDivElement | null>(null);
   const clockBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -325,6 +362,7 @@ const DashboardPage: React.FC = () => {
   // fill the whole container even after tab switches / route transitions.
   useIonViewDidEnter(() => {
     mapRef.current?.invalidateSize(false);
+    setHeadshotUrl(readStoredProfile(userName).headshotDataUrl);
   });
 
   const onContentScroll = useCallback((e: CustomEvent<ScrollDetail>) => {
@@ -759,7 +797,10 @@ const DashboardPage: React.FC = () => {
                 {greeting}, <span className="dash-greeting-name">{firstName}</span>
               </span>
               <button className="dash-avatar-btn" onClick={openProfileMenu} aria-label="Open menu">
-                {firstName.charAt(0).toUpperCase()}
+                {headshotUrl
+                  ? <img src={headshotUrl} alt={firstName} className="dash-avatar-photo" />
+                  : firstName.charAt(0).toUpperCase()
+                }
               </button>
             </div>
 
@@ -1190,6 +1231,77 @@ const DashboardPage: React.FC = () => {
                 </IonCard>
               ))}
             </div>
+
+            {/* ── Recent Conversations ── */}
+            {(recentChats.length > 0 || recentCoachConvos.length > 0) && (
+              <>
+                <div className="dash-section-header">
+                  <span className="dash-section-label dash-section-label--conversations">Recent Conversations</span>
+                </div>
+                <div className="conversations-list">
+                  {[
+                    ...recentChats.map(c => ({
+                      key: `chat-${c.id}`,
+                      color: c.color,
+                      initials: c.initials,
+                      name: c.name,
+                      badge: c.unread > 0 ? c.unread : 0,
+                      preview: (() => {
+                        const m = c.messages[c.messages.length - 1];
+                        if (!m) return '';
+                        return (m.sender === 'me' ? 'You: ' : '') + m.text;
+                      })(),
+                      ts: c.messages[c.messages.length - 1]?.ts ?? 0,
+                      onTap: () => history.push('/chat'),
+                    })),
+                    ...recentCoachConvos.map(c => ({
+                      key: `coach-${c.id}`,
+                      color: coachCategoryColors.get(c.categoryId) ?? '#7b3fff',
+                      initials: 'AI',
+                      name: c.title,
+                      badge: c.unreadReplies ?? 0,
+                      preview: (() => {
+                        const m = c.messages[c.messages.length - 1];
+                        if (!m) return '';
+                        return (m.role === 'user' ? 'You: ' : `${coachName}: `) + m.content;
+                      })(),
+                      ts: c.updatedAt,
+                      onTap: () => history.push('/ai-coach'),
+                    })),
+                  ]
+                    .sort((a, b) => b.ts - a.ts)
+                    .map(item => (
+                      <button
+                        key={item.key}
+                        type="button"
+                        className="convo-row"
+                        onClick={item.onTap}
+                      >
+                        <div className="convo-avatar" style={{ background: item.color }}>
+                          {item.initials}
+                        </div>
+                        <div className="convo-body">
+                          <div className="convo-name-row">
+                            <span className="convo-name">{item.name}</span>
+                            {item.badge > 0 && <span className="convo-badge">{item.badge}</span>}
+                          </div>
+                          {item.preview && <span className="convo-preview">{item.preview}</span>}
+                        </div>
+                        <IonIcon icon={chevronForwardOutline} className="convo-chevron" />
+                      </button>
+                    ))
+                  }
+                  <button
+                    type="button"
+                    className="convo-view-all"
+                    onClick={() => history.push('/chat')}
+                  >
+                    <IonIcon icon={chevronForwardOutline} />
+                    <span>View all chats</span>
+                  </button>
+                </div>
+              </>
+            )}
 
           </div>
         </div>
