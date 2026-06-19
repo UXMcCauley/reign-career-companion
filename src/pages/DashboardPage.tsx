@@ -8,6 +8,7 @@ import {
   IonIcon,
   IonPage,
   useIonAlert,
+  useIonViewDidEnter,
 } from '@ionic/react'; 
 import {
   albumsOutline,
@@ -38,6 +39,7 @@ import {
 import { defaultLoggedInEmployee } from '../data/defaultLoggedInEmployee';
 import { formatHour } from '../data/scheduleData';
 import { demoEmployeeTalentCards } from '../data/talentCards';
+import { buildSessionSummary, formatHoursMinutes, keyCardName } from '../lib/sessionMetrics';
 import { MapContainer, TileLayer, Circle, CircleMarker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -105,10 +107,6 @@ const activeContests = [
   },
 ];
 
-const HOURLY_RATE = defaultLoggedInEmployee.resume.stats.hourlyRate;
-
-type WeatherData = { tempF: number; condition: string; windMph: number };
-
 const WMO_CONDITIONS: Record<number, string> = {
   0: 'Clear', 1: 'Mostly Clear', 2: 'Partly Cloudy', 3: 'Overcast',
   45: 'Foggy', 48: 'Icy Fog',
@@ -118,6 +116,8 @@ const WMO_CONDITIONS: Record<number, string> = {
   80: 'Showers', 81: 'Showers', 82: 'Heavy Showers',
   95: 'Thunderstorm',
 };
+
+type WeatherData = { tempF: number; condition: string; windMph: number };
 
 function formatDuration(totalSeconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(totalSeconds));
@@ -157,6 +157,16 @@ const MapController: React.FC<{
     mapRef.current = map;
     return () => { mapRef.current = null; };
   }, [map, mapRef]);
+
+  // Leaflet caches the container size at init; if the map mounts mid page-transition
+  // it only paints a partial tile area. Re-measure a few times so tiles fill the
+  // whole mini map quickly once it's actually on screen.
+  useEffect(() => {
+    const timers = [0, 80, 200, 450, 800].map(delay =>
+      window.setTimeout(() => map.invalidateSize(false), delay)
+    );
+    return () => timers.forEach(window.clearTimeout);
+  }, [map]);
 
   useEffect(() => {
     let pending = 0;
@@ -213,6 +223,15 @@ const ExpandedMapController: React.FC<{
 }> = ({ mapRef, userPosition }) => {
   const map = useMap();
   const hasFitted = useRef(false);
+
+  // Ensure the full-screen map measures its container after the overlay appears.
+  useEffect(() => {
+    const timers = [0, 80, 250].map(delay =>
+      window.setTimeout(() => map.invalidateSize(false), delay)
+    );
+    return () => timers.forEach(window.clearTimeout);
+  }, [map]);
+
   useEffect(() => {
     if (!userPosition || hasFitted.current) return;
     hasFitted.current = true;
@@ -254,6 +273,7 @@ const DashboardPage: React.FC = () => {
     startBreak,
     endBreak,
     setActiveKeyCard,
+    clockEvents,
   } = useWorkforce();
   const [selectedKeyCardId, setSelectedKeyCardId] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -272,7 +292,7 @@ const DashboardPage: React.FC = () => {
   });
   const [breakElapsedSeconds, setBreakElapsedSeconds] = useState(0);
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-  const [workElapsedSeconds, setWorkElapsedSeconds] = useState(0);
+  const [sessionNowTick, setSessionNowTick] = useState(() => Date.now());
   const { userName } = useAuth();
   const metricsRef = useRef<(HTMLElement | null)[]>([]);
   const mapShellRef = useRef<HTMLDivElement | null>(null);
@@ -300,6 +320,12 @@ const DashboardPage: React.FC = () => {
       mapRef.current.flyTo([userPosition.latitude, userPosition.longitude], 17, { duration: 0.7 });
     }
   }, [userPosition]);
+
+  // Re-measure the mini map once the Dashboard view has fully entered, so tiles
+  // fill the whole container even after tab switches / route transitions.
+  useIonViewDidEnter(() => {
+    mapRef.current?.invalidateSize(false);
+  });
 
   const onContentScroll = useCallback((e: CustomEvent<ScrollDetail>) => {
     const s = e.detail.scrollTop;
@@ -402,8 +428,6 @@ const DashboardPage: React.FC = () => {
 
   const onBreak = activeSession?.onBreak ?? false;
   const breakStartedAt = activeSession?.breakStartedAt ?? null;
-  const clockInTimestamp = activeSession?.clockInTimestamp ?? null;
-  const totalBreakSeconds = activeSession?.totalBreakSeconds ?? 0;
   const activeKeyCardId = isClockedIn
     ? (activeSession?.activeKeyCardId ?? null)
     : selectedKeyCardId;
@@ -555,22 +579,13 @@ const DashboardPage: React.FC = () => {
     return () => window.clearInterval(id);
   }, [onBreak, breakStartedAt]);
 
-  /* Work timer — pauses automatically while on break */
+  /* Live session tick — keeps earned/work time frozen during breaks */
   useEffect(() => {
-    if (!isClockedIn || onBreak || !clockInTimestamp) {
-      setWorkElapsedSeconds(0);
-      return;
-    }
-
-    const tick = () => {
-      const total = Math.floor((Date.now() - clockInTimestamp) / 1000);
-      setWorkElapsedSeconds(Math.max(0, total - totalBreakSeconds));
-    };
-
-    tick();
-    const id = window.setInterval(tick, 1000);
+    if (!isClockedIn || !activeSession) return;
+    setSessionNowTick(Date.now());
+    const id = window.setInterval(() => setSessionNowTick(Date.now()), 1000);
     return () => window.clearInterval(id);
-  }, [isClockedIn, onBreak, clockInTimestamp, totalBreakSeconds]);
+  }, [isClockedIn, activeSession]);
 
   /* Open-Meteo — free weather API, no key required */
   useEffect(() => {
@@ -682,7 +697,13 @@ const DashboardPage: React.FC = () => {
   );
 
   /* Gross earnings since clock-in, break time excluded */
-  const earnedAmount = useMemo(() => (workElapsedSeconds / 3600) * HOURLY_RATE, [workElapsedSeconds]);
+  const sessionSummary = useMemo(
+    () => (isClockedIn && activeSession ? buildSessionSummary(activeSession, clockEvents, sessionNowTick) : null),
+    [isClockedIn, activeSession, clockEvents, sessionNowTick]
+  );
+  const workElapsedSeconds = sessionSummary?.workedSeconds ?? 0;
+  const earnedAmount = sessionSummary?.earnings ?? 0;
+  const showKeyCardBreakdown = Boolean(sessionSummary && sessionSummary.perKeyCard.length > 1);
 
   const isWithinGeofence = proximityTestEnabled
     ? distanceToJobSiteFeet !== null && distanceToJobSiteFeet <= GEOFENCE_RADIUS_FEET
@@ -741,6 +762,16 @@ const DashboardPage: React.FC = () => {
                 {firstName.charAt(0).toUpperCase()}
               </button>
             </div>
+
+            {weatherData && (
+              <div className="dash-weather-line">
+                <span className="dash-weather-line__temp">{weatherData.tempF}°</span>
+                <span className="dash-weather-line__sep" aria-hidden="true">·</span>
+                <span className="dash-weather-line__cond">{weatherData.condition}</span>
+                <span className="dash-weather-line__sep" aria-hidden="true">·</span>
+                <span className="dash-weather-line__wind">{weatherData.windMph} mph</span>
+              </div>
+            )}
 
             <div className="dash-hero-glow" />
 
@@ -863,7 +894,8 @@ const DashboardPage: React.FC = () => {
                     attribution="&copy; OpenStreetMap contributors &copy; CARTO"
                     subdomains="abcd"
                     updateWhenZooming={false}
-                    keepBuffer={3}
+                    updateWhenIdle={false}
+                    keepBuffer={4}
                   />
                   <Circle
                     center={[configuredJobSite.latitude, configuredJobSite.longitude]}
@@ -929,15 +961,6 @@ const DashboardPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Weather — bottom-left */}
-                {weatherData && (
-                  <div className="clock-weather-chip">
-                    <span className="clock-weather-temp">{weatherData.tempF}&deg;F</span>
-                    <span className="clock-weather-sep" aria-hidden="true">·</span>
-                    <span className="clock-weather-cond">{weatherData.condition}</span>
-                    <span className="clock-weather-wind">{weatherData.windMph}&nbsp;mph</span>
-                  </div>
-                )}
 
                 {/* Zoom + locate — bottom-right */}
                 <div className="map-bottom-controls">
@@ -973,13 +996,14 @@ const DashboardPage: React.FC = () => {
 
                 {/* Live earnings counter — visible while clocked in */}
                 {isClockedIn && (
+                  <>
                   <div className="clock-live-stats">
-                    <div className="clock-live-stat">
+                    <div className={`clock-live-stat${onBreak ? ' clock-live-stat--paused' : ''}`}>
                       <span className="clock-live-value">${earnedAmount.toFixed(2)}</span>
                       <span className="clock-live-label">Earned</span>
                     </div>
                     <div className="clock-live-divider" />
-                    <div className="clock-live-stat">
+                    <div className={`clock-live-stat${onBreak ? ' clock-live-stat--paused' : ''}`}>
                       <span className="clock-live-value">{formatDuration(workElapsedSeconds)}</span>
                       <span className="clock-live-label">Work Time</span>
                     </div>
@@ -993,6 +1017,25 @@ const DashboardPage: React.FC = () => {
                       </>
                     )}
                   </div>
+
+                  {showKeyCardBreakdown && sessionSummary && (
+                    <div className="clock-keycard-breakdown">
+                      <div className="clock-keycard-breakdown-total">
+                        <span className="clock-keycard-breakdown-label">Total Work Time</span>
+                        <span className="clock-keycard-breakdown-value">{formatDuration(workElapsedSeconds)}</span>
+                      </div>
+                      <div className="clock-keycard-breakdown-head">Hours by Key Card</div>
+                      <div className="clock-keycard-breakdown-list">
+                        {sessionSummary.perKeyCard.map(kc => (
+                          <div key={kc.keyCardId ?? 'none'} className="clock-keycard-row">
+                            <span className="clock-keycard-row-name">{keyCardName(kc.keyCardId)}</span>
+                            <span className="clock-keycard-row-time">{formatHoursMinutes(kc.seconds)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  </>
                 )}
 
                 {/* <div className="clock-readiness-list">

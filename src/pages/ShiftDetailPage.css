@@ -180,6 +180,143 @@
   padding-left: 0;
 }
 
+/* ── Live session summary ── */
+.shift-session-card {
+  padding: 16px 16px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.shift-session-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shift-session-live-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #2fd17a;
+  box-shadow: 0 0 0 4px rgba(47, 209, 122, 0.18);
+  animation: shift-session-pulse 1.6s ease-in-out infinite;
+}
+
+.shift-session-live-dot.on-break {
+  background: #ffb23a;
+  box-shadow: 0 0 0 4px rgba(255, 178, 58, 0.18);
+}
+
+@keyframes shift-session-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.shift-session-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(220, 226, 245, 0.82);
+}
+
+.shift-session-primary {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.shift-session-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+}
+
+.shift-session-value {
+  font-size: 1.18rem;
+  font-weight: 800;
+  color: #f6f8ff;
+  font-variant-numeric: tabular-nums;
+}
+
+.shift-session-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(168, 174, 195, 0.6);
+}
+
+.shift-session-divider {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.shift-session-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 10px;
+}
+
+.shift-session-section-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(168, 174, 195, 0.5);
+  margin-bottom: 4px;
+}
+
+.shift-session-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.shift-session-row-name {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: rgba(236, 240, 252, 0.92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shift-session-row-meta {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: rgba(168, 174, 195, 0.7);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.shift-session-row-value {
+  min-width: 52px;
+  text-align: right;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #cfe0ff;
+  font-variant-numeric: tabular-nums;
+}
+
+/* When a break row has both meta + value, value comes after meta. */
+.shift-session-row-meta + .shift-session-row-value {
+  min-width: 48px;
+}
+
+/* Per-key-card rows have no meta; push value to the right. */
+.shift-session-row-name + .shift-session-row-value {
+  margin-left: auto;
+}
+
 /* ── Section cards (breaks + team + notes) ── */
 .shift-section-card {
   padding: 0 14px;

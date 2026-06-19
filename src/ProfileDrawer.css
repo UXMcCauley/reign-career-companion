@@ -2,6 +2,9 @@
 
 ion-menu.profile-drawer {
   --width: min(82vw, 340px);
+  /* Sit above the floating tab bar (z-index: 1000) when open, so the drawer
+     and its backdrop cover the navigation instead of being overlapped by it. */
+  z-index: 1001;
 }
 
 ion-menu.profile-drawer::part(backdrop) {

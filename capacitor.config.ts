@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.mccauley.reigncareercompanion',
-  appName: 'photo-gallery',
+  appName: 'REIGN Career Companion',
   webDir: 'dist',
   plugins: {
     LiveUpdates: {

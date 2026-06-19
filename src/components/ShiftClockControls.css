@@ -1,0 +1,336 @@
+.shift-clock-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.shift-clock-controls--inline {
+  margin-top: 4px;
+}
+
+/* ── Key card selection ── */
+.shift-keycard-card {
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.shift-keycard-card.is-ready {
+  border-color: rgba(72, 199, 142, 0.28);
+}
+
+.shift-keycard-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.shift-keycard-icon {
+  font-size: 1.15rem;
+  color: rgba(99, 179, 237, 0.75);
+  flex-shrink: 0;
+}
+
+.shift-keycard-card.is-ready .shift-keycard-icon {
+  color: rgba(72, 199, 142, 0.85);
+}
+
+.shift-keycard-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shift-keycard-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(168, 174, 195, 0.55);
+}
+
+.shift-keycard-name {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: rgba(220, 224, 240, 0.88);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shift-keycard-card:not(.is-ready) .shift-keycard-name {
+  color: rgba(255, 178, 58, 0.88);
+}
+
+.shift-keycard-btn {
+  --border-radius: 10px;
+  --border-color: rgba(99, 179, 237, 0.4);
+  --color: rgba(99, 179, 237, 0.92);
+  font-size: 0.72rem;
+  font-weight: 700;
+  height: 30px;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* ── Live session summary ── */
+.shift-session-card {
+  padding: 16px 16px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.shift-session-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shift-session-live-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #2fd17a;
+  box-shadow: 0 0 0 4px rgba(47, 209, 122, 0.18);
+  animation: shift-session-pulse 1.6s ease-in-out infinite;
+}
+
+.shift-session-live-dot.on-break {
+  background: #ffb23a;
+  box-shadow: 0 0 0 4px rgba(255, 178, 58, 0.18);
+}
+
+@keyframes shift-session-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.shift-session-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(220, 226, 245, 0.82);
+}
+
+.shift-session-primary {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.shift-session-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+}
+
+.shift-session-value {
+  font-size: 1.18rem;
+  font-weight: 800;
+  color: #f6f8ff;
+  font-variant-numeric: tabular-nums;
+}
+
+.shift-session-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(168, 174, 195, 0.6);
+}
+
+.shift-session-divider {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.shift-session-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 10px;
+}
+
+.shift-session-section-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(168, 174, 195, 0.5);
+  margin-bottom: 4px;
+}
+
+.shift-session-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.shift-session-row-name {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: rgba(236, 240, 252, 0.92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shift-session-row-meta {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: rgba(168, 174, 195, 0.7);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.shift-session-row-value {
+  min-width: 52px;
+  text-align: right;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #cfe0ff;
+  font-variant-numeric: tabular-nums;
+}
+
+.shift-session-row-meta + .shift-session-row-value {
+  min-width: 48px;
+}
+
+.shift-session-row-name + .shift-session-row-value {
+  margin-left: auto;
+}
+
+/* ── Clock in / out ── */
+.shift-clockin-btn {
+  --border-radius: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.shift-clockin-btn:disabled {
+  opacity: 0.45;
+}
+
+.shift-clockin-card {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.shift-clockin-status {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shift-clockin-check {
+  font-size: 1.2rem;
+  color: rgba(72, 199, 142, 0.9);
+}
+
+.shift-clockin-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(72, 199, 142, 0.9);
+}
+
+.shift-clockout-btn {
+  --color: rgba(255, 100, 100, 0.8);
+  --border-color: rgba(255, 100, 100, 0.35);
+  --border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  height: 34px;
+}
+
+/* ── Break rows ── */
+.shift-break-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  transition: background 200ms ease;
+}
+
+.shift-break-row--divider {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.shift-break-row--active {
+  background: rgba(72, 199, 142, 0.06);
+  border-radius: 10px;
+  margin: 0 -6px;
+  padding: 10px 6px;
+}
+
+.shift-break-row--active .shift-break-label {
+  color: rgba(72, 199, 142, 0.9);
+}
+
+.shift-break-row--active .shift-break-icon {
+  color: rgba(72, 199, 142, 0.8);
+}
+
+.shift-break-icon {
+  font-size: 1rem;
+  color: rgba(99, 179, 237, 0.7);
+  flex-shrink: 0;
+}
+
+.shift-break-icon--misc {
+  color: rgba(168, 174, 195, 0.5);
+}
+
+.shift-break-label {
+  flex: 1;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: rgba(220, 224, 240, 0.85);
+}
+
+.shift-break-time {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(168, 174, 195, 0.55);
+}
+
+.shift-break-action {
+  --padding-start: 4px;
+  --padding-end: 4px;
+  --color: rgba(99, 179, 237, 0.6);
+  margin: 0;
+  min-height: auto;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.shift-break-action ion-icon {
+  font-size: 1.2rem;
+}
+
+.shift-break-action--active {
+  --color: rgba(72, 199, 142, 0.85);
+}
+
+@keyframes pulse-active {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+.shift-break-action--active ion-icon {
+  animation: pulse-active 1.8s ease-in-out infinite;
+}

@@ -18,6 +18,7 @@ import {
 } from 'ionicons/icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useHistory } from 'react-router-dom';
+import ShiftClockControls from '../components/ShiftClockControls';
 import { useWorkforce } from '../context/WorkforceContext';
 import {
   DAY_NAMES,
@@ -474,6 +475,14 @@ const SchedulePage: React.FC = () => {
                       <div className="schedule-tl-end-label">Shift ends</div>
                     </div>
 
+                    <div className="schedule-tl-section-gap">
+                      <ShiftClockControls
+                        shift={selectedWeekShift}
+                        shiftDate={selectedWeekEntry.date}
+                        variant="inline"
+                      />
+                    </div>
+
                     {/* Info tiles */}
                     <div className="schedule-inline-info-row schedule-tl-section-gap">
                       <div className="schedule-inline-card schedule-inline-info-tile">
@@ -637,6 +646,14 @@ const SchedulePage: React.FC = () => {
                       <div className="schedule-inline-duration">{shiftDuration(selectedMonthShift)}</div>
                       {selectedMonthCountdown ? <div className="schedule-inline-countdown">{selectedMonthCountdown}</div> : null}
                     </div>
+
+                    {selectedDayDate && (
+                      <ShiftClockControls
+                        shift={selectedMonthShift}
+                        shiftDate={selectedDayDate}
+                        variant="inline"
+                      />
+                    )}
 
                     <div className="schedule-inline-info-row">
                       <div className="schedule-inline-card schedule-inline-info-tile">

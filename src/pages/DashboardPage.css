@@ -397,44 +397,39 @@
   background: rgba(208, 208, 208, 0.95);
 }
 
-/* Weather chip — bottom-left of mini map */
-.clock-weather-chip {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  top: auto;
-  z-index: 800;
+/* ── Inline weather line — sits just below the greeting ── */
+
+.dash-weather-line {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 10px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  backdrop-filter: blur(10px) saturate(130%);
-  -webkit-backdrop-filter: blur(10px) saturate(130%);
-  color: #1a1f3a;
-  font-size: 0.72rem;
-  white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  align-self: flex-start;
+  gap: 6px;
+  margin-top: -10px;
+  margin-bottom: 4px;
+  position: relative;
+  z-index: 2;
+  font-size: 0.7rem;
+  color: rgba(200, 210, 235, 0.44);
+  letter-spacing: 0.03em;
 }
 
-.clock-weather-temp {
-  font-weight: 800;
-  font-size: 0.78rem;
+.dash-weather-line__temp {
+  font-weight: 700;
+  color: rgba(220, 225, 245, 0.58);
 }
 
-.clock-weather-sep {
-  color: rgba(0, 0, 0, 0.25);
+.dash-weather-line__sep {
+  color: rgba(255, 255, 255, 0.18);
+  font-size: 0.6rem;
 }
 
-.clock-weather-cond {
-  color: rgba(30, 40, 80, 0.82);
+.dash-weather-line__cond {
+  font-weight: 400;
 }
 
-.clock-weather-wind {
-  font-size: 0.64rem;
-  color: rgba(60, 80, 140, 0.55);
+.dash-weather-line__wind {
+  font-weight: 400;
+  color: rgba(185, 200, 235, 0.34);
 }
 
 /* Distance chip — top of mini map */
@@ -658,6 +653,94 @@
 @keyframes clockBreakDividerIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+.clock-live-stat--paused .clock-live-value {
+  opacity: 0.72;
+}
+
+.clock-live-stat--paused .clock-live-label::after {
+  content: ' · paused';
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: rgba(185, 200, 235, 0.45);
+}
+
+/* ── Per-key-card work breakdown ── */
+
+.clock-keycard-breakdown {
+  margin: 0 4px 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  position: relative;
+  z-index: 1;
+}
+
+.clock-keycard-breakdown-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.clock-keycard-breakdown-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(185, 200, 235, 0.55);
+}
+
+.clock-keycard-breakdown-value {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #f6f8ff;
+  font-variant-numeric: tabular-nums;
+}
+
+.clock-keycard-breakdown-head {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(185, 200, 235, 0.5);
+  margin-bottom: 8px;
+}
+
+.clock-keycard-breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.clock-keycard-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.clock-keycard-row-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(232, 240, 255, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.clock-keycard-row-time {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(207, 224, 255, 0.92);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
 }
 
 /* ── Readiness checklist ── */

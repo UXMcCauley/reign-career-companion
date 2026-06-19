@@ -144,8 +144,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-latest',
-        max_tokens: 900,
+        model: process.env.ANTHROPIC_MODEL || 'claude-opus-4-8',
+        max_tokens: 1500,
         system: systemPrompt,
         messages: messages.map(message => ({
           role: message.role,

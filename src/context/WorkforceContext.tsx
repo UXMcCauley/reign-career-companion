@@ -236,9 +236,19 @@ export function WorkforceProvider({ children }: { children: ReactNode }) {
         isClockedIn: true,
         activeBreakIndex: breakIndex,
       };
+      // Label the event by break type so the shift detail page can show
+      // "Lunch"/"Break"/"Misc" start times distinctly.
+      const breakDef = breakIndex != null && breakIndex >= 0
+        ? current.shifts[session.shiftId]?.breaks[breakIndex]
+        : null;
+      const label = breakIndex === -1
+        ? 'Misc / Away started'
+        : breakDef?.type === 'meal'
+          ? 'Lunch started'
+          : 'Break started';
       current.clockEvents = [
         ...current.clockEvents,
-        createClockEvent('break_start', session.shiftId, session.shiftDate, 'Break started'),
+        createClockEvent('break_start', session.shiftId, session.shiftDate, label),
       ];
       return current;
     });
@@ -274,11 +284,20 @@ export function WorkforceProvider({ children }: { children: ReactNode }) {
 
   const setActiveKeyCard = useCallback(async (keyCardId: string | null) => {
     const db = await updateLocalDatabase(current => {
-      if (!current.activeClockSession) return current;
-      current.activeClockSession.activeKeyCardId = keyCardId;
+      const session = current.activeClockSession;
+      if (!session) return current;
+      // Record the switch so per-keycard worked time can be reconstructed.
+      if (session.activeKeyCardId !== keyCardId) {
+        current.clockEvents = [
+          ...current.clockEvents,
+          createClockEvent('keycard_change', session.shiftId, session.shiftDate, 'Switched key card', keyCardId),
+        ];
+      }
+      session.activeKeyCardId = keyCardId;
       return current;
     });
     setActiveSession(db.activeClockSession);
+    setClockEvents(db.clockEvents);
   }, []);
 
   const refreshSchedule = useCallback(async () => {

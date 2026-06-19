@@ -2,7 +2,7 @@ import { Preferences } from '@capacitor/preferences';
 import { MOCK_SHIFTS, SCHEDULE_SEED_VERSION, type Shift } from './scheduleData';
 import { ensureTodayInSchedule, seedScheduleByDate, toDateKey } from './scheduleResolver';
 
-export type ClockEventType = 'clock_in' | 'clock_out' | 'break_start' | 'break_end';
+export type ClockEventType = 'clock_in' | 'clock_out' | 'break_start' | 'break_end' | 'keycard_change';
 
 export interface ClockEvent {
   id: string;
