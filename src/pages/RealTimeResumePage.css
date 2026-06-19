@@ -187,14 +187,14 @@
   min-height: 108px;
   padding: 14px 16px;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 12px;
   box-shadow:
-    0 10px 26px rgba(0, 0, 0, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 10px 26px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   text-align: left;
@@ -223,45 +223,43 @@
 .resume-metric--hourly-rate {
   grid-column: 1 / -1;
   min-height: 96px;
-  background: linear-gradient(145deg, rgba(34, 18, 62, 0.48), rgba(14, 10, 32, 0.49));
+  background: linear-gradient(145deg, rgba(34, 18, 62, 0.36), rgba(14, 10, 32, 0.37));
 }
 
 .resume-metric--hourly-rate::before {
-  background:
-    radial-gradient(circle at 12% 18%, rgba(123, 63, 255, 0.21) 0%, transparent 52%),
-    radial-gradient(circle at 88% 82%, rgba(200, 64, 232, 0.14) 0%, transparent 48%);
+  background: radial-gradient(circle at 15% 82%, rgba(123, 63, 255, 0.13) 0%, transparent 52%);
 }
 
 .resume-metric--attendance::before {
-  background: radial-gradient(circle at 18% 22%, rgba(6, 197, 12, 0.17) 0%, transparent 58%);
+  background: radial-gradient(circle at 15% 82%, rgba(6, 197, 12, 0.10) 0%, transparent 58%);
 }
 
 .resume-metric--attendance {
-  background: linear-gradient(145deg, rgba(8, 38, 18, 0.48), rgba(6, 18, 12, 0.49));
+  background: linear-gradient(145deg, rgba(8, 38, 18, 0.36), rgba(6, 18, 12, 0.37));
 }
 
 .resume-metric--pto::before {
-  background: radial-gradient(circle at 18% 22%, rgba(6, 119, 240, 0.17) 0%, transparent 58%);
+  background: radial-gradient(circle at 15% 82%, rgba(6, 119, 240, 0.10) 0%, transparent 58%);
 }
 
 .resume-metric--pto {
-  background: linear-gradient(145deg, rgba(8, 28, 58, 0.48), rgba(6, 14, 32, 0.49));
+  background: linear-gradient(145deg, rgba(8, 28, 58, 0.36), rgba(6, 14, 32, 0.37));
 }
 
 .resume-metric--tenure::before {
-  background: radial-gradient(circle at 18% 22%, rgba(70, 201, 255, 0.15) 0%, transparent 58%);
+  background: radial-gradient(circle at 15% 82%, rgba(70, 201, 255, 0.09) 0%, transparent 58%);
 }
 
 .resume-metric--tenure {
-  background: linear-gradient(145deg, rgba(10, 32, 48, 0.48), rgba(8, 16, 28, 0.49));
+  background: linear-gradient(145deg, rgba(10, 32, 48, 0.36), rgba(8, 16, 28, 0.37));
 }
 
 .resume-metric--flags::before {
-  background: radial-gradient(circle at 18% 22%, rgba(255, 71, 169, 0.16) 0%, transparent 58%);
+  background: radial-gradient(circle at 15% 82%, rgba(255, 71, 169, 0.09) 0%, transparent 58%);
 }
 
 .resume-metric--flags {
-  background: linear-gradient(145deg, rgba(48, 12, 38, 0.48), rgba(22, 8, 24, 0.49));
+  background: linear-gradient(145deg, rgba(48, 12, 38, 0.36), rgba(22, 8, 24, 0.37));
 }
 
 .resume-metric__icon {
