@@ -8,9 +8,13 @@ const ALLOWED_ORIGINS = new Set([
   // custom domain when live
 ]);
 
+function isDevOrigin(origin: string): boolean {
+  return /^http:\/\/192\.168\.\d+\.\d+(:\d+)?$/.test(origin);
+}
+
 function applyCors(req: ApiRequest, res: ApiResponse): void {
   const origin = (req as { headers?: Record<string, string> }).headers?.origin ?? null;
-  if (origin && ALLOWED_ORIGINS.has(origin)) {
+  if (origin && (ALLOWED_ORIGINS.has(origin) || isDevOrigin(origin))) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
