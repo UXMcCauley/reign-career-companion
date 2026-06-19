@@ -41,6 +41,25 @@
   font-weight: 500;
 }
 
+.resume-hero__bio-toggle {
+  margin: 6px 0 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--app-brand-light-blue, #8ec5ff);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.resume-hero__bio-toggle:hover,
+.resume-hero__bio-toggle:focus-visible {
+  color: #f8fbff;
+}
+
 .resume-card {
   border-radius: 18px;
   padding: 12px;

@@ -136,6 +136,7 @@ const RealTimeResumePage: React.FC = () => {
   const [activeBadgeId, setActiveBadgeId] = useState<string | null>(null);
   const [activeMetricId, setActiveMetricId] = useState<ResumeMetricId | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
+  const [bioOpen, setBioOpen] = useState(false);
 
   const displayName = useMemo(() => {
     const full = `${defaultLoggedInEmployee.firstName || ''} ${defaultLoggedInEmployee.lastName || ''}`.trim();
@@ -195,13 +196,23 @@ const RealTimeResumePage: React.FC = () => {
             <div>
               <h1>{displayName}</h1>
               <h2>{defaultLoggedInEmployee.roleTitle}</h2>
+              <button
+                type="button"
+                className="resume-hero__bio-toggle"
+                onClick={() => setBioOpen(open => !open)}
+                aria-expanded={bioOpen}
+              >
+                {bioOpen ? 'Hide bio' : 'View bio'}
+              </button>
             </div>
           </header>
 
-          <section className="resume-card">
-            <h3>Bio</h3>
-            <p className="resume-bio">{profile.bio}</p>
-          </section>
+          {bioOpen ? (
+            <section className="resume-card resume-card--bio">
+              <h3>Bio</h3>
+              <p className="resume-bio">{profile.bio}</p>
+            </section>
+          ) : null}
 
           <section className="resume-card">
             <h3>Badges</h3>
@@ -252,7 +263,7 @@ const RealTimeResumePage: React.FC = () => {
                 max={defaultLoggedInEmployee.resume.performanceRating.max}
                 startLabel={defaultLoggedInEmployee.resume.performanceRating.startLabel}
                 endLabel={defaultLoggedInEmployee.resume.performanceRating.endLabel}
-                gradient={defaultLoggedInEmployee.resume.performanceRating.gradient}
+                color="#0677f0"
               />
               <GaugeChart
                 title={defaultLoggedInEmployee.resume.kpiGauge.title}
@@ -260,7 +271,7 @@ const RealTimeResumePage: React.FC = () => {
                 max={defaultLoggedInEmployee.resume.kpiGauge.max}
                 startLabel={defaultLoggedInEmployee.resume.kpiGauge.startLabel}
                 endLabel={defaultLoggedInEmployee.resume.kpiGauge.endLabel}
-                gradient={defaultLoggedInEmployee.resume.kpiGauge.gradient}
+                color="#06c50c"
               />
             </div>
           </section>
