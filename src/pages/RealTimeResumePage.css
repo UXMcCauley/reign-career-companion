@@ -16,33 +16,38 @@
 
 .resume-hero {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: end;
+  gap: 15px;
 }
 
 .resume-hero img {
-  width: 82px;
-  height: 82px;
+  width: 132px;
+  height: 132px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  border: 1px solid rgba(39, 145, 237, 0.599);
+  margin-left: 10px;
 }
 
 .resume-hero h1 {
   margin: 0;
   color: #f8fbff;
-  font-size: 1.2rem;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+  text-transform: uppercase;
 }
 
 .resume-hero h2 {
   margin: 4px 0 0;
   color: rgba(214, 224, 246, 0.7);
-  font-size: 0.82rem;
+  font-size: 0.92rem;
   font-weight: 500;
 }
 
 .resume-hero__bio-toggle {
-  margin: 6px 0 0;
+  margin: 0 auto 10px;
   padding: 0;
   border: none;
   background: none;
