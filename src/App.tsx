@@ -48,6 +48,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { GeofenceTestProvider, useGeofenceTest } from './context/GeofenceTestContext';
 import { WorkforceProvider } from './context/WorkforceContext';
 import { getChatUnreadCount, subscribeChatUnread, syncAppBadge } from './lib/chatUnread';
+import { readStoredProfile, PROFILE_STORAGE_KEY } from './data/profileData';
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
 
@@ -190,11 +191,20 @@ const AppTabs: React.FC = () => {
   const { logout, userName } = useAuth();
   const { proximityTestEnabled, setProximityTestEnabled } = useGeofenceTest();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerHeadshotUrl, setDrawerHeadshotUrl] = useState<string>('');
+  const [drawerDisplayName, setDrawerDisplayName] = useState<string>('');
+
+  useEffect(() => {
+    const p = readStoredProfile(userName);
+    setDrawerHeadshotUrl(p.headshotDataUrl);
+    setDrawerDisplayName(p.displayName);
+  }, [userName]);
 
   const currentTab = resolveTab(location.pathname);
 
-  const drawerFirstName = userName
-    ? (userName.includes('@') ? userName.split('@')[0] : userName.split(' ')[0])
+  const effectiveName = drawerDisplayName || userName || '';
+  const drawerFirstName = effectiveName
+    ? (effectiveName.includes('@') ? effectiveName.split('@')[0] : effectiveName.split(' ')[0])
     : 'User';
   const drawerInitial = drawerFirstName.charAt(0).toUpperCase();
 
@@ -228,7 +238,12 @@ const AppTabs: React.FC = () => {
         menuId="profile-drawer"
         contentId="main-content"
         className="profile-drawer"
-        onIonWillOpen={() => setDrawerOpen(true)}
+        onIonWillOpen={() => {
+          const p = readStoredProfile(userName);
+          setDrawerHeadshotUrl(p.headshotDataUrl);
+          setDrawerDisplayName(p.displayName);
+          setDrawerOpen(true);
+        }}
         onIonDidClose={() => setDrawerOpen(false)}
       >
         <IonContent scrollY>
@@ -238,7 +253,12 @@ const AppTabs: React.FC = () => {
 
             {/* ── Avatar + identity ── */}
             <div className="drawer-hero">
-              <div className="drawer-avatar-large">{drawerInitial}</div>
+              <div className="drawer-avatar-large">
+                {drawerHeadshotUrl
+                  ? <img src={drawerHeadshotUrl} alt={drawerFirstName} className="drawer-avatar-photo" />
+                  : drawerInitial
+                }
+              </div>
               <span className="drawer-name">{drawerFirstName}</span>
               <span className="drawer-role">Team Member</span>
             </div>

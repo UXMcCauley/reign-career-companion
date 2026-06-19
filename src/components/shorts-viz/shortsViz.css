@@ -1,0 +1,558 @@
+/* ── Shorts & Viz shared surface ── */
+
+.sv-card {
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.038), rgba(98, 60, 255, 0.1));
+  border: 1px solid rgba(237, 240, 244, 0.12);
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* ── Dotted progress chart card ── */
+
+.sv-dotted-progress {
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+}
+
+.sv-dotted-progress__header {
+  position: relative;
+  padding: 18px 16px 14px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.58);
+  border-bottom: none;
+  border-radius: 18px 18px 0 0;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.03), rgba(123, 63, 255, 0.08));
+}
+
+.sv-dotted-progress__header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 42px;
+  height: 18px;
+  background: inherit;
+  border-right: 1.5px dashed rgba(255, 255, 255, 0.58);
+  border-bottom: 1.5px dashed rgba(255, 255, 255, 0.58);
+  border-radius: 0 0 14px 0;
+}
+
+.sv-dotted-progress__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sv-dotted-progress__title {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.96);
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+}
+
+.sv-dotted-progress__actions {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.sv-dotted-progress__link {
+  border: none;
+  background: none;
+  padding: 0;
+  color: rgba(212, 223, 245, 0.78);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sv-dotted-progress__link:hover,
+.sv-dotted-progress__link:focus-visible {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.sv-dotted-progress__metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #041204;
+  line-height: 1;
+}
+
+.sv-dotted-progress__metric--positive {
+  background: var(--app-brand-light-green);
+}
+
+.sv-dotted-progress__metric--negative {
+  background: linear-gradient(135deg, #ff8f6b, #ff5f7f);
+  color: #fff;
+}
+
+.sv-dotted-progress__metric--neutral {
+  background: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.sv-dotted-progress__metric-icon {
+  display: inline-flex;
+  font-size: 0.9rem;
+}
+
+.sv-dotted-progress__chart {
+  padding: 14px 14px 16px;
+  background: rgba(8, 9, 18, 0.42);
+  border-radius: 0 0 18px 18px;
+}
+
+.sv-dotted-progress__chart-subtitle {
+  margin: 0 0 10px;
+  color: rgba(212, 223, 245, 0.62);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sv-dotted-progress__chart-body {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 8px;
+  align-items: end;
+  min-height: 148px;
+}
+
+.sv-dotted-progress__y-axis {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: space-between;
+  height: 120px;
+  color: rgba(212, 223, 245, 0.72);
+  font-size: 0.62rem;
+  font-weight: 600;
+}
+
+.sv-dotted-progress__plot {
+  position: relative;
+  height: 120px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 4px;
+}
+
+.sv-dotted-progress__grid-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+}
+
+.sv-dotted-progress__bar-col {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  align-content: end;
+}
+
+.sv-dotted-progress__bar {
+  width: min(100%, 42px);
+  border-radius: 999px 999px 8px 8px;
+  min-height: 6px;
+  transition: height 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
+}
+
+.sv-dotted-progress__bar-label {
+  color: rgba(212, 223, 245, 0.72);
+  font-size: 0.66rem;
+  font-weight: 600;
+}
+
+.sv-dotted-progress__bar-label--active {
+  color: #B794FF;
+}
+
+/* ── Metric short card ── */
+
+.sv-metric-short {
+  padding: 16px;
+  min-height: 96px;
+  display: grid;
+  align-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.sv-metric-short::before {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(circle at 80% 20%, var(--sv-metric-glow, rgba(123, 63, 255, 0.28)) 0%, transparent 58%);
+  pointer-events: none;
+}
+
+.sv-metric-short__title {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  position: relative;
+}
+
+.sv-metric-short__value-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  position: relative;
+}
+
+.sv-metric-short__value {
+  margin: 0;
+  color: #fff;
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.sv-metric-short__trend {
+  color: rgba(212, 223, 245, 0.72);
+  font-size: 1rem;
+}
+
+/* ── Feature grid card ── */
+
+.sv-feature-grid-card {
+  aspect-ratio: 1;
+  padding: 14px;
+  display: grid;
+  align-content: space-between;
+  position: relative;
+  overflow: hidden;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  width: 100%;
+}
+
+.sv-feature-grid-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 18% 18%, var(--sv-feature-glow, rgba(6, 197, 12, 0.24)) 0%, transparent 62%);
+  pointer-events: none;
+}
+
+.sv-feature-grid-card__icon {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 1.05rem;
+}
+
+.sv-feature-grid-card__label {
+  position: relative;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+/* ── Linear progress short ── */
+
+.sv-linear-progress {
+  display: grid;
+  gap: 8px;
+}
+
+.sv-linear-progress__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sv-linear-progress__title {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sv-linear-progress__value {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.sv-linear-progress__track {
+  position: relative;
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: visible;
+}
+
+.sv-linear-progress__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--app-brand-dark-green), var(--app-brand-light-green));
+  box-shadow: 0 0 12px rgba(6, 197, 12, 0.35);
+  transition: width 360ms ease;
+}
+
+.sv-linear-progress__handle {
+  position: absolute;
+  top: 50%;
+  width: 3px;
+  height: 18px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.28);
+  transform: translate(-50%, -50%);
+  transition: left 360ms ease;
+}
+
+/* ── Donut chart short ── */
+
+.sv-donut {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+
+.sv-donut__title {
+  margin: 0;
+  width: 100%;
+  color: #f8fbff;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sv-donut__svg {
+  width: 100%;
+  max-width: 180px;
+}
+
+.sv-donut__track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.14);
+  stroke-width: 14;
+}
+
+.sv-donut__segment {
+  fill: none;
+  stroke-width: 14;
+  stroke-linecap: butt;
+  transition: stroke-dasharray 360ms ease;
+}
+
+.sv-donut__center-title {
+  fill: rgba(212, 223, 245, 0.72);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sv-donut__center-value {
+  fill: #fff;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.sv-donut__legend {
+  width: 100%;
+  display: grid;
+  gap: 6px;
+}
+
+.sv-donut__legend-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: rgba(222, 232, 248, 0.88);
+  font-size: 0.72rem;
+}
+
+.sv-donut__legend-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sv-donut__legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Task progress slider ── */
+
+.sv-task-slider-list {
+  display: grid;
+  gap: 14px;
+}
+
+.sv-task-slider {
+  display: grid;
+  gap: 8px;
+}
+
+.sv-task-slider__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sv-task-slider__left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sv-task-slider__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sv-task-slider__title {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sv-task-slider__value {
+  color: rgba(212, 223, 245, 0.78);
+  font-size: 0.74rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.sv-task-slider__track {
+  position: relative;
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.sv-task-slider__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  transition: width 320ms ease;
+}
+
+.sv-task-slider__thumb {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(8, 9, 18, 0.65);
+  transform: translate(-50%, -50%);
+  transition: left 320ms ease;
+}
+
+/* ── List link short ── */
+
+.sv-list-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 0;
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sv-list-link:last-child {
+  border-bottom: none;
+}
+
+.sv-list-link__icon {
+  color: rgba(212, 223, 245, 0.62);
+  font-size: 0.95rem;
+}
+
+/* ── Tab pills ── */
+
+.sv-tab-pills {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sv-tab-pill {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(212, 223, 245, 0.78);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.sv-tab-pill--active {
+  color: #fff;
+  border-color: rgba(123, 63, 255, 0.55);
+  background: linear-gradient(135deg, rgba(123, 63, 255, 0.34), rgba(6, 119, 240, 0.22));
+}

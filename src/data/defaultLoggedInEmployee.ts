@@ -39,6 +39,10 @@ type ResumeBadge = {
   label: string;
   thumbUrl: string;
   fullUrl: string;
+  description: string;
+  awardedBy: string;
+  awardedAt: string;
+  awardCount: number;
 };
 
 type CareerOverviewSegment = {
@@ -63,6 +67,20 @@ type SuccessProbabilitySegment = {
   startColor: string;
   endColor: string;
 };
+
+type ResumeMetricTimelineEntry = {
+  period: string;
+  value: string;
+  note?: string;
+};
+
+type ResumeMetricDetail = {
+  summary: string;
+  insight?: string;
+  timeline: ResumeMetricTimelineEntry[];
+};
+
+type ResumeMetricId = 'hourlyRate' | 'attendance' | 'pto' | 'tenure' | 'flags';
 
 type SuccessProbabilityConfig = {
   title: string;
@@ -99,6 +117,7 @@ export type DefaultLoggedInEmployee = {
       ptoDays: number;
       employerFlags: number;
     };
+    metricDetails: Record<ResumeMetricId, ResumeMetricDetail>;
     badges: ResumeBadge[];
     careerOverview: CareerOverviewSegment[];
     performanceRating: GaugeConfig;
@@ -109,7 +128,7 @@ export type DefaultLoggedInEmployee = {
 
 const parsedEmployee = employeeJson as Omit<DefaultLoggedInEmployee, 'avatarUrl' | 'resume'> & {
   resume: Omit<DefaultLoggedInEmployee['resume'], 'badges'> & {
-    badges: Array<{ id: string; key: string; label: string }>;
+    badges: Array<{ id: string; key: string; label: string; description: string; awardedBy: string; awardedAt: string; awardCount: number }>;
   };
 };
 

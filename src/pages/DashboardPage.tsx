@@ -283,6 +283,7 @@ const DashboardPage: React.FC = () => {
   const [selectedKeyCardId, setSelectedKeyCardId] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [headshotUrl, setHeadshotUrl] = useState<string>('');
+  const [profileDisplayName, setProfileDisplayName] = useState<string>('');
   const [recentChats, setRecentChats] = useState<Conversation[]>([]);
   const [recentCoachConvos, setRecentCoachConvos] = useState<CoachConversation[]>([]);
   const [coachName, setCoachName] = useState('Nova');
@@ -306,7 +307,9 @@ const DashboardPage: React.FC = () => {
   const { userName } = useAuth();
 
   useEffect(() => {
-    setHeadshotUrl(readStoredProfile(userName).headshotDataUrl);
+    const p = readStoredProfile(userName);
+    setHeadshotUrl(p.headshotDataUrl);
+    setProfileDisplayName(p.displayName);
 
     loadChats(() => []).then(chats => {
       const active = chats
@@ -362,7 +365,9 @@ const DashboardPage: React.FC = () => {
   // fill the whole container even after tab switches / route transitions.
   useIonViewDidEnter(() => {
     mapRef.current?.invalidateSize(false);
-    setHeadshotUrl(readStoredProfile(userName).headshotDataUrl);
+    const p = readStoredProfile(userName);
+    setHeadshotUrl(p.headshotDataUrl);
+    setProfileDisplayName(p.displayName);
   });
 
   const onContentScroll = useCallback((e: CustomEvent<ScrollDetail>) => {
@@ -451,8 +456,9 @@ const DashboardPage: React.FC = () => {
     }
   }, []);
 
-  const firstName = userName
-    ? userName.includes('@') ? userName.split('@')[0] : userName.split(' ')[0]
+  const effectiveName = profileDisplayName || userName || '';
+  const firstName = effectiveName
+    ? (effectiveName.includes('@') ? effectiveName.split('@')[0] : effectiveName.split(' ')[0])
     : defaultLoggedInEmployee.firstName || 'there';
 
   const [greeting] = useState(pickGreeting);

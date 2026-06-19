@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import './ChartPrimitives.css';
 
 type GaugeChartProps = {
@@ -10,20 +11,36 @@ type GaugeChartProps = {
   valueLabel?: string;
 };
 
+const CENTER_X = 100;
+const CENTER_Y = 92;
+const RADIUS = 72;
+const START_ANGLE = 180;
+const END_ANGLE = 0;
+
 function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {
-  const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
+  const angleInRadians = (angleInDegrees * Math.PI) / 180;
   return {
     x: centerX + radius * Math.cos(angleInRadians),
     y: centerY + radius * Math.sin(angleInRadians)
   };
 }
 
-function describeArc(x: number, y: number, radius: number, startAngle: number, endAngle: number) {
-  const start = polarToCartesian(x, y, radius, endAngle);
-  const end = polarToCartesian(x, y, radius, startAngle);
-  const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
-  return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`;
+function describeArc(
+  centerX: number,
+  centerY: number,
+  radius: number,
+  startAngle: number,
+  endAngle: number
+) {
+  const start = polarToCartesian(centerX, centerY, radius, startAngle);
+  const end = polarToCartesian(centerX, centerY, radius, endAngle);
+  const sweep = startAngle > endAngle ? 0 : 1;
+  const delta = Math.abs(endAngle - startAngle);
+  const largeArcFlag = delta > 180 ? 1 : 0;
+
+  return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} ${sweep} ${end.x} ${end.y}`;
 }
+
 
 const GaugeChart: React.FC<GaugeChartProps> = ({
   title,
@@ -34,39 +51,66 @@ const GaugeChart: React.FC<GaugeChartProps> = ({
   gradient,
   valueLabel
 }) => {
+  const gradientId = useId();
   const clamped = Math.max(0, Math.min(max, value));
-  const startColor = gradient[0] ?? '#7D2EFF';
-  const endColor = gradient[1] ?? '#EF2C7B';
   const ratio = max > 0 ? clamped / max : 0;
-  const startAngle = 180;
-  const endAngle = 360;
-  const activeEnd = startAngle + (endAngle - startAngle) * ratio;
-  const centerX = 100;
-  const centerY = 100;
-  const radius = 72;
+  const startColor = gradient[0] ?? '#038908';
+  const endColor = gradient[1] ?? '#06c50c';
+  const activeAngle = START_ANGLE - (START_ANGLE - END_ANGLE) * ratio;
 
-  const trackPath = describeArc(centerX, centerY, radius, startAngle, endAngle);
-  const activePath = describeArc(centerX, centerY, radius, startAngle, activeEnd);
+  const trackPath = describeArc(CENTER_X, CENTER_Y, RADIUS, START_ANGLE, END_ANGLE);
+  const activePath =
+    ratio > 0 ? describeArc(CENTER_X, CENTER_Y, RADIUS, START_ANGLE, activeAngle) : '';
 
-  const needleAngle = startAngle + (endAngle - startAngle) * ratio;
-  const needleTip = polarToCartesian(centerX, centerY, 48, needleAngle);
+  const valuePoint = polarToCartesian(CENTER_X, CENTER_Y, RADIUS + 18, activeAngle);
+  const leftPoint = polarToCartesian(CENTER_X, CENTER_Y, RADIUS, START_ANGLE);
+  const rightPoint = polarToCartesian(CENTER_X, CENTER_Y, RADIUS, END_ANGLE);
+  const displayValue = valueLabel ?? clamped.toFixed(1);
 
   return (
     <div className="gauge-chart-wrap">
       <h4 className="chart-card-title">{title}</h4>
-      <svg className="gauge-svg" viewBox="0 0 200 130" role="img" aria-label={`${title} ${clamped} out of ${max}`}>
+      <svg
+        className="gauge-svg"
+        viewBox="0 0 200 118"
+        role="img"
+        aria-label={`${title} ${clamped} out of ${max}`}
+      >
         <defs>
-          <linearGradient id={`${title}-gradient`} x1="0%" y1="0%" x2="100%" y2="0%">
+          <linearGradient
+            id={gradientId}
+            gradientUnits="userSpaceOnUse"
+            x1={leftPoint.x}
+            y1={leftPoint.y}
+            x2={rightPoint.x}
+            y2={rightPoint.y}
+          >
             <stop offset="0%" stopColor={startColor} />
             <stop offset="100%" stopColor={endColor} />
           </linearGradient>
         </defs>
+
         <path d={trackPath} className="gauge-track" />
-        <path d={activePath} className="gauge-progress" style={{ stroke: `url(#${title}-gradient)` }} />
-        <line x1={centerX} y1={centerY} x2={needleTip.x} y2={needleTip.y} className="gauge-needle" strokeWidth="3.5" />
-        <circle cx={centerX} cy={centerY} r="6" className="gauge-center-dot" />
+        {activePath ? (
+          <path d={activePath} className="gauge-progress" style={{ stroke: `url(#${gradientId})` }} />
+        ) : null}
+
+        {ratio > 0 ? (
+          <g className="gauge-arc-value-wrap">
+            <circle cx={valuePoint.x} cy={valuePoint.y} r="13" className="gauge-arc-value-bg" />
+            <text
+              x={valuePoint.x}
+              y={valuePoint.y}
+              textAnchor="middle"
+              dominantBaseline="central"
+              className="gauge-arc-value"
+            >
+              {displayValue}
+            </text>
+          </g>
+        ) : null}
       </svg>
-      <div className="gauge-value">{valueLabel ?? clamped.toFixed(1)}</div>
+
       <div className="gauge-end-labels">
         <span>{startLabel}</span>
         <span>{endLabel}</span>

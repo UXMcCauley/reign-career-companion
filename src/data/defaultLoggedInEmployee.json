@@ -100,31 +100,103 @@
       "ptoDays": 8.25,
       "employerFlags": 2
     },
+    "metricDetails": {
+      "hourlyRate": {
+        "summary": "Your current base hourly rate reflects a Q1 2025 merit adjustment tied to sustained performance and role scope.",
+        "insight": "Next review window opens in Sep 2025 — on track for a tier bump if KPI holds above 3.5.",
+        "timeline": [
+          { "period": "Mar 2025", "value": "$24.32", "note": "Q1 merit increase (+$1.12)" },
+          { "period": "Oct 2024", "value": "$23.20", "note": "Annual review adjustment" },
+          { "period": "Jun 2024", "value": "$22.50", "note": "Role expansion — Field Ops Specialist" },
+          { "period": "Jan 2024", "value": "$21.00", "note": "Starting rate at hire" }
+        ]
+      },
+      "attendance": {
+        "summary": "Rolling 12-month attendance across scheduled shifts. One excused absence in the current period.",
+        "insight": "You are in the top 8% of your work group for reliability this quarter.",
+        "timeline": [
+          { "period": "Q1 2025", "value": "99%", "note": "1 excused absence — Feb 12" },
+          { "period": "Q4 2024", "value": "100%", "note": "Perfect holiday season streak" },
+          { "period": "Q3 2024", "value": "98%", "note": "2 late arrivals, no absences" },
+          { "period": "Q2 2024", "value": "100%", "note": "First full quarter — flawless" }
+        ]
+      },
+      "pto": {
+        "summary": "Paid time off balance available for request. Accrues at 0.69 days per pay period.",
+        "insight": "3.0 days scheduled in Jul — balance will refresh to ~5.5 days by Aug 1.",
+        "timeline": [
+          { "period": "Jun 2025", "value": "8.25d", "note": "Current balance" },
+          { "period": "Apr 2025", "value": "6.50d", "note": "Used 1.75d — family event" },
+          { "period": "Jan 2025", "value": "10.00d", "note": "Year-end accrual top-up" },
+          { "period": "Oct 2024", "value": "4.25d", "note": "Used 3.0d — holiday break" }
+        ]
+      },
+      "tenure": {
+        "summary": "Continuous employment since hire, including all active and leave periods.",
+        "insight": "Eligible for 2-year milestone benefits in ~5 months.",
+        "timeline": [
+          { "period": "Jun 2025", "value": "1.6y", "note": "Current tenure" },
+          { "period": "Jan 2025", "value": "1.0y", "note": "One-year anniversary" },
+          { "period": "Jul 2024", "value": "0.5y", "note": "Probation cleared — full benefits" },
+          { "period": "Jan 2024", "value": "0.0y", "note": "Hire date — Field Operations" }
+        ]
+      },
+      "flags": {
+        "summary": "Employer flags are formal notes tied to policy, safety, or conduct events. Both current flags are resolved.",
+        "insight": "No open flags — clear record for 4+ months.",
+        "timeline": [
+          { "period": "Feb 2025", "value": "0 open", "note": "Last flag cleared — uniform compliance" },
+          { "period": "Nov 2024", "value": "1 open", "note": "Uniform policy — resolved in 3 days" },
+          { "period": "Aug 2024", "value": "1 open", "note": "Safety checklist miss — resolved same week" },
+          { "period": "Jan 2024", "value": "0 open", "note": "Clean start at hire" }
+        ]
+      }
+    },
     "badges": [
       {
         "id": "badge-holiday-hero",
         "key": "holiday_hero",
-        "label": "Holiday Hero"
+        "label": "Holiday Hero",
+        "description": "Earned for exceptional service and reliability during the holiday season — maintaining top performance scores while handling peak-volume demand with composure.",
+        "awardedBy": "Sarah Mitchell",
+        "awardedAt": "2024-12-27",
+        "awardCount": 2
       },
       {
         "id": "badge-teamwork",
         "key": "artboard_2_10",
-        "label": "Teamwork"
+        "label": "Teamwork",
+        "description": "Recognizes outstanding collaboration and consistent support of teammates, prioritizing collective success and stepping up whenever the team needs it most.",
+        "awardedBy": "System",
+        "awardedAt": "2024-10-14",
+        "awardCount": 3
       },
       {
         "id": "badge-safety",
         "key": "artboard_2_13",
-        "label": "Safety"
+        "label": "Safety",
+        "description": "Awarded for strict adherence to safety protocols and proactively identifying and reporting potential workplace hazards before incidents occurred.",
+        "awardedBy": "Marcus Chen",
+        "awardedAt": "2025-01-08",
+        "awardCount": 1
       },
       {
         "id": "badge-quality",
         "key": "artboard_2_16",
-        "label": "Quality"
+        "label": "Quality",
+        "description": "Given for consistently delivering work that exceeds quality benchmarks, earning top guest feedback scores across multiple consecutive review periods.",
+        "awardedBy": "System",
+        "awardedAt": "2025-02-20",
+        "awardCount": 4
       },
       {
         "id": "badge-speed",
         "key": "artboard_2_19",
-        "label": "Speed"
+        "label": "Speed",
+        "description": "Recognizes exceptional efficiency and the ability to maintain high output quality while consistently exceeding throughput targets during high-demand periods.",
+        "awardedBy": "Dena Ramos",
+        "awardedAt": "2025-03-11",
+        "awardCount": 2
       }
     ],
     "careerOverview": [
@@ -149,24 +221,24 @@
     ],
     "performanceRating": {
       "title": "Performance Rating",
-      "value": 9.9,
+      "value": 7.4,
       "max": 10,
       "startLabel": "0",
       "endLabel": "10",
       "gradient": [
-        "#7D2EFF",
-        "#EF2C7B"
+        "#038908",
+        "#06c50c"
       ]
     },
     "kpiGauge": {
-      "title": "KPI Gauge",
-      "value": 2.9,
+      "title": "KPI",
+      "value": 3.6,
       "max": 5,
       "startLabel": "0",
       "endLabel": "5",
       "gradient": [
-        "#6D35FF",
-        "#D62187"
+        "#0f2f73",
+        "#0677f0"
       ]
     },
     "successProbability": {
