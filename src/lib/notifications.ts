@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
+import { Badge } from '@capawesome/capacitor-badge';
 
 /**
  * Lightweight notification helper for the chat mockup.
@@ -106,5 +107,38 @@ export async function notifyIncomingMessage({
     };
     if (delayMs > 0) window.setTimeout(show, delayMs);
     else show();
+  }
+}
+
+let badgeSupported: boolean | null = null;
+
+async function isBadgeSupported(): Promise<boolean> {
+  if (badgeSupported !== null) return badgeSupported;
+  try {
+    badgeSupported = (await Badge.isSupported()).isSupported;
+  } catch {
+    badgeSupported = false;
+  }
+  return badgeSupported;
+}
+
+/**
+ * Reflect a count on the home-screen app icon badge.
+ * Does NOT prompt for permission — only updates the badge when the user has
+ * already granted notification/badge access, so app launch stays prompt-free.
+ */
+export async function setAppBadge(count: number): Promise<void> {
+  try {
+    if (!(await isBadgeSupported())) return;
+
+    if (isNative) {
+      const status = await Badge.checkPermissions();
+      if (status.display !== 'granted') return;
+    }
+
+    if (count > 0) await Badge.set({ count });
+    else await Badge.clear();
+  } catch {
+    // Badging is best-effort; ignore unsupported environments.
   }
 }

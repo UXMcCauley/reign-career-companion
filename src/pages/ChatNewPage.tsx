@@ -1,5 +1,5 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { IonContent, IonPage, IonIcon, isPlatform } from '@ionic/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { IonContent, IonPage, IonIcon, isPlatform, useIonViewWillEnter } from '@ionic/react';
 import {
   addOutline,
   attachOutline,
@@ -11,9 +11,11 @@ import {
   sendOutline,
   timeOutline,
 } from 'ionicons/icons';
-import { useHistory, useLocation } from 'react-router-dom';
-import { loadEmployees } from '../data/blobStorage';
-import { DEMO_EMPLOYEES } from '../data/employees';
+import { useHistory } from 'react-router-dom';
+import { composeMessage, loadEmployees } from '../data/blobStorage';
+import { DEMO_EMPLOYEES, initialsFromName } from '../data/employees';
+import type { Message } from '../data/chatTypes';
+import { ensureNotificationPermission } from '../lib/notifications';
 import './ChatPage.css';
 
 const isIOS = isPlatform('ios') || /iphone|ipad|ipod/i.test(
@@ -22,7 +24,6 @@ const isIOS = isPlatform('ios') || /iphone|ipad|ipod/i.test(
 
 const ChatNewPage: React.FC = () => {
   const history = useHistory();
-  const location = useLocation();
   const recipientInputRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const photoRef = useRef<HTMLInputElement>(null);
@@ -40,14 +41,25 @@ const ChatNewPage: React.FC = () => {
   const [recipientFocused, setRecipientFocused] = useState(false);
   const [employees, setEmployees] = useState(DEMO_EMPLOYEES);
 
-  React.useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const recipientName = params.get('recipient')?.trim();
-    if (!recipientName) return;
-
-    setSelectedRecipients(prev => (prev.includes(recipientName) ? prev : [...prev, recipientName]));
-    setStatus(`Message draft started with ${recipientName}.`);
-  }, [location.search]);
+  // Reset the compose form every time this view is entered so a previously sent
+  // recipient never carries over. Honors a ?recipient= deep link if present.
+  useIonViewWillEnter(() => {
+    const recipientName = new URLSearchParams(window.location.search).get('recipient')?.trim();
+    setSelectedRecipients(recipientName ? [recipientName] : []);
+    setRecipientQuery('');
+    setMessage('');
+    setIsGroupMessage(false);
+    setSaveAsDraft(false);
+    setScheduleEnabled(false);
+    setScheduledAt('');
+    setMenuOpen(false);
+    setRecipientFocused(false);
+    setStatus(
+      recipientName
+        ? `Message draft started with ${recipientName}.`
+        : 'Add recipients and compose your message.'
+    );
+  });
 
   const matchingEmployees = useMemo(() => {
     const query = recipientQuery.trim().toLowerCase();
@@ -62,7 +74,7 @@ const ChatNewPage: React.FC = () => {
       .slice(0, 8);
   }, [recipientQuery, selectedRecipients, employees]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     let active = true;
     (async () => {
       const loaded = await loadEmployees();
@@ -98,6 +110,43 @@ const ChatNewPage: React.FC = () => {
   const runDemoAction = (label: string, callback?: () => void) => {
     setStatus(`${label} configured for demo.`);
     callback?.();
+  };
+
+  const handleSend = async () => {
+    const text = message.trim();
+    if (selectedRecipients.length === 0 || !text) return;
+
+    // Request notification permission now, while we still have the user's tap.
+    void ensureNotificationPermission();
+
+    const isGroup = isGroupMessage || selectedRecipients.length > 1;
+    const myMessage: Message = { id: `${Date.now()}-me`, text, sender: 'me', ts: Date.now() };
+
+    setStatus('Sending...');
+
+    // Appends to an existing thread with the same recipient(s) when one exists,
+    // otherwise creates a new conversation.
+    const { id } = await composeMessage({
+      recipientNames: selectedRecipients,
+      isGroup,
+      message: myMessage,
+      createConversation: newId => ({
+        id: newId,
+        name: isGroup ? selectedRecipients.join(', ') : selectedRecipients[0],
+        role: isGroup ? `Group · ${selectedRecipients.length} members` : 'Direct message',
+        initials: initialsFromName(selectedRecipients[0]),
+        color: chipColor(selectedRecipients[0]),
+        type: isGroup ? 'group' : 'dm',
+        pinned: false,
+        muted: false,
+        archived: false,
+        unread: 0,
+        messages: [myMessage],
+      }),
+    });
+
+    // Open the thread in the chat page, reload from storage, and let it reply.
+    history.push('/chat', { openConvId: id, reload: true, autoReply: true });
   };
 
   return (
@@ -199,7 +248,7 @@ const ChatNewPage: React.FC = () => {
                 </button>
                 <button
                   className="new-chat-inline-send-btn"
-                  onClick={() => setStatus('Demo message ready to send.')}
+                  onClick={() => void handleSend()}
                   disabled={selectedRecipients.length === 0 || !message.trim()}
                 >
                   <IonIcon icon={sendOutline} />

@@ -819,7 +819,12 @@ const DashboardPage: React.FC = () => {
               }}
             >
               {demoEmployeeTalentCards.map((card, i) => (
-                <div key={card.id} className="dash-mastery dash-mastery--card">
+                <button
+                  key={card.id}
+                  type="button"
+                  className="dash-mastery dash-mastery--card"
+                  onClick={() => history.push('/keycards', { openCardId: card.id })}
+                >
                   <div className="dash-mastery-header">
                     <span className="dash-mastery-title">{card.name}</span>
                   </div>
@@ -830,7 +835,7 @@ const DashboardPage: React.FC = () => {
                     <span className="dash-mastery-pts">{defaultLoggedInEmployee.dashboard.mastery.pointsLabel}</span>
                     <span className="dash-mastery-remaining">{defaultLoggedInEmployee.dashboard.mastery.remainingLabel}</span>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -854,7 +859,7 @@ const DashboardPage: React.FC = () => {
                   style={{ height: '270px', width: '100%' }}
                 >
                   <TileLayer
-                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                    url="https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png"
                     attribution="&copy; OpenStreetMap contributors &copy; CARTO"
                     subdomains="abcd"
                     updateWhenZooming={false}
@@ -879,6 +884,16 @@ const DashboardPage: React.FC = () => {
                   )}
                   <MapController mapRef={mapRef} userPosition={userPosition} onTilesLoaded={handleMapTilesLoaded} />
                 </MapContainer>
+
+                {/* Expand to full-screen map — top-right of the mini map */}
+                <button
+                  type="button"
+                  className="map-expand-btn"
+                  onClick={() => setMapExpanded(true)}
+                  aria-label="Expand map to full view"
+                >
+                  <IonIcon icon={expandOutline} />
+                </button>
 
                 {/* Skeleton placeholder — fades out once tiles are loaded */}
                 {/* <div className={`map-placeholder${mapTilesLoaded ? ' map-placeholder--loaded' : ''}`}>
@@ -1046,15 +1061,6 @@ const DashboardPage: React.FC = () => {
 
                 <button
                   type="button"
-                  className="clock-float-btn clock-float-btn--map"
-                  onClick={() => setMapExpanded(true)}
-                >
-                  <IonIcon icon={expandOutline} />
-                  <span>Map</span>
-                </button>
-
-                <button
-                  type="button"
                   className={`clock-float-btn clock-float-btn--action${isClockedIn ? ' is-clocked-in' : ''}${onBreak ? ' is-on-break' : ''}`}
                   onClick={handleRightAction}
                   aria-label={rightActionLabel}
@@ -1155,7 +1161,7 @@ const DashboardPage: React.FC = () => {
             style={{ height: '100%', width: '100%' }}
           >
             <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+              url="https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png"
               attribution="&copy; OpenStreetMap contributors &copy; CARTO"
               subdomains="abcd"
               updateWhenZooming={false}

@@ -1,7 +1,7 @@
 import { DEMO_EMPLOYEES, type DemoEmployee } from './employees';
 import { persistShiftStartOverride as persistShiftStartOverrideDb, readLocalDatabase, updateLocalDatabase } from './localDatabase';
 import { MOCK_SHIFTS, type Shift } from './scheduleData';
-import type { Conversation } from './chatTypes';
+import type { Conversation, Message } from './chatTypes';
 
 const CHAT_LOCAL_KEY = 'reign_chat_v2';
 const EMPLOYEE_LOCAL_KEY = 'reign_employees_v1';
@@ -303,6 +303,51 @@ export async function loadChats(seedFactory: () => Conversation[]): Promise<Conv
 export async function saveChats(conversations: Conversation[]): Promise<void> {
   writeLocalJson(CHAT_LOCAL_KEY, conversations);
   await writeBlobJson(activeChatBlobName, toExternalChats(conversations));
+}
+
+export interface ComposeResult {
+  id: string;
+  isNew: boolean;
+}
+
+/**
+ * Send a freshly composed message. If a conversation with the same recipient(s)
+ * already exists, the message is appended to that thread (and it's surfaced to
+ * the top, un-archived). Otherwise a new conversation is created via the factory.
+ */
+export async function composeMessage(opts: {
+  recipientNames: string[];
+  isGroup: boolean;
+  message: Message;
+  createConversation: (id: string) => Conversation;
+}): Promise<ComposeResult> {
+  const existing = readLocalJson<Conversation[]>(CHAT_LOCAL_KEY) ?? [];
+  const wantedType = opts.isGroup ? 'group' : 'dm';
+  const targetName = (opts.isGroup ? opts.recipientNames.join(', ') : opts.recipientNames[0] ?? '')
+    .trim()
+    .toLowerCase();
+
+  const matchIndex = existing.findIndex(
+    c => c.type === wantedType && c.name.trim().toLowerCase() === targetName
+  );
+
+  if (matchIndex >= 0) {
+    const match = existing[matchIndex];
+    const updated: Conversation = {
+      ...match,
+      archived: false,
+      messages: [...match.messages, opts.message],
+    };
+    const next = [updated, ...existing.filter((_, i) => i !== matchIndex)];
+    await saveChats(next);
+    return { id: match.id, isNew: false };
+  }
+
+  const id = `new-${Date.now()}`;
+  const created = opts.createConversation(id);
+  const next = [created, ...existing];
+  await saveChats(next);
+  return { id, isNew: true };
 }
 
 export async function loadShiftRuntime(shiftId: string): Promise<ShiftRuntimeState> {

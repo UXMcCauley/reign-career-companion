@@ -1,21 +1,16 @@
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { Redirect, Route, useHistory, useLocation } from 'react-router-dom';
 import {
   AnimationBuilder,
   IonApp,
   IonContent,
-  IonHeader,
   IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
   IonMenu,
   IonRouterOutlet,
   IonTabBar,
   IonTabButton,
   IonTabs,
-  IonTitle,
   IonToggle,
-  IonToolbar,
   createAnimation,
   setupIonicReact,
 } from '@ionic/react';
@@ -24,9 +19,16 @@ import {
   albumsOutline,
   calendarOutline,
   chatbubbleEllipsesOutline,
+  chevronForwardOutline,
+  documentTextOutline,
   gridOutline,
+  locateOutline,
   logOutOutline,
-  sparklesOutline
+  megaphoneOutline,
+  notificationsOutline,
+  personOutline,
+  settingsOutline,
+  sparklesOutline,
 } from 'ionicons/icons';
 import ChatArchivedPage from './pages/ChatArchivedPage';
 import ChatNewPage from './pages/ChatNewPage';
@@ -45,6 +47,7 @@ import ShiftDetailPage from './pages/ShiftDetailPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { GeofenceTestProvider, useGeofenceTest } from './context/GeofenceTestContext';
 import { WorkforceProvider } from './context/WorkforceContext';
+import { getChatUnreadCount, subscribeChatUnread, syncAppBadge } from './lib/chatUnread';
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
 
@@ -67,6 +70,7 @@ import '@ionic/react/css/palettes/dark.system.css';
   
 /* Theme variables */
 import './theme/variables.css';
+import './ProfileDrawer.css';
 import { ShiftCountdownIsland } from './components/ShiftCountdownIsland';
 import { Capacitor } from '@capacitor/core';
 import {  } from '@ionic/pwa-elements';
@@ -139,6 +143,7 @@ const FloatingTabBar: React.FC<{
 }> = ({ currentTab }) => {
   const history = useHistory();
   const activeIndex = tabDefs.findIndex(t => t.id === currentTab);
+  const chatUnread = useSyncExternalStore(subscribeChatUnread, getChatUnreadCount);
 
   const handleTap = (tab: (typeof tabDefs)[number]) => {
     if (tab.href) {
@@ -163,7 +168,7 @@ const FloatingTabBar: React.FC<{
             aria-label={tab.id.replace(/-/g, ' ')}
           >
             <IonIcon icon={tab.icon} />
-            {tab.id === 'chat' ? <span className="tab-notification-dot" aria-hidden /> : null}
+            {tab.id === 'chat' && chatUnread > 0 ? <span className="tab-notification-dot" aria-hidden /> : null}
           </button>
         ))}
       </div>
@@ -171,89 +176,119 @@ const FloatingTabBar: React.FC<{
   );
 };
 
+const NAV_ITEMS = [
+  { label: 'Profile',          icon: personOutline,       path: '/profile',           iconBg: 'rgba(140, 80, 255, 0.22)',  iconColor: 'rgba(185, 150, 255, 0.95)' },
+  { label: 'Announcements',    icon: megaphoneOutline,    path: '/announcements',     iconBg: 'rgba(255, 60, 140, 0.18)',  iconColor: 'rgba(255, 130, 190, 0.95)' },
+  { label: 'Notifications',    icon: notificationsOutline,path: '/notifications',     iconBg: 'rgba(30, 130, 255, 0.20)',  iconColor: 'rgba(110, 200, 255, 0.95)' },
+  { label: 'Real-time Resume', icon: documentTextOutline, path: '/real-time-resume',  iconBg: 'rgba(20, 190, 130, 0.18)',  iconColor: 'rgba(80, 230, 170, 0.95)'  },
+  { label: 'Settings',         icon: settingsOutline,     path: '/settings',          iconBg: 'rgba(255, 180, 30, 0.16)',  iconColor: 'rgba(255, 210, 100, 0.95)' },
+] as const;
+
 const AppTabs: React.FC = () => {
   const location = useLocation();
   const history = useHistory();
-  const { logout } = useAuth();
+  const { logout, userName } = useAuth();
   const { proximityTestEnabled, setProximityTestEnabled } = useGeofenceTest();
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const currentTab = resolveTab(location.pathname);
 
+  const drawerFirstName = userName
+    ? (userName.includes('@') ? userName.split('@')[0] : userName.split(' ')[0])
+    : 'User';
+  const drawerInitial = drawerFirstName.charAt(0).toUpperCase();
+
+  const getMenu = () =>
+    document.querySelector('ion-menu[menu-id="profile-drawer"]') as HTMLIonMenuElement | null;
+
   const onMenuItemTap = async (destination: string) => {
-    const profileMenu = document.querySelector('ion-menu[menu-id="profile-drawer"]') as
-      | HTMLIonMenuElement
-      | null;
-    await profileMenu?.close();
+    await getMenu()?.close();
     history.push(destination);
   };
 
   const handleLogout = async () => {
-    const profileMenu = document.querySelector('ion-menu[menu-id="profile-drawer"]') as
-      | HTMLIonMenuElement
-      | null;
-    await profileMenu?.close();
+    await getMenu()?.close();
     logout();
   };
 
   const handleProximityTestToggle = async (enabled: boolean) => {
     setProximityTestEnabled(enabled);
-    const profileMenu = document.querySelector('ion-menu[menu-id="profile-drawer"]') as
-      | HTMLIonMenuElement
-      | null;
     if (enabled) {
-      await profileMenu?.close();
+      await getMenu()?.close();
       history.push('/dashboard');
     }
   };
 
   return (
     <>
-    
+
       <IonMenu
         side="end"
         type="overlay"
         menuId="profile-drawer"
         contentId="main-content"
         className="profile-drawer"
+        onIonWillOpen={() => setDrawerOpen(true)}
+        onIonDidClose={() => setDrawerOpen(false)}
       >
-        <IonHeader>
-          <IonToolbar>
-            <IonTitle>Menu</IonTitle>
-          </IonToolbar>
-        </IonHeader>
-        <IonContent>
-          <IonList>
-            <IonItem button detail onClick={() => onMenuItemTap('/announcements')}>
-              Announcements
-            </IonItem>
-            <IonItem button detail onClick={() => onMenuItemTap('/notifications')}>
-              Notifications
-            </IonItem>
-            <IonItem button detail onClick={() => onMenuItemTap('/settings')}>
-              Settings
-            </IonItem>
-            <IonItem button detail onClick={() => onMenuItemTap('/profile')}>
-              Profile
-            </IonItem>
-            <IonItem button detail onClick={() => onMenuItemTap('/real-time-resume')}>
-              Real-time Resume
-            </IonItem>
-            <IonItem lines="full">
-              <IonLabel>
-                <h2>Proximity test mode</h2>
-                <p>Simulate walking toward the job site boundary</p>
-              </IonLabel>
+        <IonContent scrollY>
+          <div className={`drawer-inner${drawerOpen ? ' drawer-inner--open' : ''}`}>
+            <div className="drawer-glow" />
+            <div className="drawer-glow-bottom" />
+
+            {/* ── Avatar + identity ── */}
+            <div className="drawer-hero">
+              <div className="drawer-avatar-large">{drawerInitial}</div>
+              <span className="drawer-name">{drawerFirstName}</span>
+              <span className="drawer-role">Team Member</span>
+            </div>
+
+            {/* ── Nav items ── */}
+            <nav className="drawer-nav">
+              {NAV_ITEMS.map(item => (
+                <button
+                  key={item.path}
+                  className="drawer-nav-item"
+                  onClick={() => onMenuItemTap(item.path)}
+                >
+                  <span
+                    className="drawer-nav-icon-wrap"
+                    style={{ background: item.iconBg }}
+                  >
+                    <IonIcon icon={item.icon} style={{ color: item.iconColor }} />
+                  </span>
+                  <span className="drawer-nav-label">{item.label}</span>
+                  <IonIcon icon={chevronForwardOutline} className="drawer-nav-chevron" />
+                </button>
+              ))}
+            </nav>
+
+            <div className="drawer-divider" />
+
+            {/* ── Proximity test toggle ── */}
+            <div className="drawer-setting">
+              <span
+                className="drawer-nav-icon-wrap"
+                style={{ background: 'rgba(6, 119, 240, 0.20)' }}
+              >
+                <IonIcon icon={locateOutline} style={{ color: 'rgba(103, 208, 255, 0.95)' }} />
+              </span>
+              <div className="drawer-setting-text">
+                <span className="drawer-setting-label">Proximity Test</span>
+                <span className="drawer-setting-sub">Simulate walking toward job site</span>
+              </div>
               <IonToggle
-                slot="end"
                 checked={proximityTestEnabled}
                 onIonChange={e => void handleProximityTestToggle(e.detail.checked)}
               />
-            </IonItem>
-            <IonItem button onClick={handleLogout} style={{ marginTop: '16px' }}>
-              <IonIcon icon={logOutOutline} slot="start" color="danger" />
-              <IonLabel color="danger">Sign Out</IonLabel>
-            </IonItem>
-          </IonList>
+            </div>
+
+            {/* ── Sign out ── */}
+            <button className="drawer-signout" onClick={handleLogout}>
+              <IonIcon icon={logOutOutline} />
+              <span>Sign Out</span>
+            </button>
+          </div>
         </IonContent>
       </IonMenu>
 
@@ -343,6 +378,11 @@ const AppTabs: React.FC = () => {
 const AppContent: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
+
+  // Reflect any persisted unread chats on the home-screen icon badge at launch.
+  useEffect(() => {
+    syncAppBadge();
+  }, []);
 
   if (location.pathname.startsWith('/profile/public/')) {
     return <PublicProfilePage />;

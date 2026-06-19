@@ -56,6 +56,11 @@
   min-width: 0;
 }
 
+.schedule-view-toggle--right {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
 .schedule-controls-row {
   margin: calc(var(--ion-safe-area-top, 0px) + 20px) 12px 12px;
   padding-left: 12px;
@@ -539,11 +544,329 @@
   opacity: 0;
 }
 
+/* ── Redesigned Week View ───────────────────────────────────── */
+
+.schedule-week-v2 {
+  padding-bottom: var(--app-floating-tab-clearance, 90px);
+}
+
+.schedule-week-month-bar {
+  display: flex;
+  align-items: center;
+  padding: 0 4px 2px;
+}
+
+.schedule-week-nav-btn {
+  --color: rgba(214, 222, 240, 0.7);
+  --padding-start: 8px;
+  --padding-end: 8px;
+  margin: 0;
+}
+
+.schedule-week-month-title {
+  flex: 1;
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: rgba(244, 245, 248, 0.92);
+  letter-spacing: -0.01em;
+}
+
+/* 7-day selector strip */
+.schedule-day-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+  padding: 4px 10px 14px;
+}
+
+.schedule-day-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: transparent;
+  border: none;
+  padding: 4px 0 5px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.schedule-day-btn-letter {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(179, 192, 224, 0.45);
+  transition: color 0.2s;
+}
+
+.schedule-day-btn.active .schedule-day-btn-letter {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.schedule-day-btn-num {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(200, 207, 235, 0.62);
+  transition: background 0.22s, color 0.22s, box-shadow 0.22s;
+}
+
+.schedule-day-btn.today:not(.active) .schedule-day-btn-num {
+  border: 1.5px solid rgba(168, 85, 247, 0.55);
+  color: rgba(168, 85, 247, 0.9);
+}
+
+.schedule-day-btn.active .schedule-day-btn-num {
+  background: linear-gradient(135deg, #7b3fff, #a855f7);
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 2px 12px rgba(123, 63, 255, 0.42);
+}
+
+.schedule-day-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(71, 238, 154, 0.9);
+}
+
+.schedule-day-dot--off {
+  opacity: 0;
+}
+
+/* Day heading row */
+.schedule-day-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 16px 14px;
+}
+
+.schedule-day-heading {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: #f4f5f8;
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+
+.schedule-day-heading-num {
+  color: rgba(168, 85, 247, 0.95);
+}
+
+.schedule-day-heading-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.schedule-day-countdown {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: rgba(99, 179, 237, 0.88);
+  letter-spacing: 0.02em;
+}
+
+/* Timeline */
+.schedule-timeline {
+  display: flex;
+  flex-direction: column;
+  padding: 0 16px;
+}
+
+.schedule-tl-row {
+  display: grid;
+  grid-template-columns: 56px 18px 1fr;
+  gap: 0 8px;
+  align-items: flex-start;
+}
+
+.schedule-tl-time {
+  padding-top: 15px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: rgba(168, 174, 195, 0.48);
+  text-align: right;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.schedule-tl-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.schedule-tl-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 15px;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.schedule-tl-dot--shift {
+  background: rgba(123, 63, 255, 0.85);
+  box-shadow: 0 0 10px rgba(123, 63, 255, 0.5);
+  border: 2px solid rgba(168, 85, 247, 0.7);
+}
+
+.schedule-tl-dot--break {
+  background: rgba(20, 22, 40, 1);
+  border: 2px solid rgba(71, 238, 154, 0.65);
+}
+
+.schedule-tl-dot--end {
+  background: rgba(20, 22, 40, 1);
+  border: 2px solid rgba(168, 174, 195, 0.35);
+  width: 8px;
+  height: 8px;
+}
+
+.schedule-tl-line {
+  width: 2px;
+  flex: 1;
+  min-height: 12px;
+  background: linear-gradient(180deg, rgba(123, 63, 255, 0.3), rgba(123, 63, 255, 0.06));
+}
+
+.schedule-tl-card {
+  margin: 8px 0 8px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 14px;
+}
+
+.schedule-tl-card--shift {
+  background: linear-gradient(135deg, rgba(123, 63, 255, 0.2), rgba(168, 85, 247, 0.1));
+  border-color: rgba(123, 63, 255, 0.28);
+}
+
+.schedule-tl-role {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #e8eaf6;
+  margin-bottom: 3px;
+  line-height: 1.2;
+}
+
+.schedule-tl-meta {
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: rgba(168, 174, 195, 0.58);
+}
+
+.schedule-tl-card--break {
+  background: linear-gradient(135deg, rgba(71, 238, 154, 0.09), rgba(71, 238, 154, 0.04));
+  border-color: rgba(71, 238, 154, 0.18);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.schedule-tl-break-icon {
+  font-size: 1rem;
+  color: rgba(71, 238, 154, 0.72);
+  flex-shrink: 0;
+}
+
+.schedule-tl-break-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(220, 224, 240, 0.82);
+}
+
+.schedule-tl-row--end .schedule-tl-time {
+  padding-top: 10px;
+}
+
+.schedule-tl-row--end .schedule-tl-dot {
+  margin-top: 10px;
+}
+
+.schedule-tl-end-label {
+  padding-top: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(168, 174, 195, 0.35);
+  letter-spacing: 0.04em;
+}
+
+.schedule-tl-section-gap {
+  margin-top: 18px;
+}
+
+.schedule-tl-off-card {
+  margin: 8px 16px 0;
+}
+
+.schedule-request-change-btn {
+  --color: rgba(168, 174, 195, 0.5);
+  margin: 18px 0 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  height: 36px;
+}
+
+.schedule-request-change-btn--submitted {
+  --color: var(--app-brand-light-green);
+}
+
 /* ── Month view wrapper ─────────────────────────────────────── */
 
 .schedule-month-view {
   display: flex;
   flex-direction: column;
+}
+
+/* ── Week strip ─────────────────────────────────────────────── */
+
+.week-strip {
+  display: flex;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  padding: 8px 0 6px;
+}
+
+.week-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.week-strip-item {
+  flex: 0 0 33.333%;
+  text-align: center;
+  scroll-snap-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.22);
+  letter-spacing: -0.01em;
+  padding: 4px 0;
+  pointer-events: none;
+  transition: color 0.25s ease, font-size 0.25s ease, font-weight 0.25s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+.week-strip-item.active {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #9b6dff;
+  letter-spacing: -0.01em;
 }
 
 /* ── Month strip ────────────────────────────────────────────── */

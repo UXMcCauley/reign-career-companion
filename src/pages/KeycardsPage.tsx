@@ -9,6 +9,7 @@ import {
   trophyOutline
 } from 'ionicons/icons';
 import { useEffect, useMemo, useRef, useState, type TouchEvent } from 'react';
+import { useLocation } from 'react-router-dom';
 import { demoEmployeeTalentCards } from '../data/talentCards';
 import './KeycardsPage.css';
 
@@ -84,6 +85,7 @@ type ViewMode = 'grid' | 'list';
 type SortMode = 'alphabetical' | 'progress';
 
 const KeycardsPage: React.FC = () => {
+  const location = useLocation<{ openCardId?: string }>();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [swipeTransition, setSwipeTransition] = useState<SwipeTransitionState | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -91,6 +93,7 @@ const KeycardsPage: React.FC = () => {
   const startPointRef = useRef<{ x: number; y: number } | null>(null);
   const draggingPanelRef = useRef(false);
   const transitionTimerRef = useRef<number | null>(null);
+  const handledLocationKey = useRef<string | null>(null);
 
   const visibleKeycards = useMemo(() => {
     const cards = [...keycards];
@@ -113,6 +116,17 @@ const KeycardsPage: React.FC = () => {
   const openDetails = (index: number) => {
     setSelectedIndex(index);
   };
+
+  useEffect(() => {
+    const id = location.state?.openCardId;
+    if (!id) return;
+    if (handledLocationKey.current === location.key) return;
+    const idx = visibleKeycards.findIndex(c => c.id === id);
+    if (idx >= 0) {
+      handledLocationKey.current = location.key ?? null;
+      openDetails(idx);
+    }
+  }, [visibleKeycards, location.state, location.key]);
 
   useEffect(() => {
     return () => {

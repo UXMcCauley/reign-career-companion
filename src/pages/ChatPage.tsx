@@ -10,6 +10,7 @@ import { loadChats, loadEmployees, saveChats } from '../data/blobStorage';
 import type { Conversation, Message } from '../data/chatTypes';
 import { DEMO_EMPLOYEES, initialsFromName, type DemoEmployee } from '../data/employees';
 import { ensureNotificationPermission, notifyIncomingMessage, onNotificationTap } from '../lib/notifications';
+import { setChatUnreadFromConversations } from '../lib/chatUnread';
 import './ChatPage.css';
 
 const isIOS = isPlatform('ios') || /iphone|ipad|ipod/i.test(
@@ -80,6 +81,20 @@ const AUTO_REPLIES: Record<string, string[]> = {
   ],
 };
 
+// Fallback replies for newly created conversations that have no scripted pool.
+const GENERIC_REPLIES = [
+  "Hey! Thanks for the message 👋",
+  "Got it — I'll take a look and get back to you shortly.",
+  "Sounds good! Talk soon.",
+  "Appreciate you reaching out 🙌",
+  "Thanks! Let me check on that and circle back.",
+];
+
+// Delay before the simulated reply lands. Kept a few seconds long so you have
+// time to background the app and see the notification arrive.
+const REPLY_DELAY_MS = 3200;
+const REPLY_JITTER_MS = 1200;
+
 function makeSeedConversations(contacts: Omit<Conversation, 'pinned' | 'muted' | 'archived' | 'messages' | 'unread'>[] = CONTACTS): Conversation[] {
   const now = Date.now();
   return [
@@ -148,7 +163,7 @@ const DEFAULT_EMPLOYEES = DEMO_EMPLOYEES.slice(0, 10).map(employee => ({
 
 const ChatPage: React.FC = () => {
   const history  = useHistory();
-  const location = useLocation<{ openConvId?: string }>();
+  const location = useLocation<{ openConvId?: string; reload?: boolean; autoReply?: boolean }>();
   const [presentActionSheet] = useIonActionSheet();
 
   const [convs, setConvs]         = useState<Conversation[]>([]);
@@ -179,6 +194,11 @@ const ChatPage: React.FC = () => {
   // Keep live refs so the delayed auto-reply reads the latest conversation state.
   convsRef.current = convs;
   activeIdRef.current = activeId;
+
+  // Keep the floating tab bar's chat dot in sync with unread conversations.
+  useEffect(() => {
+    if (convs.length) setChatUnreadFromConversations(convs);
+  }, [convs]);
 
   const archivedCount = convs.filter(c => c.archived).length;
   const filtered      = convs.filter(c => {
@@ -243,13 +263,28 @@ const ChatPage: React.FC = () => {
     void saveChats(nextConversations);
   };
 
-  // Open a conversation when returning from the archived page
+  // Open a conversation when returning from the archived or new-message pages.
   useEffect(() => {
-    const id = location.state?.openConvId;
-    if (id && !activeId) {
-      openConv(id);
+    const state = location.state;
+    const id = state?.openConvId;
+    if (!id) return;
+
+    (async () => {
+      // A freshly composed chat was persisted elsewhere — pull it into state.
+      let list = convsRef.current;
+      if (state.reload) {
+        list = await loadChats(() => makeSeedConversations(CONTACTS));
+        setConvs(list);
+      }
+      setActiveId(id);
+      setConvs(prev => {
+        const next = prev.map(c => (c.id === id ? { ...c, unread: 0 } : c));
+        persist(next);
+        return next;
+      });
+      if (state.autoReply) triggerAutoReply(id, list.find(c => c.id === id));
       history.replace('/chat', {});
-    }
+    })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
@@ -305,6 +340,40 @@ const ChatPage: React.FC = () => {
   };
 
   // ── Send ──
+  // Schedules a simulated reply for a conversation, then fires a notification
+  // for it (unless the chat is muted). Shared by manual sends and brand-new chats.
+  // `fallbackConv` covers the brief window where a freshly created conversation
+  // isn't in `convsRef` yet (its setConvs hasn't committed).
+  const triggerAutoReply = useCallback((convId: string, fallbackConv?: Conversation) => {
+    const pool    = AUTO_REPLIES[convId] ?? GENERIC_REPLIES;
+    const replyTx = pool[Math.floor(Math.random() * pool.length)];
+    const delay   = Math.round(REPLY_DELAY_MS + Math.random() * REPLY_JITTER_MS);
+
+    // Hand the notification to the OS now (scheduled `delay` ms out) so it still
+    // fires if the app is backgrounded/suspended before the reply "arrives".
+    const conv = convsRef.current.find(c => c.id === convId) ?? fallbackConv;
+    if (conv && !conv.muted) {
+      void notifyIncomingMessage({ conversationId: convId, title: conv.name, body: replyTx, delayMs: delay });
+    }
+
+    setTyping(true);
+    setTimeout(() => {
+      setTyping(false);
+      const reply: Message = { id: `${Date.now()}-other`, text: replyTx, sender: 'other', ts: Date.now() };
+      const isActiveThreadOpen = activeIdRef.current === convId;
+      setConvs(prev => {
+        const n = prev.map(c => {
+          if (c.id !== convId) return c;
+          // Only bump unread when the user isn't currently looking at the thread.
+          const unread = isActiveThreadOpen ? c.unread : c.unread + 1;
+          return { ...c, messages: [...c.messages, reply], unread };
+        });
+        persist(n);
+        return n;
+      });
+    }, delay);
+  }, []);
+
   const sendMessage = useCallback(() => {
     const text = inputText.trim();
     if (!text || !activeId || typing) return;
@@ -317,38 +386,8 @@ const ChatPage: React.FC = () => {
     const myMsg: Message = { id: `${Date.now()}-me`, text, sender: 'me', ts: Date.now() };
     setConvs(prev => { const n = prev.map(c => c.id === activeId ? { ...c, messages: [...c.messages, myMsg] } : c); persist(n); return n; });
 
-    setTyping(true);
-    const replyToId = activeId;
-    const pool    = AUTO_REPLIES[replyToId] ?? AUTO_REPLIES.manager;
-    const replyTx = pool[Math.floor(Math.random() * pool.length)];
-    const delay   = 1100 + Math.random() * 1100;
-
-    setTimeout(() => {
-      setTyping(false);
-      const reply: Message = { id: `${Date.now()}-other`, text: replyTx, sender: 'other', ts: Date.now() };
-      const isActiveThreadOpen = activeIdRef.current === replyToId;
-      setConvs(prev => {
-        const n = prev.map(c => {
-          if (c.id !== replyToId) return c;
-          // Only bump unread when the user isn't currently looking at the thread.
-          const unread = isActiveThreadOpen ? c.unread : c.unread + 1;
-          return { ...c, messages: [...c.messages, reply], unread };
-        });
-        persist(n);
-        return n;
-      });
-
-      // Fire a real notification for the incoming reply (unless the chat is muted).
-      const conv = convsRef.current.find(c => c.id === replyToId);
-      if (conv && !conv.muted) {
-        void notifyIncomingMessage({
-          conversationId: replyToId,
-          title: conv.name,
-          body: replyTx,
-        });
-      }
-    }, delay);
-  }, [inputText, activeId, typing]);
+    triggerAutoReply(activeId);
+  }, [inputText, activeId, typing, triggerAutoReply]);
 
   const handleMenuOption = (type: 'camera' | 'library' | 'file') => {
     setMenuOpen(false);
